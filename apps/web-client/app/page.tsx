@@ -2,6 +2,8 @@ import { Button, ChapterCard } from "@vhg/ui";
 import { Play, ScrollText } from "lucide-react";
 import Link from "next/link";
 
+import { ChapterStatus } from "@/components/chapter-status";
+
 export default function HomePage() {
   return (
     <main className="mx-auto flex max-w-5xl flex-col gap-10 px-6 py-16">
@@ -28,11 +30,14 @@ export default function HomePage() {
             title="Kim Đồng – Người liên lạc nhỏ"
             description="Vào vai anh Kim Đồng, băng qua núi rừng Cao Bằng, thu thập mật thư và tránh tầm mắt của lính tuần."
             action={
-              <Link href="/chapters/kim-dong">
-                <Button>
-                  <Play className="size-4" aria-hidden /> Chơi ngay
-                </Button>
-              </Link>
+              <div className="flex flex-col gap-3">
+                <Link href="/chapters/kim-dong" className="w-fit">
+                  <Button>
+                    <Play className="size-4" aria-hidden /> Chơi ngay
+                  </Button>
+                </Link>
+                <ChapterStatus />
+              </div>
             }
           />
         </div>
