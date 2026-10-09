@@ -1,10 +1,24 @@
-import type { ChapterId, ChapterProgress } from "@vhg/engine";
+import type { ChapterId, ChapterOutcome, ChapterProgress } from "@vhg/engine";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+export interface ChapterCompletion {
+  /** ISO timestamp of the (latest) completion. */
+  completedAt: string;
+  outcome: ChapterOutcome;
+}
+
 interface ProgressState {
+  /** Latest letters-collected progress per chapter. */
   chapters: Partial<Record<ChapterId, ChapterProgress>>;
+  /** Chapters the player has finished. */
+  completions: Partial<Record<ChapterId, ChapterCompletion>>;
+  /** Chapters whose historical dossier (Codex) is unlocked. */
+  codexUnlocked: ChapterId[];
+
   setProgress: (progress: ChapterProgress) => void;
+  /** Mark a chapter finished and unlock its Codex entry. */
+  completeChapter: (chapterId: ChapterId, outcome: ChapterOutcome) => void;
   reset: () => void;
 }
 
@@ -12,9 +26,22 @@ export const useProgressStore = create<ProgressState>()(
   persist(
     (set) => ({
       chapters: {},
+      completions: {},
+      codexUnlocked: [],
+
       setProgress: (progress) =>
         set((state) => ({ chapters: { ...state.chapters, [progress.chapterId]: progress } })),
-      reset: () => set({ chapters: {} }),
+      completeChapter: (chapterId, outcome) =>
+        set((state) => ({
+          completions: {
+            ...state.completions,
+            [chapterId]: { completedAt: new Date().toISOString(), outcome },
+          },
+          codexUnlocked: state.codexUnlocked.includes(chapterId)
+            ? state.codexUnlocked
+            : [...state.codexUnlocked, chapterId],
+        })),
+      reset: () => set({ chapters: {}, completions: {}, codexUnlocked: [] }),
     }),
     {
       name: "vhg-progress",
