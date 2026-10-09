@@ -38,6 +38,14 @@ export class TypedEmitter<E extends { [K in keyof E]: unknown }> {
     for (const listener of [...set]) (listener as Listener<E[K]>)(payload);
   }
 
+  /** Number of listeners for `event`, or for all events when omitted (for leak checks). */
+  listenerCount(event?: keyof E): number {
+    if (event !== undefined) return this.listeners.get(event)?.size ?? 0;
+    let total = 0;
+    for (const set of this.listeners.values()) total += set.size;
+    return total;
+  }
+
   /** Remove every listener (call when tearing a game down). */
   clear(): void {
     this.listeners.clear();
