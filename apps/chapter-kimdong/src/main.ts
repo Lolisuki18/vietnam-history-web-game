@@ -4,6 +4,8 @@ import { debugHandlers, installDebugHooks } from "./debug";
 import { gameEvents, hostEvents } from "./events";
 import { connectHost } from "./host-bridge";
 import { touchInput } from "./input-state";
+import { PIXEL_ART } from "./config";
+import { PreloaderScene } from "./scenes/preloader-scene";
 import { RunnerScene } from "./scenes/runner-scene";
 import { StealthScene } from "./scenes/stealth-scene";
 import { UiScene } from "./scenes/ui-scene";
@@ -23,8 +25,10 @@ const game = new Phaser.Game({
   // Fill the whole container; scenes adapt the camera zoom to the available size.
   scale: { mode: Phaser.Scale.RESIZE, width: "100%", height: "100%" },
   physics: { default: "arcade", arcade: { debug: false } },
-  // Only the first scene starts automatically; StealthScene launches UiScene on top of itself.
-  scene: [StealthScene, UiScene, RunnerScene],
+  pixelArt: PIXEL_ART,
+  // Only the first scene starts automatically: PreloaderScene loads the art, then starts
+  // StealthScene, which launches UiScene on top of itself.
+  scene: [PreloaderScene, StealthScene, UiScene, RunnerScene],
 });
 
 connectHost();

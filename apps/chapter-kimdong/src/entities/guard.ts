@@ -1,6 +1,8 @@
 import { isPointInCone, rotateToward, type Point } from "@vhg/engine";
 import type Phaser from "phaser";
 
+import type { SoldierAnimKey } from "../assets/animations";
+import { ASSET_KEYS, SOLDIER_SHEET, SPRITE_FRAME, SPRITE_ORIGIN } from "../assets/manifest";
 import { GUARD } from "../config";
 import type { GuardRoute } from "../world-data";
 
@@ -46,7 +48,12 @@ export class Guard {
 
   private readonly container: Phaser.GameObjects.Container;
   private readonly cone: Phaser.GameObjects.Graphics;
+  private readonly sprite: Phaser.GameObjects.Sprite;
   private readonly icon: Phaser.GameObjects.Text;
+  /** The guard moved during this update (drives the walking animation). */
+  private moving = false;
+  private lookingLeft = true;
+  private animKey: SoldierAnimKey | null = null;
 
   constructor(
     scene: Phaser.Scene,
@@ -56,14 +63,21 @@ export class Guard {
     this.x = start.x;
     this.y = start.y;
 
+    // The container sits on the guard's logical position (the feet); the sprite's origin is at
+    // its feet too, so the cone, the sprite and all hit tests share the same centre.
     this.cone = scene.add.graphics();
-    const body = scene.add.rectangle(0, 0, 28, 28, 0xb91c1c).setStrokeStyle(2, 0x450a0a);
-    const helmet = scene.add.ellipse(0, -13, 30, 14, 0x3f4a2c).setStrokeStyle(2, 0x1c2312);
+    this.sprite = scene.add
+      .sprite(0, 0, ASSET_KEYS.soldier, SOLDIER_SHEET.rows.left * SOLDIER_SHEET.columns)
+      .setOrigin(SPRITE_ORIGIN.x, SPRITE_ORIGIN.y);
     this.icon = scene.add
-      .text(0, -34, "", { fontFamily: "sans-serif", fontSize: "22px", fontStyle: "bold" })
+      .text(0, -SPRITE_FRAME.height * SPRITE_ORIGIN.y - 18, "", {
+        fontFamily: "sans-serif",
+        fontSize: "22px",
+        fontStyle: "bold",
+      })
       .setOrigin(0.5);
     this.container = scene.add
-      .container(this.x, this.y, [this.cone, body, helmet, this.icon])
+      .container(this.x, this.y, [this.cone, this.sprite, this.icon])
       .setDepth(15);
 
     this.reset();
@@ -105,6 +119,7 @@ export class Guard {
   }
 
   update(dt: number): void {
+    this.moving = false;
     switch (this.state) {
       case "patrol":
         this.updatePatrol(dt);
@@ -159,6 +174,7 @@ export class Guard {
     const step = Math.min(speed * dt, distance);
     this.x += (dx / distance) * step;
     this.y += (dy / distance) * step;
+    this.moving = true;
     return false;
   }
 
@@ -216,6 +232,29 @@ export class Guard {
   private syncVisuals(): void {
     this.container.setPosition(this.x, this.y);
     this.cone.setRotation(this.facing);
+    this.updateAnimation();
+  }
+
+  /** Walk left or right depending on where the guard looks; stand still on the first frame. */
+  private updateAnimation(): void {
+    const horizontal = Math.cos(this.facing);
+    // Dead zone so a guard walking straight up/down does not flicker between the two sheets.
+    if (Math.abs(horizontal) > 0.2) this.lookingLeft = horizontal < 0;
+    const key: SoldierAnimKey = this.lookingLeft ? "patrol_left" : "patrol_right";
+
+    if (this.moving) {
+      if (key !== this.animKey || !this.sprite.anims.isPlaying) {
+        this.animKey = key;
+        this.sprite.anims.play(key, true);
+      }
+    } else if (this.animKey !== null || this.sprite.anims.isPlaying) {
+      this.animKey = null;
+      this.sprite.anims.stop();
+    }
+    if (!this.moving) {
+      const row = this.lookingLeft ? SOLDIER_SHEET.rows.left : SOLDIER_SHEET.rows.right;
+      this.sprite.setFrame(row * SOLDIER_SHEET.columns);
+    }
   }
 
   destroy(): void {

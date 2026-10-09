@@ -5,7 +5,8 @@ import { OXYGEN } from "../config";
 
 const BAR_WIDTH = 46;
 const BAR_HEIGHT = 7;
-const BAR_OFFSET_Y = -36;
+/** Above the head of the 48px tall sprite (its feet are at the logical position). */
+const BAR_OFFSET_Y = -54;
 
 /** Air supply while diving, drawn as a small bar above the player's head. */
 export class OxygenMeter {

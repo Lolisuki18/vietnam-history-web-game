@@ -1,11 +1,19 @@
 import type Phaser from "phaser";
 
-const PICKUP_RADIUS = 28;
+import { ASSET_KEYS, LETTER_DISPLAY_WIDTH } from "../assets/manifest";
 
-/** A secret letter (mật thư) lying on the ground: a glowing gold envelope. */
+const PICKUP_RADIUS = 28;
+const BOB_HEIGHT = 5;
+
+/**
+ * A secret letter (mật thư) lying on the ground: the letter image bobbing gently over a
+ * pulsing glow. The pickup radius is independent of the artwork, so swapping the image never
+ * changes how close the player has to get.
+ */
 export class LetterPickup {
-  private readonly envelope: Phaser.GameObjects.Graphics;
+  private readonly image: Phaser.GameObjects.Image;
   private readonly glow: Phaser.GameObjects.Arc;
+  private readonly baseScale: number;
   private taken = false;
 
   constructor(
@@ -24,16 +32,17 @@ export class LetterPickup {
       ease: "Sine.easeInOut",
     });
 
-    this.envelope = scene.add.graphics({ x, y }).setDepth(9);
-    this.envelope.fillStyle(0xfacc15, 1);
-    this.envelope.fillRect(-12, -8, 24, 16);
-    this.envelope.lineStyle(2, 0x92400e, 1);
-    this.envelope.strokeRect(-12, -8, 24, 16);
-    this.envelope.beginPath();
-    this.envelope.moveTo(-12, -8);
-    this.envelope.lineTo(0, 2);
-    this.envelope.lineTo(12, -8);
-    this.envelope.strokePath();
+    this.image = scene.add.image(x, y, ASSET_KEYS.letter).setDepth(9);
+    this.baseScale = LETTER_DISPLAY_WIDTH / this.image.width;
+    this.image.setScale(this.baseScale);
+    scene.tweens.add({
+      targets: this.image,
+      y: y - BOB_HEIGHT,
+      duration: 700,
+      yoyo: true,
+      repeat: -1,
+      ease: "Sine.easeInOut",
+    });
   }
 
   get isTaken(): boolean {
@@ -48,19 +57,20 @@ export class LetterPickup {
   take(): void {
     if (this.taken) return;
     this.taken = true;
-    this.scene.tweens.killTweensOf(this.glow);
+    this.scene.tweens.killTweensOf([this.image, this.glow]);
     this.scene.tweens.add({
-      targets: [this.envelope, this.glow],
-      scale: 1.8,
+      targets: this.image,
+      scale: this.baseScale * 1.8,
       alpha: 0,
       duration: 260,
       onComplete: () => this.destroy(),
     });
+    this.scene.tweens.add({ targets: this.glow, scale: 1.8, alpha: 0, duration: 260 });
   }
 
   destroy(): void {
-    this.scene.tweens.killTweensOf([this.envelope, this.glow]);
-    this.envelope.destroy();
+    this.scene.tweens.killTweensOf([this.image, this.glow]);
+    this.image.destroy();
     this.glow.destroy();
   }
 }

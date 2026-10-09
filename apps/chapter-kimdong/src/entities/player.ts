@@ -1,25 +1,26 @@
 import type Phaser from "phaser";
 
-const SIZE = 24;
-const HAT_OFFSET_Y = -15;
+import type { PlayerAnimKey } from "../assets/animations";
+import { ASSET_KEYS, HITBOX_OFFSET, HITBOX_SIZE, SPRITE_ORIGIN } from "../assets/manifest";
 
-/** Kim Đồng (Dền): a blue block with a white outline and a white hat. */
+/**
+ * Kim Đồng (Dền) as an animated physics sprite. The sprite's origin sits at the feet and the
+ * Arcade body is a small square there, so `x` / `y` are the centre of the hitbox exactly as
+ * they were when the player was a plain rectangle.
+ */
 export class Player {
-  readonly sprite: Phaser.GameObjects.Rectangle;
-  private readonly hat: Phaser.GameObjects.Ellipse;
+  readonly sprite: Phaser.Physics.Arcade.Sprite;
+  private currentAnim: PlayerAnimKey | null = null;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    this.sprite = scene.add
-      .rectangle(x, y, SIZE, SIZE, 0x2f6fdb)
-      .setStrokeStyle(2, 0xffffff)
+    this.sprite = scene.physics.add
+      .sprite(x, y, ASSET_KEYS.kimdong, 0)
+      .setOrigin(SPRITE_ORIGIN.x, SPRITE_ORIGIN.y)
       .setDepth(20);
-    scene.physics.add.existing(this.sprite);
+    this.body.setSize(HITBOX_SIZE, HITBOX_SIZE);
+    this.body.setOffset(HITBOX_OFFSET.x, HITBOX_OFFSET.y);
     this.body.setCollideWorldBounds(true);
-
-    this.hat = scene.add
-      .ellipse(x, y + HAT_OFFSET_Y, 32, 13, 0xffffff)
-      .setStrokeStyle(2, 0xcbd5e1)
-      .setDepth(21);
+    this.animate(0, 0, false);
   }
 
   get body(): Phaser.Physics.Arcade.Body {
@@ -34,23 +35,36 @@ export class Player {
     return this.sprite.y;
   }
 
-  /** Keep the hat attached; call once per frame after physics has moved the sprite. */
-  syncVisuals(): void {
-    this.hat.setPosition(this.sprite.x, this.sprite.y + HAT_OFFSET_Y);
+  /** The animation currently playing (for debugging and tests). */
+  get animation(): PlayerAnimKey | null {
+    return this.currentAnim;
+  }
+
+  /**
+   * Pick the animation from the movement direction (`dx`, `dy` are the input axes, 0 when
+   * standing still). Swimming wins over everything else. Cheap enough to call every frame.
+   */
+  animate(dx: number, dy: number, swimming: boolean): void {
+    let key: PlayerAnimKey;
+    if (swimming) key = "swim";
+    else if (dx === 0 && dy === 0) key = "idle";
+    else if (Math.abs(dx) > Math.abs(dy)) key = dx < 0 ? "walk_left" : "walk_right";
+    else key = dy < 0 ? "walk_up" : "walk_down";
+
+    if (key === this.currentAnim) return;
+    this.currentAnim = key;
+    this.sprite.anims.play(key, true);
   }
 
   setAlpha(alpha: number): void {
     this.sprite.setAlpha(alpha);
-    this.hat.setAlpha(alpha);
   }
 
   teleport(x: number, y: number): void {
     this.body.reset(x, y);
-    this.syncVisuals();
   }
 
   destroy(): void {
     this.sprite.destroy();
-    this.hat.destroy();
   }
 }

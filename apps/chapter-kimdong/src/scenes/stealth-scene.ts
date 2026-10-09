@@ -15,7 +15,7 @@ import { touchInput } from "../input-state";
 import { AlertMeter } from "../systems/alert-meter";
 import { OxygenMeter } from "../systems/oxygen-meter";
 import { PebbleThrower } from "../systems/pebble";
-import { createWorldImage } from "../systems/world-renderer";
+import { createBushes, createWorld } from "../systems/world-renderer";
 import { isInBush, isInWater } from "../systems/zones";
 import {
   GUARD_ROUTES,
@@ -72,6 +72,8 @@ export class StealthScene extends Phaser.Scene {
   /** Unit vector of the last movement direction (where a touch-thrown pebble goes). */
   private readonly facing = { x: 1, y: 0 };
   private controlsActive = false;
+  /** This frame's movement input (axes, before speed) – drives the walking animation. */
+  private readonly moveInput = { x: 0, y: 0 };
   /** Dev-only virtual keys driven by `debugHold` (always false in production). */
   private readonly debugInput = { left: false, right: false, up: false, down: false };
   /** Teardown callbacks (listeners, timers) run once when the scene shuts down. */
@@ -96,7 +98,8 @@ export class StealthScene extends Phaser.Scene {
   }
 
   create(): void {
-    createWorldImage(this);
+    createWorld(this);
+    createBushes(this);
     this.createSolids();
     this.createTreeHint();
     this.audio = new GameAudio(this);
@@ -144,7 +147,10 @@ export class StealthScene extends Phaser.Scene {
       if (this.oxygen.update(dt, inWater)) this.onOutOfAir();
     } else {
       this.player.body.setVelocity(0, 0);
+      this.moveInput.x = 0;
+      this.moveInput.y = 0;
     }
+    this.player.animate(this.moveInput.x, this.moveInput.y, inWater);
 
     let seen = false;
     for (const guard of this.guards) {
@@ -167,7 +173,6 @@ export class StealthScene extends Phaser.Scene {
     this.alert.flush(time);
     this.syncControlsVisibility();
 
-    this.player.syncVisuals();
     this.oxygen.syncVisuals(px, py);
   }
 
@@ -290,6 +295,8 @@ export class StealthScene extends Phaser.Scene {
       this.facing.x = dx / length;
       this.facing.y = dy / length;
     }
+    this.moveInput.x = dx;
+    this.moveInput.y = dy;
     const speed = PLAYER.speed * speedFactor;
     this.player.body.setVelocity(dx * speed, dy * speed);
   }
@@ -550,6 +557,8 @@ export class StealthScene extends Phaser.Scene {
       x: Math.round(this.player.x),
       y: Math.round(this.player.y),
       collected: this.collected,
+      anim: this.player.animation,
+      frame: this.player.sprite.frame.name,
     });
 
     this.cleanups.push(plugDebugHandlers({ win, goto, hold, state }));

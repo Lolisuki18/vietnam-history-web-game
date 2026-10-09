@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 
+import { ASSET_KEYS, SPRITE_ORIGIN } from "../assets/manifest";
 import { GameAudio } from "../audio";
 import { RUNNER } from "../config";
 import { plugDebugHandlers } from "../debug";
@@ -85,7 +86,7 @@ export class RunnerScene extends Phaser.Scene {
   private obstacleTimer = 0;
   private bulletTimer = 0;
 
-  private player!: Phaser.GameObjects.Container;
+  private player!: Phaser.GameObjects.Sprite;
   private ground!: Phaser.GameObjects.Rectangle;
   private trail!: Phaser.GameObjects.Rectangle;
   private heartsText!: Phaser.GameObjects.Text;
@@ -96,7 +97,7 @@ export class RunnerScene extends Phaser.Scene {
   private readonly trees: BackgroundTree[] = [];
   private readonly obstacles: Obstacle[] = [];
   private readonly bullets: Bullet[] = [];
-  private readonly chasers: Phaser.GameObjects.Container[] = [];
+  private readonly chasers: Phaser.GameObjects.Sprite[] = [];
   private stopAmbience?: () => void;
   private readonly cleanups: Array<() => void> = [];
 
@@ -263,9 +264,13 @@ export class RunnerScene extends Phaser.Scene {
 
   private createChasers(): void {
     for (let i = 0; i < RUNNER.lanes; i++) {
-      const body = this.add.rectangle(0, 0, 30, 30, 0xb91c1c).setStrokeStyle(2, 0x450a0a);
-      const helmet = this.add.ellipse(0, -14, 32, 15, 0x3f4a2c).setStrokeStyle(2, 0x1c2312);
-      this.chasers.push(this.add.container(0, 0, [body, helmet]).setDepth(6));
+      // They chase from the right, so they face left like the runner.
+      const chaser = this.add
+        .sprite(0, 0, ASSET_KEYS.soldier, 0)
+        .setOrigin(SPRITE_ORIGIN.x, SPRITE_ORIGIN.y)
+        .setDepth(6);
+      chaser.anims.play("patrol_left");
+      this.chasers.push(chaser);
     }
   }
 
@@ -287,11 +292,12 @@ export class RunnerScene extends Phaser.Scene {
   }
 
   private createPlayer(): void {
-    const body = this.add
-      .rectangle(0, 0, PLAYER_SIZE, PLAYER_SIZE, 0x2f6fdb)
-      .setStrokeStyle(2, 0xffffff);
-    const hat = this.add.ellipse(0, -15, 34, 14, 0xffffff).setStrokeStyle(2, 0xcbd5e1);
-    this.player = this.add.container(0, 0, [body, hat]).setDepth(10);
+    // Same sprite and origin as in the exploration scene: x / y are the feet.
+    this.player = this.add
+      .sprite(0, 0, ASSET_KEYS.kimdong, 0)
+      .setOrigin(SPRITE_ORIGIN.x, SPRITE_ORIGIN.y)
+      .setDepth(10);
+    this.player.anims.play("walk_left");
   }
 
   private createHud(): void {
@@ -515,6 +521,7 @@ export class RunnerScene extends Phaser.Scene {
     }
     this.progressBack.setVisible(false);
     this.progressFill.setVisible(false);
+    this.player.anims.stop();
 
     this.audio.gunshot();
     this.cameras.main.flash(200, 255, 255, 255);

@@ -1,6 +1,7 @@
 import { distanceToPolyline, sampleCatmullRom, type Point } from "@vhg/engine";
 import Phaser from "phaser";
 
+import { ASSET_KEYS, BUSH_DISPLAY_FACTOR } from "../assets/manifest";
 import {
   BUSHES,
   GUARD_ROUTES,
@@ -25,9 +26,6 @@ const COLORS = {
   bank: 0x4f4a2f,
   water: 0x2f7bc0,
   waterLight: 0x7cc0f0,
-  bushDark: 0x14301a,
-  bushMid: 0x1d4325,
-  bushLeaf: 0x2f6a38,
   outpostFloor: 0x4a4034,
   treeShadow: 0x143020,
   treeCanopy: 0x1f4a2a,
@@ -75,23 +73,6 @@ function drawRiver(g: Phaser.GameObjects.Graphics): void {
       g,
       RIVER_POLYLINE.map((p) => ({ x: p.x + offset, y: p.y })),
     );
-  }
-}
-
-function drawBushes(g: Phaser.GameObjects.Graphics, rng: Phaser.Math.RandomDataGenerator): void {
-  for (const bush of BUSHES) {
-    g.fillStyle(COLORS.bushDark, 1);
-    g.fillCircle(bush.x, bush.y, bush.r);
-    g.fillStyle(COLORS.bushMid, 1);
-    g.fillCircle(bush.x - bush.r * 0.15, bush.y - bush.r * 0.15, bush.r * 0.8);
-    g.fillStyle(COLORS.bushLeaf, 1);
-    for (let i = 0; i < 9; i++) {
-      const angle = rng.realInRange(0, Math.PI * 2);
-      const dist = rng.realInRange(0, bush.r * 0.7);
-      g.fillCircle(bush.x + Math.cos(angle) * dist, bush.y + Math.sin(angle) * dist, 4);
-    }
-    g.lineStyle(2, 0x0c2010, 0.9);
-    g.strokeCircle(bush.x, bush.y, bush.r);
   }
 }
 
@@ -158,7 +139,7 @@ function drawScenery(g: Phaser.GameObjects.Graphics, rng: Phaser.Math.RandomData
  * Baking avoids re-running ~1000 draw commands on every frame, and the texture is reused
  * when the scene restarts.
  */
-export function createWorldImage(scene: Phaser.Scene): Phaser.GameObjects.Image {
+function createBakedWorld(scene: Phaser.Scene): Phaser.GameObjects.Image {
   if (!scene.textures.exists(WORLD_TEXTURE_KEY)) {
     const rng = new Phaser.Math.RandomDataGenerator(["kim-dong-world"]);
     const g = scene.make.graphics({ x: 0, y: 0 }, false);
@@ -167,10 +148,63 @@ export function createWorldImage(scene: Phaser.Scene): Phaser.GameObjects.Image 
     drawRiver(g);
     drawOutpost(g);
     drawScenery(g, rng);
-    drawBushes(g, rng);
     drawTree(g);
     g.generateTexture(WORLD_TEXTURE_KEY, WORLD.width, WORLD.height);
     g.destroy();
   }
   return scene.add.image(0, 0, WORLD_TEXTURE_KEY).setOrigin(0, 0).setDepth(0);
+}
+
+/** Tile layers whose name starts with this are drawn above the characters (tree canopies...). */
+const ABOVE_LAYER_PREFIX = "above";
+const ABOVE_LAYER_DEPTH = 30;
+
+/**
+ * Build the environment from the Tiled map (`level1.json` + `forest_tiles.png`) when both were
+ * loaded. The map is only scenery: it is stretched to the world size and every tile layer is
+ * created in file order. Returns false (and leaves nothing behind) when the files are missing
+ * or unusable, so the caller can fall back to the baked world.
+ */
+function createTilemapWorld(scene: Phaser.Scene): boolean {
+  if (!scene.cache.tilemap.exists(ASSET_KEYS.map) || !scene.textures.exists(ASSET_KEYS.tiles)) {
+    return false;
+  }
+  try {
+    const map = scene.make.tilemap({ key: ASSET_KEYS.map });
+    const tilesetName = map.tilesets[0]?.name;
+    const tileset = tilesetName ? map.addTilesetImage(tilesetName, ASSET_KEYS.tiles) : null;
+    if (!tileset || map.layers.length === 0) return false;
+
+    const scaleX = WORLD.width / map.widthInPixels;
+    const scaleY = WORLD.height / map.heightInPixels;
+    let created = 0;
+    map.layers.forEach((layerData, index) => {
+      const layer = map.createLayer(layerData.name, tileset, 0, 0);
+      if (!layer) return;
+      layer.setScale(scaleX, scaleY);
+      layer.setDepth(
+        layerData.name.toLowerCase().startsWith(ABOVE_LAYER_PREFIX)
+          ? ABOVE_LAYER_DEPTH
+          : index * 0.01,
+      );
+      created++;
+    });
+    return created > 0;
+  } catch (error) {
+    console.warn("[kimdong] level1.json could not be used, drawing the built-in world.", error);
+    return false;
+  }
+}
+
+/** The ground, river, trails and trees: from the tilemap if there is one, else drawn in code. */
+export function createWorld(scene: Phaser.Scene): void {
+  if (!createTilemapWorld(scene)) createBakedWorld(scene);
+}
+
+/** The hiding bushes. Their hiding radius (world-data.ts) is what counts, not the image. */
+export function createBushes(scene: Phaser.Scene): void {
+  for (const bush of BUSHES) {
+    const image = scene.add.image(bush.x, bush.y, ASSET_KEYS.bush).setDepth(3);
+    image.setScale((bush.r * BUSH_DISPLAY_FACTOR) / Math.max(image.width, image.height));
+  }
 }

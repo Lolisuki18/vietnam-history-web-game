@@ -1,3 +1,9 @@
+/**
+ * Render sprites with nearest-neighbour filtering instead of smoothing. Turn this on when the
+ * real artwork in `public/assets` is pixel art.
+ */
+export const PIXEL_ART = false;
+
 /** Gameplay tuning constants (distances in world px, times in ms unless noted). */
 
 export const PLAYER = {
