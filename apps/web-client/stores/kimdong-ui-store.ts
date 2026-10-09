@@ -1,7 +1,7 @@
 import type { ChapterOutcome, ChapterPhase, DialogueId } from "@vhg/engine";
 import { create } from "zustand";
 
-export type KimDongScreen = "menu" | "playing" | "result" | "codex";
+export type KimDongScreen = "menu" | "playing" | "result";
 
 export interface DialogueState {
   id: DialogueId;
@@ -45,12 +45,8 @@ interface KimDongUiState extends RunState {
   /** The game iframe has loaded and is waiting for `host:start`. */
   ready: boolean;
   screen: KimDongScreen;
-  /** Screen to return to when the Codex is closed. */
-  codexFrom: Exclude<KimDongScreen, "codex">;
 
   setReady: () => void;
-  openCodex: () => void;
-  closeCodex: () => void;
   /** Back to the initial state (menu, not ready); used when the chapter page mounts/unmounts. */
   reset: () => void;
   setScreen: (screen: KimDongScreen) => void;
@@ -74,15 +70,9 @@ export const useKimDongUiStore = create<KimDongUiState>()((set) => ({
   ...initialRun,
   ready: false,
   screen: "menu",
-  codexFrom: "menu",
 
   setReady: () => set({ ready: true }),
-  openCodex: () =>
-    set((state) =>
-      state.screen === "codex" ? state : { screen: "codex", codexFrom: state.screen },
-    ),
-  closeCodex: () => set((state) => ({ screen: state.codexFrom })),
-  reset: () => set({ ...initialRun, ready: false, screen: "menu", codexFrom: "menu" }),
+  reset: () => set({ ...initialRun, ready: false, screen: "menu" }),
   setScreen: (screen) => set({ screen }),
   startRun: () => set({ ...initialRun, screen: "playing" }),
   setPhase: (phase) => set({ phase }),

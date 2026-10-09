@@ -118,9 +118,6 @@ export interface CodexTimelineEntry {
 
 /** The historical dossier unlocked after finishing the chapter. */
 export const CODEX = {
-  kicker: "Hồ sơ lịch sử",
-  title: "Tưởng niệm Anh hùng Kim Đồng",
-  subtitle: "Nông Văn Dền (1929 – 1943)",
   years: "1929 – 1943",
   /** One-line biography for the trading card. */
   cardSummary:
@@ -130,13 +127,6 @@ export const CODEX = {
     { label: "Năm sinh", value: "1929" },
     { label: "Năm hy sinh", value: "1943" },
     { label: "Đội Nhi đồng Cứu quốc thành lập", value: "15/5/1941" },
-  ],
-  facts: [
-    { label: "Tên thật", value: "Nông Văn Dền" },
-    { label: "Bí danh", value: "Kim Đồng" },
-    { label: "Năm sinh – mất", value: "1929 – 1943 (hy sinh khi 14 tuổi)" },
-    { label: "Quê hương", value: "Hà Quảng, Cao Bằng" },
-    { label: "Dân tộc", value: "Nùng" },
   ],
   sections: [
     {

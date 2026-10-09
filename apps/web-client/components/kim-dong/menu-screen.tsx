@@ -1,18 +1,13 @@
 "use client";
 
-import { Button } from "@vhg/ui";
+import { Button, buttonStyles } from "@vhg/ui";
 import { ArrowLeft, BookOpen, Loader2, Play } from "lucide-react";
 import Link from "next/link";
 
 import { useKimDongUiStore } from "@/stores/kimdong-ui-store";
 import { useProgressStore } from "@/stores/progress-store";
 
-interface MenuScreenProps {
-  onStart: () => void;
-  onOpenCodex: () => void;
-}
-
-export function MenuScreen({ onStart, onOpenCodex }: MenuScreenProps) {
+export function MenuScreen({ onStart }: { onStart: () => void }) {
   const ready = useKimDongUiStore((state) => state.ready);
   const codexUnlocked = useProgressStore((state) => state.codexUnlocked.includes("kim-dong"));
 
@@ -41,9 +36,12 @@ export function MenuScreen({ onStart, onOpenCodex }: MenuScreenProps) {
             )}
           </Button>
           {codexUnlocked ? (
-            <Button variant="secondary" className="px-6 py-3 text-base" onClick={onOpenCodex}>
+            <Link
+              href="/chapters/kim-dong/codex"
+              className={buttonStyles({ variant: "secondary", size: "lg" })}
+            >
               <BookOpen className="size-5" aria-hidden /> Hồ sơ lịch sử
-            </Button>
+            </Link>
           ) : null}
         </div>
         <Link

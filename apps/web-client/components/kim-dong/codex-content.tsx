@@ -2,11 +2,9 @@ import { cn } from "@vhg/ui";
 
 import { CODEX } from "@/data/kimdong-story";
 
-import { CodexIllustration } from "./codex-illustration";
-
 /**
  * The historical text of the Codex (key numbers, sections, timeline, note) in sharp serif
- * typography. Shared by the Codex page and the in-game overlay.
+ * typography (the right-hand column of the Codex page).
  */
 export function CodexText({ className }: { className?: string }) {
   return (
@@ -57,36 +55,5 @@ export function CodexText({ className }: { className?: string }) {
         {CODEX.note}
       </blockquote>
     </div>
-  );
-}
-
-/** The whole Codex as one article (used by the in-game overlay). */
-export function CodexContent() {
-  return (
-    <article className="mx-auto flex w-full max-w-3xl flex-col gap-8 text-stone-200">
-      <header className="flex flex-col gap-2 text-center">
-        <p className="text-sm font-semibold tracking-widest text-amber-500 uppercase">
-          {CODEX.kicker}
-        </p>
-        <h1 className="font-serif text-3xl font-black tracking-tight text-amber-500 sm:text-4xl">
-          {CODEX.title}
-        </h1>
-        <p className="font-serif text-lg text-stone-400">{CODEX.subtitle}</p>
-      </header>
-
-      <div className="grid gap-6 sm:grid-cols-[minmax(0,18rem)_1fr] sm:items-start">
-        <CodexIllustration />
-        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 rounded-xl border border-amber-700/40 bg-black/30 p-4 text-sm">
-          {CODEX.facts.map((fact) => (
-            <div key={fact.label} className="contents">
-              <dt className="font-semibold text-amber-500">{fact.label}</dt>
-              <dd className="text-stone-200">{fact.value}</dd>
-            </div>
-          ))}
-        </dl>
-      </div>
-
-      <CodexText />
-    </article>
   );
 }

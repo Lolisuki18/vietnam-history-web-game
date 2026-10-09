@@ -6,7 +6,6 @@ import { useEffect, useRef } from "react";
 import { CHAPTER_KIMDONG_URL } from "@/lib/env";
 import { useKimDongUiStore } from "@/stores/kimdong-ui-store";
 
-import { CodexScreen } from "./codex-screen";
 import { DialogueBox } from "./dialogue-box";
 import { FadeScreen } from "./fade-screen";
 import { Hud } from "./hud";
@@ -18,7 +17,7 @@ import { useKimDongBridge } from "./use-kimdong-bridge";
 /**
  * Full-viewport shell: the Phaser game (iframe) is the background and React screens are
  * layered on top of it. Overlays let pointer events through unless they need them.
- * Menu → gameplay → result → codex are cross-faded with CSS only.
+ * Menu → gameplay → result are cross-faded with CSS only.
  */
 export function ChapterShell() {
   const frameRef = useRef<HTMLIFrameElement>(null);
@@ -36,8 +35,6 @@ export function ChapterShell() {
   const dialogueOpen = useKimDongUiStore((state) => state.dialogueOpen);
   const startRun = useKimDongUiStore((state) => state.startRun);
   const closeDialogue = useKimDongUiStore((state) => state.closeDialogue);
-  const openCodex = useKimDongUiStore((state) => state.openCodex);
-  const closeCodex = useKimDongUiStore((state) => state.closeCodex);
 
   // Keyboard input must go to the game while playing; dialogues take focus themselves.
   useEffect(() => {
@@ -78,15 +75,11 @@ export function ChapterShell() {
       <DialogueBox onClose={handleDialogueClosed} />
 
       <FadeScreen show={screen === "menu"}>
-        <MenuScreen onStart={handleStart} onOpenCodex={openCodex} />
+        <MenuScreen onStart={handleStart} />
       </FadeScreen>
 
       <FadeScreen show={screen === "result"} duration={900}>
         <ResultScreen onReplay={handleReplay} />
-      </FadeScreen>
-
-      <FadeScreen show={screen === "codex"}>
-        <CodexScreen onClose={closeCodex} />
       </FadeScreen>
     </div>
   );

@@ -47,17 +47,3 @@ export function KimDongArt({ className }: { className?: string }) {
     </svg>
   );
 }
-
-/** The art with a caption, for use inside articles. */
-export function CodexIllustration({ className }: { className?: string }) {
-  return (
-    <figure className={className}>
-      <div className="aspect-[8/5] overflow-hidden rounded-xl">
-        <KimDongArt />
-      </div>
-      <figcaption className="mt-2 text-center text-xs text-amber-100/60">
-        Minh họa tự vẽ – có thể thay bằng ảnh tư liệu trong thư mục public.
-      </figcaption>
-    </figure>
-  );
-}
