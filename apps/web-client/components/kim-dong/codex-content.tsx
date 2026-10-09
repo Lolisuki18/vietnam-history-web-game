@@ -1,57 +1,92 @@
+import { cn } from "@vhg/ui";
+
 import { CODEX } from "@/data/kimdong-story";
 
 import { CodexIllustration } from "./codex-illustration";
 
-/** The Codex article (dark theme). Presentational only, used by the overlay and the standalone page. */
-export function CodexContent() {
+/**
+ * The historical text of the Codex (key numbers, sections, timeline, note) in sharp serif
+ * typography. Shared by the Codex page and the in-game overlay.
+ */
+export function CodexText({ className }: { className?: string }) {
   return (
-    <article className="mx-auto flex w-full max-w-3xl flex-col gap-8 text-amber-50">
-      <header className="flex flex-col gap-2 text-center">
-        <p className="text-sm font-semibold tracking-widest text-amber-300 uppercase">
-          {CODEX.kicker}
-        </p>
-        <h1 className="text-3xl font-black tracking-tight sm:text-4xl">{CODEX.title}</h1>
-        <p className="text-lg text-amber-100/80">{CODEX.subtitle}</p>
-      </header>
+    <div className={cn("flex flex-col gap-10 text-stone-300", className)}>
+      <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {CODEX.stats.map((stat) => (
+          <div
+            key={stat.label}
+            className="rounded-xl border border-amber-700/40 bg-stone-950/60 px-4 py-4 text-center"
+          >
+            <dd className="font-serif text-3xl font-bold text-amber-500">{stat.value}</dd>
+            <dt className="mt-1 text-xs font-semibold tracking-wide text-stone-400 uppercase">
+              {stat.label}
+            </dt>
+          </div>
+        ))}
+      </dl>
 
-      <div className="grid gap-6 sm:grid-cols-[minmax(0,18rem)_1fr] sm:items-start">
-        <CodexIllustration />
-        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 rounded-xl border border-amber-200/20 bg-black/30 p-4 text-sm">
-          {CODEX.facts.map((fact) => (
-            <div key={fact.label} className="contents">
-              <dt className="font-semibold text-amber-300">{fact.label}</dt>
-              <dd className="text-amber-50/90">{fact.value}</dd>
-            </div>
-          ))}
-        </dl>
-      </div>
-
-      {CODEX.sections.map((section) => (
-        <section key={section.heading} className="flex flex-col gap-2">
-          <h2 className="text-xl font-bold text-amber-300">{section.heading}</h2>
-          <p className="leading-relaxed text-amber-50/90">{section.body}</p>
+      {CODEX.sections.map((section, index) => (
+        <section key={section.heading} className="flex flex-col gap-3">
+          <h2 className="flex items-baseline gap-3 border-b border-amber-700/40 pb-2 font-serif text-2xl font-bold text-amber-500">
+            <span className="text-base text-red-600">{String(index + 1).padStart(2, "0")}</span>
+            {section.heading}
+          </h2>
+          <p className="text-base leading-8 text-stone-300 sm:text-lg">{section.body}</p>
         </section>
       ))}
 
-      <section className="flex flex-col gap-3">
-        <h2 className="text-xl font-bold text-amber-300">Dòng thời gian</h2>
-        <ol className="flex flex-col gap-3 border-l-2 border-amber-300/40 pl-5">
+      <section className="flex flex-col gap-4">
+        <h2 className="border-b border-amber-700/40 pb-2 font-serif text-2xl font-bold text-amber-500">
+          Dòng thời gian
+        </h2>
+        <ol className="flex flex-col gap-5 border-l-2 border-amber-600/50 pl-6">
           {CODEX.timeline.map((entry) => (
             <li key={entry.date} className="relative">
               <span
                 aria-hidden
-                className="absolute top-1.5 -left-[1.65rem] size-3 rounded-full bg-red-600 ring-2 ring-amber-200/60"
+                className="absolute top-1.5 -left-[1.95rem] size-3.5 rounded-full bg-red-700 ring-2 ring-amber-400/70"
               />
-              <p className="text-sm font-bold text-amber-200">{entry.date}</p>
-              <p className="text-amber-50/90">{entry.text}</p>
+              <p className="font-serif text-lg font-bold text-amber-400">{entry.date}</p>
+              <p className="text-stone-300">{entry.text}</p>
             </li>
           ))}
         </ol>
       </section>
 
-      <p className="rounded-lg border border-amber-200/20 bg-black/30 p-4 text-sm leading-relaxed text-amber-100/70">
+      <blockquote className="rounded-lg border-l-4 border-red-800 bg-stone-950/60 p-4 text-sm leading-relaxed text-stone-400 italic">
         {CODEX.note}
-      </p>
+      </blockquote>
+    </div>
+  );
+}
+
+/** The whole Codex as one article (used by the in-game overlay). */
+export function CodexContent() {
+  return (
+    <article className="mx-auto flex w-full max-w-3xl flex-col gap-8 text-stone-200">
+      <header className="flex flex-col gap-2 text-center">
+        <p className="text-sm font-semibold tracking-widest text-amber-500 uppercase">
+          {CODEX.kicker}
+        </p>
+        <h1 className="font-serif text-3xl font-black tracking-tight text-amber-500 sm:text-4xl">
+          {CODEX.title}
+        </h1>
+        <p className="font-serif text-lg text-stone-400">{CODEX.subtitle}</p>
+      </header>
+
+      <div className="grid gap-6 sm:grid-cols-[minmax(0,18rem)_1fr] sm:items-start">
+        <CodexIllustration />
+        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 rounded-xl border border-amber-700/40 bg-black/30 p-4 text-sm">
+          {CODEX.facts.map((fact) => (
+            <div key={fact.label} className="contents">
+              <dt className="font-semibold text-amber-500">{fact.label}</dt>
+              <dd className="text-stone-200">{fact.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+
+      <CodexText />
     </article>
   );
 }

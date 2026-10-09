@@ -121,6 +121,16 @@ export const CODEX = {
   kicker: "Hồ sơ lịch sử",
   title: "Tưởng niệm Anh hùng Kim Đồng",
   subtitle: "Nông Văn Dền (1929 – 1943)",
+  years: "1929 – 1943",
+  /** One-line biography for the trading card. */
+  cardSummary:
+    "Người liên lạc nhỏ của cách mạng ở Cao Bằng, đội trưởng đầu tiên của Đội Nhi đồng Cứu quốc – hy sinh khi bảo vệ cán bộ lúc mới 14 tuổi.",
+  /** Key numbers shown big in the article. */
+  stats: [
+    { label: "Năm sinh", value: "1929" },
+    { label: "Năm hy sinh", value: "1943" },
+    { label: "Đội Nhi đồng Cứu quốc thành lập", value: "15/5/1941" },
+  ],
   facts: [
     { label: "Tên thật", value: "Nông Văn Dền" },
     { label: "Bí danh", value: "Kim Đồng" },

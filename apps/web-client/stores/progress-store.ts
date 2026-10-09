@@ -8,7 +8,7 @@ export interface ChapterCompletion {
   outcome: ChapterOutcome;
 }
 
-interface ProgressState {
+export interface ProgressState {
   /** Latest letters-collected progress per chapter. */
   chapters: Partial<Record<ChapterId, ChapterProgress>>;
   /** Chapters the player has finished. */
@@ -21,6 +21,18 @@ interface ProgressState {
   completeChapter: (chapterId: ChapterId, outcome: ChapterOutcome) => void;
   reset: () => void;
 }
+
+/** Selector: has the dossier (Codex) of this chapter been unlocked by finishing the game? */
+export const selectIsCodexUnlocked =
+  (chapterId: ChapterId) =>
+  (state: ProgressState): boolean =>
+    state.codexUnlocked.includes(chapterId);
+
+/** Selector: has the player finished this chapter? */
+export const selectIsCompleted =
+  (chapterId: ChapterId) =>
+  (state: ProgressState): boolean =>
+    chapterId in state.completions;
 
 export const useProgressStore = create<ProgressState>()(
   persist(

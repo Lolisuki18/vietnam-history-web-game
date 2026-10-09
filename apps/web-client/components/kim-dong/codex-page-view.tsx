@@ -1,43 +1,65 @@
 "use client";
 
-import { Button } from "@vhg/ui";
+import { buttonStyles, CodexCard } from "@vhg/ui";
 import { ArrowLeft, Lock } from "lucide-react";
 import Link from "next/link";
 
-import { useProgressStore } from "@/stores/progress-store";
+import { CODEX } from "@/data/kimdong-story";
+import { selectIsCodexUnlocked, useProgressStore } from "@/stores/progress-store";
 import { useProgressHydrated } from "@/stores/use-progress-hydrated";
 
-import { CodexContent } from "./codex-content";
+import { CodexText } from "./codex-content";
+import { KimDongArt } from "./codex-illustration";
 
-/** Standalone Codex page: shows the dossier once the chapter has been completed. */
+/**
+ * The Codex page. `isCodexUnlocked` comes from the Zustand store, which the game fills in
+ * (through `postMessage`) when the chapter is completed.
+ */
 export function CodexPageView() {
   const hydrated = useProgressHydrated();
-  const unlocked = useProgressStore((state) => state.codexUnlocked.includes("kim-dong"));
+  const isCodexUnlocked = useProgressStore(selectIsCodexUnlocked("kim-dong"));
 
   return (
-    <main className="min-h-screen bg-stone-950 px-4 py-8">
-      <div className="mx-auto mb-6 flex w-full max-w-3xl">
-        <Link href="/">
-          <Button variant="secondary">
-            <ArrowLeft className="size-4" aria-hidden /> Về trang chủ
-          </Button>
+    <main className="min-h-svh bg-stone-900">
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
+        <Link href="/" className={buttonStyles({ variant: "secondary", size: "sm" })}>
+          <ArrowLeft className="size-4" aria-hidden /> Quay lại Trang chủ
         </Link>
-      </div>
 
-      {!hydrated ? null : unlocked ? (
-        <CodexContent />
-      ) : (
-        <div className="mx-auto flex max-w-md flex-col items-center gap-4 pt-16 text-center text-amber-50">
-          <Lock className="size-10 text-amber-300" aria-hidden />
-          <h1 className="text-2xl font-bold">Hồ sơ chưa được mở khóa</h1>
-          <p className="text-amber-100/80">
-            Hoàn thành Chương 1 – Kim Đồng, Người liên lạc nhỏ để xem hồ sơ lịch sử.
-          </p>
-          <Link href="/chapters/kim-dong">
-            <Button>Chơi chương 1</Button>
-          </Link>
-        </div>
-      )}
+        <h1 className="mt-6 font-serif text-3xl leading-tight font-black text-balance text-amber-500 text-glow sm:text-4xl md:text-5xl">
+          Hồ sơ Lịch sử: Anh hùng Kim Đồng
+        </h1>
+        <div className="mt-4 h-px w-32 bg-gradient-to-r from-amber-600 to-transparent" />
+
+        {!hydrated ? null : isCodexUnlocked ? (
+          <div className="mt-8 flex animate-rise-in flex-col gap-8 md:flex-row md:items-start md:gap-12">
+            <aside className="mx-auto w-full max-w-sm md:sticky md:top-8 md:mx-0 md:w-[22rem] md:shrink-0">
+              <CodexCard
+                unlocked
+                name="Anh hùng Kim Đồng"
+                years={CODEX.years}
+                role="Người liên lạc nhỏ"
+                summary={CODEX.cardSummary}
+                art={<KimDongArt />}
+              />
+              <p className="mt-3 text-center text-xs text-stone-500">
+                Minh họa tự vẽ – có thể thay bằng ảnh tư liệu.
+              </p>
+            </aside>
+            <CodexText className="min-w-0 flex-1" />
+          </div>
+        ) : (
+          <div className="mx-auto mt-12 flex max-w-md animate-rise-in flex-col items-center gap-5 rounded-2xl border border-stone-700 bg-neutral-950 px-6 py-10 text-center">
+            <Lock className="size-12 text-stone-600" aria-hidden />
+            <p className="font-serif text-xl text-stone-300">
+              Bạn cần hoàn thành Chapter Kim Đồng để xem hồ sơ này
+            </p>
+            <Link href="/chapters/kim-dong" className={buttonStyles({ size: "lg" })}>
+              Chơi Chapter Kim Đồng
+            </Link>
+          </div>
+        )}
+      </div>
     </main>
   );
 }

@@ -1,0 +1,42 @@
+import type { ChapterId } from "@vhg/engine";
+
+export interface ChapterInfo {
+  /** Present for chapters that exist; "coming soon" slots have no id yet. */
+  id?: ChapterId;
+  chapterLabel: string;
+  character: string;
+  title: string;
+  period: string;
+  description: string;
+  href?: string;
+  codexHref?: string;
+}
+
+/** The chapter list on the home page. Only chapter 1 is playable so far. */
+export const CHAPTERS: readonly ChapterInfo[] = [
+  {
+    id: "kim-dong",
+    chapterLabel: "Chương 1",
+    character: "Anh hùng Kim Đồng",
+    title: "Người liên lạc nhỏ",
+    period: "Cao Bằng · 1941 – 1943",
+    description:
+      "Nhập vai Dền, băng qua núi rừng Cao Bằng, nhặt mật thư, tránh tầm mắt của lính tuần và bảo vệ cán bộ.",
+    href: "/chapters/kim-dong",
+    codexHref: "/chapters/kim-dong/codex",
+  },
+  {
+    chapterLabel: "Chương 2",
+    character: "Đang cập nhật",
+    title: "Một trang sử mới",
+    period: "Sắp ra mắt",
+    description: "Một câu chuyện lịch sử mới đang được chuẩn bị. Hãy quay lại sau nhé.",
+  },
+  {
+    chapterLabel: "Chương 3",
+    character: "Đang cập nhật",
+    title: "Một trang sử mới",
+    period: "Sắp ra mắt",
+    description: "Một câu chuyện lịch sử mới đang được chuẩn bị. Hãy quay lại sau nhé.",
+  },
+];
