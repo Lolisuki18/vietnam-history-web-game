@@ -1,34 +1,51 @@
-import { postChapterMessage } from "@vhg/engine";
 import Phaser from "phaser";
 
-import { gameEvents } from "./events";
-import { GAME_HEIGHT, GAME_WIDTH, MainScene } from "./scenes/main-scene";
+import { debugHandlers, installDebugHooks } from "./debug";
+import { gameEvents, hostEvents } from "./events";
+import { connectHost } from "./host-bridge";
+import { touchInput } from "./input-state";
+import { RunnerScene } from "./scenes/runner-scene";
+import { StealthScene } from "./scenes/stealth-scene";
+import { UiScene } from "./scenes/ui-scene";
 
-/** Origin of the page that embeds this game; progress messages are only sent there. */
-const PARENT_ORIGIN = import.meta.env.VITE_PARENT_ORIGIN ?? "http://localhost:3000";
+// Dev-only: `?timeoutloop` drives the game loop with setTimeout instead of requestAnimationFrame,
+// which keeps it running at full speed in browsers that pause rAF for hidden panes (automated tests).
+const useTimeoutLoop =
+  import.meta.env.DEV && new URLSearchParams(location.search).has("timeoutloop");
 
-new Phaser.Game({
+const game = new Phaser.Game({
   type: Phaser.AUTO,
   parent: "game",
-  width: GAME_WIDTH,
-  height: GAME_HEIGHT,
   backgroundColor: "#14231a",
+  // The host page decides who has keyboard focus (dialogues take it); never grab it back.
+  autoFocus: false,
+  fps: { forceSetTimeOut: useTimeoutLoop },
+  // Fill the whole container; scenes adapt the camera zoom to the available size.
+  scale: { mode: Phaser.Scale.RESIZE, width: "100%", height: "100%" },
   physics: { default: "arcade", arcade: { debug: false } },
-  scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
-  scene: [MainScene],
+  // Only the first scene starts automatically; StealthScene launches UiScene on top of itself.
+  scene: [StealthScene, UiScene, RunnerScene],
 });
 
-gameEvents.on("progress", (progress) => {
-  postChapterMessage({ type: "chapter:progress", progress }, PARENT_ORIGIN);
-});
-
-postChapterMessage({ type: "chapter:ready" }, PARENT_ORIGIN);
-
+connectHost();
 if (import.meta.env.DEV) {
-  // Lets the embedding page trigger the cheat across origins, e.g.
-  // iframe.contentWindow.postMessage({ source: "vhg-debug", type: "win" }, "http://localhost:5173")
-  window.addEventListener("message", (event: MessageEvent<{ source?: string; type?: string }>) => {
-    if (event.origin !== PARENT_ORIGIN) return;
-    if (event.data?.source === "vhg-debug" && event.data.type === "win") window.debugWinGame?.();
+  installDebugHooks();
+  // Leak checks: listener and display-object counts must not grow when the chapter restarts.
+  window.debugStats = () => ({
+    hostListeners: hostEvents.listenerCount(),
+    gameListeners: gameEvents.listenerCount(),
+    activeScenes: game.scene.getScenes(true).map((scene) => scene.scene.key),
+    scene: debugHandlers.state?.(),
+    touch: { ...touchInput },
+    displayObjects: Object.fromEntries(
+      game.scene.getScenes(false).map((scene) => [scene.scene.key, scene.children.length]),
+    ),
   });
+  window.debugRestart = () => hostEvents.emit("restart", undefined);
 }
+
+hostEvents.on("restart", () => {
+  // Replaying: leave the auto-runner (if it is running) and start the chapter over.
+  game.scene.stop("runner");
+  game.scene.start("stealth", { autostart: true });
+});
