@@ -1,4 +1,29 @@
-import { TypedEmitter, type ChapterProgress } from "@vhg/engine";
+import { TypedEmitter, type DialogueId } from "@vhg/engine";
 
-/** Events the Phaser scenes raise for the host page glue in main.ts. */
-export const gameEvents = new TypedEmitter<{ progress: ChapterProgress }>();
+/** Commands arriving from the host page (translated from postMessage in host-bridge.ts). */
+export const hostEvents = new TypedEmitter<{
+  hello: undefined;
+  start: undefined;
+  restart: undefined;
+  "dialogue-closed": DialogueId;
+}>();
+
+/** Events between Phaser scenes (gameplay scenes ⇄ UiScene). */
+export const gameEvents = new TypedEmitter<{
+  /** Short message in the middle of the screen. */
+  banner: { text: string; ms: number };
+  /** A gameplay scene (re)started: UiScene drops any overlay that is still showing. */
+  reset: undefined;
+  "rhythm:start": undefined;
+  /** One rhythm note was judged. */
+  "rhythm:note": { hit: boolean };
+  "rhythm:done": { hits: number; misses: number };
+  /** Show the ambush prompt with its countdown. */
+  "climax:start": undefined;
+  /** The player answered the ambush prompt (`acted: false` = the time ran out). */
+  "climax:result": { acted: boolean };
+  /** The on-screen action button was pressed (replaces Space / left click). */
+  "touch:action": undefined;
+  /** Gameplay scenes tell UiScene whether the virtual controls should be shown right now. */
+  "controls:active": boolean;
+}>();
