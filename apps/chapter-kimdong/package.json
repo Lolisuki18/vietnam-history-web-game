@@ -1,0 +1,23 @@
+{
+  "name": "chapter-kimdong",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@vhg/engine": "workspace:*",
+    "phaser": "^4.2.1"
+  },
+  "devDependencies": {
+    "@vhg/config": "workspace:*",
+    "eslint": "catalog:",
+    "typescript": "catalog:",
+    "vite": "^8.3.4"
+  }
+}

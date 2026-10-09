@@ -1,0 +1,25 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# Chỉ cho phép chạy build script của dependency khi thật sự cần.
+allowBuilds:
+  unrs-resolver: false
+
+# Phiên bản dùng chung cho cả workspace (tham chiếu bằng "catalog:" trong package.json)
+catalog:
+  "@eslint/js": ^9.39.0
+  "@types/node": ^22.20.5
+  "@types/react": ^19.3.0
+  "@types/react-dom": ^19.3.0
+  eslint: ^9.39.5
+  globals: ^17.13.0
+  prettier: ^3.9.9
+  react: ^19.3.0
+  react-dom: ^19.3.0
+  typescript: ~5.9.3
+  typescript-eslint: ^8.71.1
+
+minimumReleaseAgeExclude:
+  - lucide-react@1.54.0
+  - vite@8.3.4
