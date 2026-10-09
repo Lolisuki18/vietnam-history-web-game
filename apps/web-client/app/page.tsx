@@ -1,47 +1,46 @@
-import { Button, ChapterCard } from "@vhg/ui";
-import { Play, ScrollText } from "lucide-react";
-import Link from "next/link";
+import { ChapterGrid } from "@/components/home/chapter-grid";
+import { CodexShelf } from "@/components/home/codex-shelf";
+import { Hero } from "@/components/home/hero";
 
-import { ChapterStatus } from "@/components/chapter-status";
+function SectionHeading({ kicker, title, id }: { kicker: string; title: string; id: string }) {
+  return (
+    <header className="mb-8 flex flex-col gap-2 text-center sm:mb-10">
+      <p className="text-xs font-semibold tracking-[0.3em] text-red-600 uppercase">{kicker}</p>
+      <h2 id={id} className="font-serif text-3xl font-bold text-amber-500 sm:text-4xl">
+        {title}
+      </h2>
+      <div className="mx-auto mt-1 h-px w-24 bg-gradient-to-r from-transparent via-amber-600 to-transparent" />
+    </header>
+  );
+}
 
 export default function HomePage() {
   return (
-    <main className="mx-auto flex max-w-5xl flex-col gap-10 px-6 py-16">
-      <header className="flex flex-col gap-4">
-        <span className="inline-flex items-center gap-2 text-sm font-semibold text-red-700">
-          <ScrollText className="size-4" aria-hidden /> Trò chơi lịch sử
-        </span>
-        <h1 className="text-4xl font-black tracking-tight text-stone-900 sm:text-5xl">
-          Hành trình lịch sử Việt Nam
-        </h1>
-        <p className="max-w-2xl text-lg text-stone-600">
-          Nhập vai vào những nhân vật lịch sử, hoàn thành nhiệm vụ và khám phá các chương của lịch
-          sử dân tộc.
-        </p>
-      </header>
+    <main>
+      <Hero />
 
-      <section aria-labelledby="chapters" className="flex flex-col gap-4">
-        <h2 id="chapters" className="text-2xl font-bold">
-          Các chương
-        </h2>
-        <div className="grid gap-6 sm:grid-cols-2">
-          <ChapterCard
-            period="1941 – 1943"
-            title="Kim Đồng – Người liên lạc nhỏ"
-            description="Vào vai anh Kim Đồng, băng qua núi rừng Cao Bằng, thu thập mật thư và tránh tầm mắt của lính tuần."
-            action={
-              <div className="flex flex-col gap-3">
-                <Link href="/chapters/kim-dong" className="w-fit">
-                  <Button>
-                    <Play className="size-4" aria-hidden /> Chơi ngay
-                  </Button>
-                </Link>
-                <ChapterStatus />
-              </div>
-            }
-          />
+      <section
+        id="chapters"
+        aria-labelledby="chapters-heading"
+        className="mx-auto max-w-6xl scroll-mt-4 px-5 py-16 sm:px-8 sm:py-24"
+      >
+        <SectionHeading kicker="Hành trình" title="Các chương" id="chapters-heading" />
+        <ChapterGrid />
+      </section>
+
+      <section
+        aria-labelledby="codex-heading"
+        className="border-t border-amber-900/30 bg-stone-950/60"
+      >
+        <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-24">
+          <SectionHeading kicker="Tư liệu" title="Hồ sơ lịch sử" id="codex-heading" />
+          <CodexShelf />
         </div>
       </section>
+
+      <footer className="border-t border-amber-900/30 px-5 py-8 text-center text-sm text-stone-500">
+        Hào khí Việt Nam · Trò chơi giáo dục lịch sử
+      </footer>
     </main>
   );
 }
