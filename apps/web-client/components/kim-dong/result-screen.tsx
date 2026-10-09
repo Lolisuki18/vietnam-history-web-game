@@ -1,69 +1,82 @@
 "use client";
 
-import { Button } from "@vhg/ui";
-import { Award, BookOpen, House, RotateCcw } from "lucide-react";
+import { Button, buttonStyles, cn } from "@vhg/ui";
+import { BookOpen, House, RotateCcw } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 
+import { useStagedReveal } from "@/lib/use-staged-reveal";
 import { useKimDongUiStore } from "@/stores/kimdong-ui-store";
 
-interface ResultScreenProps {
-  onReplay: () => void;
-  onOpenCodex: () => void;
-}
+/** ms after the screen appears: the closing line fades in, then the actions appear. */
+const REVEAL_DELAYS = [400, 3000] as const;
+
+const CODEX_HREF = "/chapters/kim-dong/codex";
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-amber-200/20 bg-black/30 px-4 py-3 text-center">
-      <p className="text-2xl font-black text-amber-50">{value}</p>
-      <p className="text-xs font-medium text-amber-100/70">{label}</p>
+    <div className="rounded-md border-2 border-amber-800/60 bg-stone-950/70 px-3 py-2 text-center">
+      <p className="font-serif text-2xl font-bold text-amber-500">{value}</p>
+      <p className="text-xs font-medium text-stone-400">{label}</p>
     </div>
   );
 }
 
-/** Shown over the black canvas after the ending: the outcome and what was unlocked. */
-export function ResultScreen({ onReplay, onOpenCodex }: ResultScreenProps) {
+/**
+ * Shown over the black canvas once the ending has faded out: one line of text fades in, then,
+ * after a few seconds, the way to the historical dossier.
+ */
+export function ResultScreen({ onReplay }: { onReplay: () => void }) {
+  const visible = useKimDongUiStore((state) => state.screen === "result");
   const outcome = useKimDongUiStore((state) => state.outcome);
   const total = useKimDongUiStore((state) => state.total);
+  const stage = useStagedReveal(visible, REVEAL_DELAYS);
+  const codexLinkRef = useRef<HTMLAnchorElement>(null);
+
+  // Keyboard focus goes to the main action as soon as it appears.
+  useEffect(() => {
+    if (stage >= 2) codexLinkRef.current?.focus();
+  }, [stage]);
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center overflow-y-auto bg-black p-6">
-      <div className="flex w-full max-w-xl flex-col items-center gap-6 text-center">
-        <Award className="size-14 text-amber-300" aria-hidden />
-        <div className="flex flex-col gap-2">
-          <p className="text-sm font-semibold tracking-widest text-amber-300 uppercase">
-            Hoàn thành Chương 1
-          </p>
-          <h1 className="text-3xl font-black tracking-tight text-amber-50 sm:text-4xl">
-            Kim Đồng – Người liên lạc nhỏ
-          </h1>
-          <p className="text-amber-100/80">
-            Nhờ sự hy sinh dũng cảm của anh, cán bộ đã kịp rút lui an toàn.
-          </p>
-        </div>
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-10 overflow-y-auto bg-black px-5 py-10 text-center">
+      <p
+        className={cn(
+          "max-w-3xl font-serif text-3xl leading-snug text-balance text-amber-100 transition-opacity duration-[2000ms] text-glow sm:text-5xl",
+          stage >= 1 ? "opacity-100" : "opacity-0",
+        )}
+      >
+        Nhiệm vụ hoàn tất... nhưng cái giá phải trả là quá đắt.
+      </p>
 
+      <div
+        inert={stage < 2}
+        className={cn(
+          "flex w-full max-w-xl flex-col items-center gap-6 transition-opacity duration-1000",
+          stage >= 2 ? "opacity-100" : "invisible opacity-0",
+        )}
+      >
         {outcome ? (
-          <div className="grid w-full grid-cols-3 gap-3">
-            <Stat label="Mật thư thu thập" value={`${outcome.lettersCollected}/${total}`} />
+          <div className="grid w-full grid-cols-3 gap-2 sm:gap-3">
+            <Stat label="Mật thư" value={`${outcome.lettersCollected}/${total}`} />
             <Stat label="Giây kéo chân địch" value={outcome.survivedSeconds.toFixed(1)} />
             <Stat label="Lần trúng đạn" value={String(outcome.hits)} />
           </div>
         ) : null}
 
-        <p className="rounded-lg border border-emerald-400/30 bg-emerald-950/40 px-4 py-2 text-sm text-emerald-200">
-          Đã mở khóa Chương 1 và hồ sơ lịch sử “Tưởng niệm Anh hùng Kim Đồng”.
-        </p>
+        <Link
+          ref={codexLinkRef}
+          href={CODEX_HREF}
+          className={buttonStyles({ size: "lg", className: "w-full sm:w-auto" })}
+        >
+          <BookOpen className="size-5" aria-hidden /> Xem Hồ sơ Lịch sử
+        </Link>
 
-        <div className="flex flex-wrap items-center justify-center gap-3">
-          <Button onClick={onOpenCodex} autoFocus>
-            <BookOpen className="size-4" aria-hidden /> Xem hồ sơ lịch sử
-          </Button>
-          <Button variant="secondary" onClick={onReplay}>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <Button variant="secondary" size="sm" onClick={onReplay}>
             <RotateCcw className="size-4" aria-hidden /> Chơi lại
           </Button>
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 px-3 py-2 text-sm font-semibold text-amber-100/80 hover:text-white"
-          >
+          <Link href="/" className={buttonStyles({ variant: "ghost", size: "sm" })}>
             <House className="size-4" aria-hidden /> Về trang chủ
           </Link>
         </div>

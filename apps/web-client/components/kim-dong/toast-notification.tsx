@@ -34,10 +34,10 @@ function ToastCard({ toastKey, letterIndex }: { toastKey: number; letterIndex: n
       role="status"
       aria-live="polite"
       className={cn(
-        "w-[min(24rem,calc(100vw-2rem))] rounded-xl border p-4 shadow-2xl transition-all ease-out",
+        "w-[min(24rem,calc(100vw-1.5rem))] rounded-md border-2 p-4 shadow-2xl transition-all ease-out",
         letter.urgent
-          ? "border-red-400/70 bg-red-950/95 text-red-50"
-          : "border-amber-200/40 bg-stone-900/95 text-amber-50",
+          ? "border-red-500/80 bg-red-950/95 text-red-50"
+          : "border-amber-600/70 bg-stone-900/95 text-amber-50",
         phase === "entering" && "translate-x-[120%] opacity-0",
         phase === "shown" && "translate-x-0 opacity-100",
         phase === "leaving" && "translate-x-4 opacity-0",
@@ -46,7 +46,7 @@ function ToastCard({ toastKey, letterIndex }: { toastKey: number; letterIndex: n
     >
       <p
         className={cn(
-          "mb-2 flex items-center gap-2 text-sm font-bold",
+          "mb-2 flex items-center gap-2 font-serif text-base font-bold",
           letter.urgent ? "text-red-300" : "text-amber-300",
         )}
       >
@@ -57,7 +57,7 @@ function ToastCard({ toastKey, letterIndex }: { toastKey: number; letterIndex: n
         )}
         Mật thư {letterIndex + 1}/{LETTERS.length} · {letter.title}
       </p>
-      <p className="text-base leading-relaxed font-medium italic">“{letter.quote}”</p>
+      <p className="font-serif text-lg leading-relaxed italic">“{letter.quote}”</p>
       {letter.fact ? (
         <p className="mt-3 flex gap-2 border-t border-white/10 pt-3 text-sm text-amber-100/80">
           <Lightbulb className="mt-0.5 size-4 shrink-0 text-amber-300" aria-hidden />
@@ -75,7 +75,7 @@ export function ToastNotification() {
   const toast = useKimDongUiStore((state) => state.toast);
 
   return (
-    <div className="pointer-events-none absolute top-20 right-4 flex justify-end overflow-hidden">
+    <div className="pointer-events-none absolute top-40 right-3 flex justify-end overflow-hidden sm:top-20 sm:right-4">
       {toast ? (
         <ToastCard key={toast.key} toastKey={toast.key} letterIndex={toast.letterIndex} />
       ) : null}

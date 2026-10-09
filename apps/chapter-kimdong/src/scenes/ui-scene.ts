@@ -82,7 +82,8 @@ export class UiScene extends Phaser.Scene {
 
   private layout(): void {
     const { width, height } = this.scale;
-    this.banner.setPosition(width / 2, height * 0.16);
+    // Below the web HUD, which fills the top ~160px on a phone held upright.
+    this.banner.setPosition(width / 2, Math.max(height * 0.3, 130));
     this.banner.setWordWrapWidth(Math.max(200, width * 0.8));
     this.rhythm?.layout(width, height);
     this.climax?.layout(width, height);

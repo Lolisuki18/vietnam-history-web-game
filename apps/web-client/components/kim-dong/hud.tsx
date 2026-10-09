@@ -7,13 +7,45 @@ import { PHASE_CONTROLS, PHASE_CONTROLS_TOUCH, PHASE_OBJECTIVES } from "@/data/k
 import { useCoarsePointer } from "@/lib/use-coarse-pointer";
 import { useKimDongUiStore } from "@/stores/kimdong-ui-store";
 
-function alertColor(value: number): string {
-  if (value >= 70) return "bg-red-600";
-  if (value >= 35) return "bg-amber-500";
-  return "bg-emerald-500";
+/** Dark outline so amber lettering stays readable on top of the forest. */
+const TEXT_OUTLINE = "[text-shadow:0_2px_3px_rgb(0_0_0/0.95),0_0_10px_rgb(0_0_0/0.8)]";
+
+/** The alert meter track: yellow → orange → blazing red; the fill only reveals more of it. */
+function AlertBar({ value }: { value: number }) {
+  const danger = value >= 90;
+  return (
+    <div
+      className={cn(
+        "w-40 rounded-md border-2 bg-stone-950/85 px-2.5 py-1.5 shadow-lg shadow-black/50 sm:w-56",
+        danger ? "animate-pulse border-red-500 shadow-red-700/50" : "border-amber-700/80",
+      )}
+    >
+      <div className="mb-1 flex items-baseline justify-between font-serif text-xs font-bold tracking-wider text-amber-400 uppercase sm:text-sm">
+        <span>Báo động</span>
+        <span className={cn("tabular-nums", danger && "text-red-400")}>{Math.round(value)}%</span>
+      </div>
+      <div
+        role="progressbar"
+        aria-label="Thanh báo động"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(value)}
+        className="relative h-3.5 overflow-hidden rounded-sm border border-black bg-stone-800"
+      >
+        <div
+          className="absolute inset-0 bg-gradient-to-r from-yellow-300 via-orange-500 to-red-600 transition-[clip-path] duration-200"
+          style={{ clipPath: `inset(0 ${100 - value}% 0 0)` }}
+        />
+      </div>
+    </div>
+  );
 }
 
-/** In-game HUD: letter counter, alert meter, objective and control hints. */
+/**
+ * In-game HUD: letter counter, alert meter, objective and control hints. It keeps the bottom
+ * corners free (the virtual joystick and the action button live there on phones): the control
+ * hint sits at the top on touch devices and narrow screens.
+ */
 export function Hud() {
   const collected = useKimDongUiStore((state) => state.collected);
   const total = useKimDongUiStore((state) => state.total);
@@ -24,59 +56,43 @@ export function Hud() {
   // The alert meter only matters while sneaking; the finale has its own rules.
   const showAlert = phase !== "climax" && phase !== "runner" && phase !== "ending";
 
+  const hintClass =
+    "w-fit max-w-full self-center rounded-md border border-amber-900/50 bg-stone-950/75 px-3 py-1.5 text-center font-serif text-xs text-amber-100/90 sm:text-sm";
+
   return (
-    <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-4 select-none">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-center gap-2 rounded-lg border border-amber-200/30 bg-stone-900/80 px-4 py-2 text-amber-100 shadow-lg">
-          <Mail className="size-5 text-amber-300" aria-hidden />
-          <span className="text-lg font-semibold">
-            Mật thư: {collected}/{total}
-          </span>
-        </div>
-
-        {phase ? (
-          <p className="hidden max-w-md rounded-lg bg-stone-900/70 px-4 py-2 text-center text-sm font-medium text-amber-50 sm:block">
-            {PHASE_OBJECTIVES[phase]}
-          </p>
-        ) : null}
-
-        <div
-          className={cn(
-            "w-44 rounded-lg border border-amber-200/30 bg-stone-900/80 px-3 py-2 shadow-lg transition-opacity duration-500 sm:w-56",
-            !showAlert && "invisible opacity-0",
-          )}
-        >
-          <div className="mb-1 flex justify-between text-xs font-semibold text-amber-100">
-            <span>Báo động</span>
-            <span>{Math.round(alert)}%</span>
+    <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 select-none sm:p-4">
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+          <div className="flex items-center gap-2 rounded-md border-2 border-amber-700/80 bg-stone-950/80 px-3 py-1.5 shadow-lg shadow-black/50">
+            <Mail className="size-5 text-amber-500" aria-hidden />
+            <span
+              className={cn("font-serif text-lg font-bold text-amber-500 sm:text-xl", TEXT_OUTLINE)}
+            >
+              Mật thư: {collected}/{total}
+            </span>
           </div>
+
+          {phase ? (
+            <p className="order-last w-full rounded-md bg-stone-950/70 px-3 py-1.5 text-center font-serif text-sm text-amber-50 sm:order-none sm:w-auto sm:max-w-md sm:px-4 sm:text-base">
+              {PHASE_OBJECTIVES[phase]}
+            </p>
+          ) : null}
+
           <div
-            role="progressbar"
-            aria-label="Thanh báo động"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={Math.round(alert)}
-            className="h-3 overflow-hidden rounded-full bg-stone-700"
+            className={cn("transition-opacity duration-500", !showAlert && "invisible opacity-0")}
           >
-            <div
-              className={cn(
-                "h-full rounded-full transition-[width] duration-200",
-                alertColor(alert),
-              )}
-              style={{ width: `${alert}%` }}
-            />
+            <AlertBar value={alert} />
           </div>
         </div>
+
+        {/* Top hint: touch devices and narrow screens (the bottom corners hold the controls). */}
+        {controls ? (
+          <p className={cn(hintClass, touch ? "block" : "md:hidden")}>{controls}</p>
+        ) : null}
       </div>
 
-      {/* On touch devices the hint sits above the virtual controls instead of overlapping them. */}
       {controls ? (
-        <p
-          className={cn(
-            "w-fit max-w-full rounded-lg bg-stone-900/70 px-3 py-2 text-xs text-amber-100/90",
-            touch && "self-center",
-          )}
-        >
+        <p className={cn(hintClass, "self-start", touch ? "hidden" : "hidden md:block")}>
           {controls}
         </p>
       ) : null}

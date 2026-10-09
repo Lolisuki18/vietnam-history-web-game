@@ -16,8 +16,9 @@ export class OxygenMeter {
 
   constructor(scene: Phaser.Scene) {
     this.background = scene.add
-      .rectangle(0, 0, BAR_WIDTH + 4, BAR_HEIGHT + 4, 0x0b1b2b, 0.85)
-      .setStrokeStyle(1, 0xffffff, 0.9)
+      .rectangle(0, 0, BAR_WIDTH + 6, BAR_HEIGHT + 6, 0x0c0a09, 0.92)
+      // Sharp amber frame, matching the HUD of the web layer.
+      .setStrokeStyle(2, 0xf59e0b, 1)
       .setDepth(30)
       .setVisible(false);
     this.fill = scene.add
@@ -47,7 +48,7 @@ export class OxygenMeter {
     this.background.setPosition(x, y + BAR_OFFSET_Y);
     this.fill.setPosition(x - BAR_WIDTH / 2, y + BAR_OFFSET_Y);
     this.fill.setSize(Math.max(0.001, BAR_WIDTH * this.value), BAR_HEIGHT);
-    this.fill.setFillStyle(this.value < 0.3 ? 0xff5252 : 0x4fc3f7);
+    this.fill.setFillStyle(this.value < 0.25 ? 0xef4444 : this.value < 0.5 ? 0xf59e0b : 0x4fc3f7);
   }
 
   reset(): void {

@@ -82,7 +82,7 @@ export function ChapterShell() {
       </FadeScreen>
 
       <FadeScreen show={screen === "result"} duration={900}>
-        <ResultScreen onReplay={handleReplay} onOpenCodex={openCodex} />
+        <ResultScreen onReplay={handleReplay} />
       </FadeScreen>
 
       <FadeScreen show={screen === "codex"}>

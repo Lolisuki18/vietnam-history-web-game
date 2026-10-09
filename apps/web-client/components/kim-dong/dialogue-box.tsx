@@ -51,51 +51,61 @@ export function DialogueBox({ onClose }: { onClose: (id: DialogueId) => void }) 
 
   return (
     <FadeScreen show={open}>
-      <div className="absolute inset-0 flex items-end justify-center bg-black/55 p-4 backdrop-blur-md sm:items-center">
+      <div className="absolute inset-0 flex items-end justify-center bg-black/60 p-3 backdrop-blur-sm sm:items-center sm:p-4">
         {line && script ? (
+          // A hand-written letter on aged paper: double red border, ink-dark serif text.
           <div
             role="dialog"
             aria-modal="true"
             aria-label="Hội thoại"
-            className="w-full max-w-2xl rounded-2xl border border-amber-200/30 bg-stone-900/95 p-6 shadow-2xl"
+            className="relative max-h-[88svh] w-full max-w-2xl overflow-y-auto rounded-md border-[3px] border-red-900 bg-gradient-to-b from-[#f4e4bb] to-[#e0c58a] p-1 shadow-2xl shadow-black/70"
           >
-            <div className="flex items-start gap-4">
-              <div
-                aria-hidden
-                className="flex size-14 shrink-0 items-center justify-center rounded-full border-2 border-amber-300 bg-red-800 text-lg font-black text-amber-50"
-              >
-                {initials(line.speaker)}
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-bold text-amber-300">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent_0_3px,rgba(120,80,20,0.05)_3px_4px)]"
+            />
+            <div className="relative rounded-sm border border-dashed border-red-900/60 p-4 text-stone-900 sm:p-7">
+              <div className="flex items-center gap-4">
+                <div
+                  aria-hidden
+                  className="flex size-14 shrink-0 items-center justify-center rounded-full border-2 border-red-950 bg-red-800 font-serif text-xl font-black text-amber-100 shadow-md shadow-black/40"
+                >
+                  {initials(line.speaker)}
+                </div>
+                <p className="font-serif text-lg font-bold text-red-900 sm:text-xl">
                   {line.speaker}
                   {line.role ? (
-                    <span className="font-medium text-amber-100/70"> ({line.role})</span>
+                    <span className="font-normal text-stone-700"> ({line.role})</span>
                   ) : null}
                 </p>
-                <p className="mt-2 text-lg leading-relaxed text-amber-50">{line.text}</p>
               </div>
-            </div>
 
-            {isLast && tips ? (
-              <div className="mt-5 rounded-lg bg-black/30 p-4">
-                <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-amber-300">
-                  <Lightbulb className="size-4" aria-hidden /> Cách chơi
-                </p>
-                <ul className="list-disc space-y-1 pl-5 text-sm text-amber-100/90">
-                  {tips.map((tip) => (
-                    <li key={tip}>{tip}</li>
-                  ))}
-                </ul>
+              <p className="mt-4 font-serif text-xl leading-relaxed text-stone-900 sm:text-2xl">
+                {line.text}
+              </p>
+
+              {isLast && tips ? (
+                <div className="mt-5 rounded border border-amber-900/30 bg-amber-900/10 p-4">
+                  <p className="mb-2 flex items-center gap-2 font-serif text-base font-bold text-red-900">
+                    <Lightbulb className="size-4" aria-hidden /> Cách chơi
+                  </p>
+                  <ul className="list-disc space-y-1 pl-5 font-serif text-base text-stone-800">
+                    {tips.map((tip) => (
+                      <li key={tip}>{tip}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
+              <div className="mt-6 flex flex-col-reverse items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <span className="text-center text-xs text-stone-700 sm:text-left">
+                  Nhấn Space hoặc bấm nút để tiếp tục
+                </span>
+                <Button ref={buttonRef} size="lg" onClick={advance}>
+                  {isLast ? "Bắt đầu nhiệm vụ" : "Tiếp tục"}
+                  <ChevronRight className="size-4" aria-hidden />
+                </Button>
               </div>
-            ) : null}
-
-            <div className="mt-6 flex items-center justify-between gap-4">
-              <span className="text-xs text-amber-100/60">Nhấn Space hoặc bấm nút để tiếp tục</span>
-              <Button ref={buttonRef} onClick={advance}>
-                {isLast ? "Bắt đầu nhiệm vụ" : "Tiếp"}
-                <ChevronRight className="size-4" aria-hidden />
-              </Button>
             </div>
           </div>
         ) : null}

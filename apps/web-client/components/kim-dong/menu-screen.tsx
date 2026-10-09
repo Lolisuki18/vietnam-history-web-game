@@ -19,10 +19,10 @@ export function MenuScreen({ onStart, onOpenCodex }: MenuScreenProps) {
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-black/60 p-6 backdrop-blur-sm">
       <div className="flex w-full max-w-xl flex-col items-center gap-6 text-center">
-        <span className="text-sm font-semibold tracking-widest text-amber-300 uppercase">
+        <span className="font-serif text-sm font-semibold tracking-[0.25em] text-red-500 uppercase">
           Chương 1 · Cao Bằng, 1943
         </span>
-        <h1 className="text-4xl font-black tracking-tight text-amber-50 sm:text-5xl">
+        <h1 className="font-serif text-4xl font-black tracking-tight text-amber-500 text-glow sm:text-5xl">
           Kim Đồng – Người liên lạc nhỏ
         </h1>
         <p className="max-w-md text-base text-amber-100/80">
