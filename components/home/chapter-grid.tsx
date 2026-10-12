@@ -45,6 +45,9 @@ function ComingSoonChapter({ chapter }: { chapter: ChapterInfo }) {
       period={chapter.period}
       description={chapter.description}
       status="coming-soon"
+      difficulty={chapter.difficulty}
+      estimatedTime={chapter.estimatedTime}
+      tag={chapter.tag}
       LinkComponent={Link}
     />
   );
@@ -66,12 +69,15 @@ function PlayableChapter({ chapter, chapterId }: { chapter: ChapterInfo; chapter
       status={hydrated && completed ? "completed" : "unlocked"}
       cover={CHAPTER_VIEWS[chapterId].cover}
       playHref={chapter.href}
+      difficulty={chapter.difficulty}
+      estimatedTime={chapter.estimatedTime}
+      tag={chapter.tag}
       LinkComponent={Link}
       extra={
         hydrated && isCodexUnlocked && chapter.codexHref ? (
           <Link
             href={chapter.codexHref}
-            className="inline-flex w-fit items-center gap-2 text-sm font-semibold text-amber-500 hover:text-amber-300 hover:underline"
+            className="inline-flex w-fit items-center gap-2 text-sm font-semibold text-amber-400 hover:text-amber-200 hover:underline"
           >
             <BookOpen className="size-4" aria-hidden /> Xem hồ sơ lịch sử
           </Link>

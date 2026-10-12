@@ -1,11 +1,12 @@
 "use client";
 
 import { cn } from "@/components/ui";
-import { Lightbulb, Mail, TriangleAlert } from "lucide-react";
+import { Flame, Lightbulb, Mail } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { LETTERS, TOAST_DURATION_MS } from "@/features/kimdong/data/story";
 import { useKimDongUiStore } from "@/features/kimdong/store/ui-store";
+import { ambientSound } from "@/lib/audio/ambient-sound";
 
 const ENTER_DELAY_MS = 30;
 const FADE_MS = 500;
@@ -16,9 +17,10 @@ function ToastCard({ toastKey, letterIndex }: { toastKey: number; letterIndex: n
   const [phase, setPhase] = useState<ToastPhase>("entering");
   const letter = LETTERS[letterIndex];
 
-  // One timeline per toast: slide in, stay, fade out, then remove it from the store.
-  // A newer toast gets a new key, which remounts this component and restarts the timeline.
+  // Play a soft chime and start timeline
   useEffect(() => {
+    ambientSound.playChime();
+
     const timers = [
       window.setTimeout(() => setPhase("shown"), ENTER_DELAY_MS),
       window.setTimeout(() => setPhase("leaving"), TOAST_DURATION_MS - FADE_MS),
@@ -34,48 +36,57 @@ function ToastCard({ toastKey, letterIndex }: { toastKey: number; letterIndex: n
       role="status"
       aria-live="polite"
       className={cn(
-        "w-[min(24rem,calc(100vw-1.5rem))] rounded-md border-2 p-4 shadow-2xl transition-all ease-out",
+        "w-[min(26rem,calc(100vw-1.5rem))] rounded-xl border-2 p-4.5 shadow-2xl backdrop-blur-md transition-all ease-out",
         letter.urgent
-          ? "border-red-500/80 bg-red-950/95 text-red-50"
-          : "border-amber-600/70 bg-stone-900/95 text-amber-50",
+          ? "border-red-500 bg-red-950/95 text-red-50 shadow-red-950/80"
+          : "border-amber-500/80 bg-stone-950/95 text-amber-50 shadow-black/80",
         phase === "entering" && "translate-x-[120%] opacity-0",
         phase === "shown" && "translate-x-0 opacity-100",
         phase === "leaving" && "translate-x-4 opacity-0",
       )}
       style={{ transitionDuration: `${phase === "leaving" ? FADE_MS : 400}ms` }}
     >
-      <p
-        className={cn(
-          "mb-2 flex items-center gap-2 font-serif text-base font-bold",
-          letter.urgent ? "text-red-300" : "text-amber-300",
-        )}
-      >
-        {letter.urgent ? (
-          <TriangleAlert className="size-4" aria-hidden />
-        ) : (
-          <Mail className="size-4" aria-hidden />
-        )}
-        Mật thư {letterIndex + 1}/{LETTERS.length} · {letter.title}
-      </p>
-      <p className="font-serif text-lg leading-relaxed italic">“{letter.quote}”</p>
-      {letter.fact ? (
-        <p className="mt-3 flex gap-2 border-t border-white/10 pt-3 text-sm text-amber-100/80">
-          <Lightbulb className="mt-0.5 size-4 shrink-0 text-amber-300" aria-hidden />
-          <span>
-            <strong className="font-semibold">Bạn có biết:</strong> {letter.fact}
-          </span>
+      <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-2">
+        <p
+          className={cn(
+            "flex items-center gap-2 font-serif text-sm font-bold tracking-wider uppercase",
+            letter.urgent ? "text-red-300" : "text-amber-300",
+          )}
+        >
+          {letter.urgent ? (
+            <Flame className="size-4 animate-pulse text-red-400" aria-hidden />
+          ) : (
+            <Mail className="size-4 text-amber-400" aria-hidden />
+          )}
+          Mật thư {letterIndex + 1}/{LETTERS.length} · {letter.title}
         </p>
+        <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-300">
+          Thu thập thành công
+        </span>
+      </div>
+
+      <p className="mt-2.5 font-serif text-lg leading-relaxed text-amber-100 italic">
+        “{letter.quote}”
+      </p>
+
+      {letter.fact ? (
+        <div className="mt-3 flex gap-2 rounded-lg border border-amber-900/40 bg-stone-900/60 p-2.5 text-xs text-amber-100/90">
+          <Lightbulb className="mt-0.5 size-3.5 shrink-0 text-amber-300" aria-hidden />
+          <span>
+            <strong className="font-semibold text-amber-300">Bạn có biết:</strong> {letter.fact}
+          </span>
+        </div>
       ) : null}
     </div>
   );
 }
 
-/** Letter contents slide in from the right, then fade out after 5 seconds. */
+/** Letter contents slide in from the right with chime sound, then fade out after 5 seconds. */
 export function ToastNotification() {
   const toast = useKimDongUiStore((state) => state.toast);
 
   return (
-    <div className="pointer-events-none absolute top-40 right-3 flex justify-end overflow-hidden sm:top-20 sm:right-4">
+    <div className="pointer-events-none absolute top-36 right-3 z-40 flex justify-end overflow-hidden sm:top-20 sm:right-4">
       {toast ? (
         <ToastCard key={toast.key} toastKey={toast.key} letterIndex={toast.letterIndex} />
       ) : null}

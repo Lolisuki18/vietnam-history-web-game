@@ -21,8 +21,9 @@ export function CodexShelf() {
             key={chapter.chapterLabel}
             unlocked={false}
             name={chapter.character}
+            role={chapter.title}
             summary=""
-            lockedHint="Hồ sơ này sẽ mở khi chương mới ra mắt."
+            lockedHint="Hồ sơ lịch sử này sẽ được giải mật khi chương mới ra mắt."
           />
         ),
       )}
@@ -49,9 +50,13 @@ function PlayableCodexCard({ chapter, chapterId }: { chapter: ChapterInfo; chapt
         unlocked && chapter.codexHref ? (
           <Link
             href={chapter.codexHref}
-            className={buttonStyles({ variant: "secondary", className: "w-full" })}
+            className={buttonStyles({
+              variant: "secondary",
+              className:
+                "w-full border-amber-600/60 font-semibold text-amber-300 hover:border-amber-400 hover:text-stone-950",
+            })}
           >
-            Xem hồ sơ
+            Mở xem toàn văn hồ sơ
           </Link>
         ) : undefined
       }
