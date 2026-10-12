@@ -1,7 +1,0 @@
-{
-  "extends": "@vhg/config/tsconfig/base.json",
-  "compilerOptions": {
-    "lib": ["DOM", "ES2023"]
-  },
-  "include": ["src"]
-}
