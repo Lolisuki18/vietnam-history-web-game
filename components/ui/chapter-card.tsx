@@ -2,6 +2,7 @@ import type { ComponentType, ReactNode } from "react";
 
 import { buttonStyles } from "./button";
 import { cn } from "./cn";
+import { SvgIcon } from "./svg-icon";
 
 export type ChapterStatus = "unlocked" | "completed" | "coming-soon";
 
@@ -28,22 +29,18 @@ function DefaultLink({
   );
 }
 
-const STATUS_LABEL: Record<ChapterStatus, string> = {
+const STATUS_LABEL: Record<Exclude<ChapterStatus, "coming-soon">, string> = {
   unlocked: "Chơi được",
   completed: "Đã hoàn thành",
-  "coming-soon": "Sắp ra mắt",
 };
 
-function StatusBadge({ status }: { status: ChapterStatus }) {
+/** The status as an ink stamp on the cover. (A chapter that is not open gets a seal instead.) */
+function StatusStamp({ status }: { status: Exclude<ChapterStatus, "coming-soon"> }) {
   return (
     <span
       className={cn(
-        "rounded-md px-2 py-1 text-xs font-semibold",
-        status === "completed"
-          ? "bg-emerald-950/90 text-emerald-300"
-          : status === "unlocked"
-            ? "bg-stone-950/85 text-amber-300"
-            : "bg-stone-950/85 text-stone-400",
+        "stamp rotate-3 bg-stone-950/80 px-2 py-0.5 text-xs",
+        status === "completed" ? "text-emerald-400" : "text-red-400",
       )}
     >
       {STATUS_LABEL[status]}
@@ -55,6 +52,13 @@ function StatusBadge({ status }: { status: ChapterStatus }) {
 function DefaultCover() {
   return <div aria-hidden className="size-full bg-stone-800" />;
 }
+
+/** Where the wear marks (ink blot, scratches) sit, so neighbouring cards do not look alike. */
+const WEAR_PLACEMENT = [
+  "right-0 bottom-0",
+  "top-0 right-0 [transform:scaleY(-1)]",
+  "bottom-0 left-0 [transform:scaleX(-1)]",
+] as const;
 
 export interface ChapterCardProps {
   /** e.g. "Chương 1". */
@@ -84,10 +88,15 @@ export interface ChapterCardProps {
   estimatedTime?: string;
   /** Historical era/tag. */
   tag?: string;
+  /** Picks where the wear marks go (0, 1, 2…), so that each card is worn differently. */
+  wear?: number;
   className?: string;
 }
 
-/** A chapter of the game: cover, figure, status and the "Chơi ngay" button. */
+/**
+ * A chapter of the game, pinned up like a file card: pin, paper label, ink stamp for the status
+ * and a seal over chapters that are not open yet.
+ */
 export function ChapterCard({
   chapterLabel,
   character,
@@ -104,6 +113,7 @@ export function ChapterCard({
   difficulty,
   estimatedTime,
   tag,
+  wear = 0,
   className,
 }: ChapterCardProps) {
   const comingSoon = status === "coming-soon";
@@ -111,12 +121,18 @@ export function ChapterCard({
   return (
     <article
       className={cn(
-        "group relative flex flex-col overflow-hidden rounded-xl border bg-stone-900 transition-colors",
-        comingSoon ? "border-stone-800" : "border-amber-800/60 hover:border-amber-600",
+        "group relative flex flex-col rounded-sm border-2 bg-stone-900",
+        comingSoon ? "border-stone-700" : "border-amber-800/70 hover:border-amber-600",
         className,
       )}
     >
-      {/* Top Banner Cover Area */}
+      {/* The pin holding the card to the wall. */}
+      <SvgIcon
+        name="pin"
+        size={22}
+        className="absolute -top-2.5 left-1/2 z-20 -translate-x-1/2 text-red-700"
+      />
+
       <div className="relative aspect-[16/10] overflow-hidden bg-stone-950">
         <div className={cn("size-full", comingSoon && "opacity-50 grayscale")}>
           {coverSrc ? (
@@ -127,17 +143,36 @@ export function ChapterCard({
           )}
         </div>
 
-        {/* Badges on cover */}
-        <span className="absolute top-3 left-3 rounded-md bg-red-800 px-2 py-1 text-xs font-semibold text-amber-50">
+        <span className="absolute top-4 left-3 label-tape px-3 py-1 text-xs font-bold">
           {chapterLabel}
         </span>
-        <span className="absolute top-3 right-3">
-          <StatusBadge status={status} />
-        </span>
+
+        {comingSoon ? (
+          // A seal stamped across the file: still closed.
+          <span
+            aria-label="Niêm phong, sắp ra mắt"
+            className="absolute top-1/2 left-1/2 stamp -translate-x-1/2 -translate-y-1/2 -rotate-12 bg-stone-950/75 px-4 py-2 text-xl leading-tight text-red-500 sm:text-2xl"
+          >
+            Niêm phong
+            <span className="block text-xs tracking-widest">Sắp ra mắt</span>
+          </span>
+        ) : (
+          <span className="absolute top-4 right-3">
+            <StatusStamp status={status} />
+          </span>
+        )}
       </div>
 
-      {/* Content Area */}
-      <div className="flex flex-1 flex-col gap-3 p-5">
+      {/* Old ink blot and scratches, in a different corner on each card. */}
+      <span
+        aria-hidden
+        className={cn(
+          "pointer-events-none absolute size-28 bg-[url('/textures/card-wear.svg')] bg-contain bg-no-repeat opacity-80",
+          WEAR_PLACEMENT[wear % WEAR_PLACEMENT.length],
+        )}
+      />
+
+      <div className="relative flex flex-1 flex-col gap-3 p-5">
         {(period || tag) && (
           <p className="text-sm text-stone-400">
             {period ? <span className="text-amber-400">{period}</span> : null}
@@ -146,7 +181,6 @@ export function ChapterCard({
           </p>
         )}
 
-        {/* Character and Chapter Title */}
         <div>
           <h3
             className={cn(
@@ -159,7 +193,6 @@ export function ChapterCard({
           <p className="mt-0.5 text-stone-400">{title}</p>
         </div>
 
-        {/* Description */}
         <p className="text-sm leading-relaxed text-stone-300/90">{description}</p>
 
         {(difficulty || estimatedTime) && (
@@ -172,7 +205,6 @@ export function ChapterCard({
 
         {extra}
 
-        {/* Bottom CTA Action Button */}
         <div className="mt-auto pt-2">
           {comingSoon || !playHref ? (
             <span
@@ -180,18 +212,13 @@ export function ChapterCard({
               className={buttonStyles({
                 variant: "secondary",
                 className:
-                  "w-full cursor-not-allowed border-stone-800 bg-stone-950/50 text-stone-500 hover:border-stone-800 hover:bg-stone-950/50 hover:text-stone-500",
+                  "w-full cursor-not-allowed border-stone-700 bg-stone-950/50 text-stone-500 hover:bg-stone-950/50 hover:text-stone-500",
               })}
             >
-              Sắp ra mắt
+              Chưa mở
             </span>
           ) : (
-            <Anchor
-              href={playHref}
-              className={buttonStyles({
-                className: "w-full",
-              })}
-            >
+            <Anchor href={playHref} className={buttonStyles({ className: "w-full" })}>
               Chơi ngay
             </Anchor>
           )}

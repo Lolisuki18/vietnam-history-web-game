@@ -27,6 +27,59 @@
   background-size: 600px 600px;
 }
 
+/*
+ * Hand-made marks. They are flat on purpose (no shadow, no glow): the "worn" look comes from
+ * masks that are separate files in public/textures/. A mask also clips outlines, so interactive
+ * elements show focus with a colour change instead (see components/ui/button.tsx).
+ */
+
+/* A strip of paper stuck on: cut by hand, a little crooked. */
+@utility label-tape {
+  background-color: #d8c79a;
+  color: #2a2013;
+  rotate: -2deg;
+  clip-path: polygon(
+    0 10%,
+    6% 0,
+    38% 7%,
+    72% 0,
+    100% 6%,
+    98% 52%,
+    100% 94%,
+    64% 100%,
+    30% 93%,
+    4% 100%,
+    1% 50%
+  );
+}
+
+/* A rubber stamp: ink-coloured lettering in a double frame, worn away by a mask. The colour
+   is the text colour; rotate and size it where it is used. */
+@utility stamp {
+  display: inline-block;
+  border: 2px double currentColor;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: center;
+  mask-image: url("/textures/ink-worn.svg");
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  -webkit-mask-image: url("/textures/ink-worn.svg");
+  -webkit-mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+}
+
+/* A hand-cut edge instead of a perfect rounded rectangle (used by buttons). */
+@utility rough-edge {
+  mask-image: url("/textures/rough-edge.svg");
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  -webkit-mask-image: url("/textures/rough-edge.svg");
+  -webkit-mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+}
+
 /* Fade a whole page in. Opacity only: a transform on an ancestor would break `position: fixed`. */
 @keyframes page-in {
   from {

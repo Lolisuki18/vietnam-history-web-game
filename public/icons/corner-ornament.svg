@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="#000" stroke-linecap="round">
+  <!-- Corner ornament for the top-left corner; rotate it for the other corners. Single colour. -->
+  <path d="M4 60 V10 Q4 4 10 4 H60" stroke-width="2.5" />
+  <path d="M11 60 V17 Q11 11 17 11 H60" stroke-width="1" />
+  <path d="M22 22 m0 0 q0 -8 8 -8 q10 0 10 10 q0 12 -12 12 q-14 0 -14 -14" stroke-width="1.6" />
+  <circle cx="30" cy="24" r="1.8" fill="#000" stroke="none" />
+</svg>

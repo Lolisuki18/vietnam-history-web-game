@@ -9,6 +9,10 @@ import { cn } from "./cn";
  */
 export const SVG_ICONS = {
   "dong-son-drum": "/icons/dong-son-drum.svg",
+  /** A drawing pin, seen from above. */
+  pin: "/icons/pin.svg",
+  /** Faint old pattern for the top-left corner of a card; rotate it for the other corners. */
+  "corner-ornament": "/icons/corner-ornament.svg",
 } as const;
 
 export type SvgIconName = keyof typeof SVG_ICONS;
