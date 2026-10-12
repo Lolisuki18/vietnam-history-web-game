@@ -5,11 +5,12 @@ import { ArrowLeft, BookOpen, Loader2, Play } from "lucide-react";
 import Link from "next/link";
 
 import { useKimDongUiStore } from "@/features/kimdong/store/ui-store";
+import { KIMDONG_ID } from "@/features/kimdong/types";
 import { useProgressStore } from "@/stores/progress-store";
 
 export function MenuScreen({ onStart }: { onStart: () => void }) {
   const ready = useKimDongUiStore((state) => state.ready);
-  const codexUnlocked = useProgressStore((state) => state.codexUnlocked.includes("kim-dong"));
+  const codexUnlocked = useProgressStore((state) => state.codexUnlocked.includes(KIMDONG_ID));
 
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-black/60 p-6 backdrop-blur-sm">

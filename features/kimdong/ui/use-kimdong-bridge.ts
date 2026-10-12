@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { chapterEvents } from "@/features/kimdong/game/host-bridge";
 import { hostEvents } from "@/features/kimdong/game/events";
 import { useKimDongUiStore } from "@/features/kimdong/store/ui-store";
-import type { ChapterMessage, HostMessage } from "@/lib/engine";
+import { KIMDONG_ID, type ChapterMessage, type HostMessage } from "../types";
 import { useProgressStore } from "@/stores/progress-store";
 
 /** Route a message from the game into the Zustand stores. */
@@ -33,7 +33,7 @@ function applyChapterMessage(message: ChapterMessage): void {
       break;
     case "chapter:complete":
       ui.finish(message.outcome);
-      useProgressStore.getState().completeChapter("kim-dong", message.outcome);
+      useProgressStore.getState().completeChapter(KIMDONG_ID, message.outcome);
       break;
   }
 }

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui";
 import { ChevronRight, Lightbulb } from "lucide-react";
 import { useEffect, useRef } from "react";
 
-import type { DialogueId } from "@/lib/engine";
+import type { DialogueId } from "../types";
 
 import { DIALOGUES } from "@/features/kimdong/data/story";
 import { useCoarsePointer } from "@/lib/use-coarse-pointer";

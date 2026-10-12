@@ -2,18 +2,21 @@
 
 import { useEffect } from "react";
 
+import { GameCanvas } from "@/components/game/game-canvas";
 import { hostEvents } from "@/features/kimdong/game/events";
 import { useKimDongUiStore } from "@/features/kimdong/store/ui-store";
-import type { DialogueId } from "@/lib/engine";
+import type { DialogueId } from "@/features/kimdong/types";
 
 import { DialogueBox } from "./dialogue-box";
 import { FadeScreen } from "./fade-screen";
-import { GameCanvas } from "./game-canvas";
 import { Hud } from "./hud";
 import { MenuScreen } from "./menu-screen";
 import { ResultScreen } from "./result-screen";
 import { ToastNotification } from "./toast-notification";
 import { sendToGame, useKimDongBridge } from "./use-kimdong-bridge";
+
+/** Loaded on demand: Phaser and the whole game stay out of every other page's bundle. */
+const loadGame = () => import("@/features/kimdong/game/main").then((module) => module.createGame);
 
 /**
  * Full-viewport shell: the Phaser game (canvas) is the background and React screens are
@@ -58,7 +61,7 @@ export function ChapterShell() {
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-[#14231a]">
-      <GameCanvas />
+      <GameCanvas load={loadGame} label="Trò chơi Kim Đồng" />
 
       <FadeScreen show={screen === "playing"} className="pointer-events-none">
         <Hud />

@@ -5,6 +5,7 @@ import { ArrowLeft, Lock } from "lucide-react";
 import Link from "next/link";
 
 import { CODEX } from "@/features/kimdong/data/story";
+import { KIMDONG_ID } from "@/features/kimdong/types";
 import { selectIsCodexUnlocked, useProgressStore } from "@/stores/progress-store";
 import { useProgressHydrated } from "@/stores/use-progress-hydrated";
 
@@ -17,7 +18,7 @@ import { KimDongArt } from "./codex-illustration";
  */
 export function CodexPageView() {
   const hydrated = useProgressHydrated();
-  const isCodexUnlocked = useProgressStore(selectIsCodexUnlocked("kim-dong"));
+  const isCodexUnlocked = useProgressStore(selectIsCodexUnlocked(KIMDONG_ID));
 
   return (
     <main className="min-h-svh bg-stone-900">
