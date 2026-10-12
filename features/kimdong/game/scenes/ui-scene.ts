@@ -55,6 +55,10 @@ export class UiScene extends Phaser.Scene {
       gameEvents.on("rhythm:start", () => this.startRhythm()),
       gameEvents.on("climax:start", () => this.startClimax()),
       gameEvents.on("reset", () => this.clearOverlays()),
+      gameEvents.on("resumed", (frozenMs) => {
+        this.rhythm?.shift(frozenMs);
+        this.climax?.shift(frozenMs);
+      }),
       gameEvents.on("controls:active", (active) => this.touchControls.setActive(active)),
     );
 

@@ -127,6 +127,12 @@ export class RhythmGame {
     this.offTouchAction = gameEvents.on("touch:action", this.onTouchAction);
   }
 
+  /** The game was frozen for `ms`: move every note so the pause does not count as missed. */
+  shift(ms: number): void {
+    for (const note of this.notes) note.time += ms;
+    this.finishAt += ms;
+  }
+
   layout(width: number, height: number): void {
     this.dim.setPosition(width / 2, height / 2).setSize(width, height);
     const fit = Math.min(1, height / (LANE.height + 200));

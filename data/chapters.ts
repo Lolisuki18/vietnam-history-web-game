@@ -58,3 +58,6 @@ export const CHAPTERS: readonly ChapterInfo[] = [
     tag: "Kháng chiến chống Pháp",
   },
 ];
+
+/** Route of the first chapter that can be played (the "Chơi ngay" / hero buttons go there). */
+export const FIRST_PLAYABLE_HREF = CHAPTERS.find((chapter) => chapter.href)?.href ?? "/";

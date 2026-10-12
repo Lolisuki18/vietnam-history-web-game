@@ -9,6 +9,8 @@ export const hostEvents = new TypedEmitter<{
   "dialogue-closed": DialogueId;
   /** Whether Phaser may read (and swallow) the keyboard; off while React dialogs have focus. */
   keyboard: boolean;
+  /** The pause menu is open (true) / closed (false): freeze or continue the whole game. */
+  pause: boolean;
 }>();
 
 /** Events between Phaser scenes (gameplay scenes ⇄ UiScene). */
@@ -27,6 +29,8 @@ export const gameEvents = new TypedEmitter<{
   "climax:result": { acted: boolean };
   /** The on-screen action button was pressed (replaces Space / left click). */
   "touch:action": undefined;
+  /** The game continued after a pause; payload = how long it was frozen (ms). */
+  resumed: number;
   /** Gameplay scenes tell UiScene whether the virtual controls should be shown right now. */
   "controls:active": boolean;
 }>();

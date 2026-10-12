@@ -77,6 +77,11 @@ export class ClimaxPrompt {
     this.offTouchAction = gameEvents.on("touch:action", () => this.finish(true));
   }
 
+  /** The game was frozen for `ms`: move the deadline so the pause does not eat the countdown. */
+  shift(ms: number): void {
+    this.deadline += ms;
+  }
+
   layout(width: number, height: number): void {
     this.tint.setPosition(width / 2, height / 2).setSize(width, height);
     this.title.setPosition(width / 2, height * 0.26);
