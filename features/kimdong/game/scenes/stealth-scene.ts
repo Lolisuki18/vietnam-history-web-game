@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 
-import { createChapterProgress, segmentIntersectsRect, type DialogueId } from "@vhg/engine";
+import { createChapterProgress, segmentIntersectsRect, type DialogueId } from "@/lib/engine";
 
 import { GameAudio } from "../audio";
 import { ALERT, CLIMAX, PEBBLE, PLAYER } from "../config";
@@ -487,10 +487,6 @@ export class StealthScene extends Phaser.Scene {
       gameEvents.on("rhythm:done", ({ misses }) => this.onRhythmDone(misses)),
       gameEvents.on("climax:result", ({ acted }) => this.onClimaxResult(acted)),
       gameEvents.on("touch:action", () => this.throwForward()),
-      // The host may have attached its listener after our first `chapter:ready`.
-      hostEvents.on("hello", () => {
-        if (this.state === "waiting") sendToHost({ type: "chapter:ready" });
-      }),
     );
   }
 
@@ -502,7 +498,7 @@ export class StealthScene extends Phaser.Scene {
    *   `letter` collects the next letter, `climax` starts the ambush, `runner` jumps to the runner.
    */
   private setupDebug(): void {
-    if (!import.meta.env.DEV) return;
+    if (process.env.NODE_ENV === "production") return;
 
     const win = (): void => {
       if (this.state === "finished") return;
