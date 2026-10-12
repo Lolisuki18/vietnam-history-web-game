@@ -1,8 +1,8 @@
 import { gameEvents } from "./events";
 
 /**
- * Dev-only cheats reachable from the browser console (`window.debugGoto(...)`) and from the host
- * page through `vhg-debug` messages. The window hooks are installed once; gameplay scenes plug
+ * Dev-only cheats reachable from the browser console (`window.debugGoto(...)`). The window hooks
+ * are installed with the game; gameplay scenes plug
  * their own handlers into `debugHandlers` and remove them when they shut down, so the cheats
  * keep working across scene changes. Nothing here is included in production builds.
  */
@@ -32,8 +32,8 @@ export function plugDebugHandlers(handlers: DebugHandlers): () => void {
   };
 }
 
-/** Install the `window.debug*` hooks. Call once at start-up, only in development. */
-export function installDebugHooks(): void {
+/** Install the `window.debug*` hooks (development only). Returns a function that removes them. */
+export function installDebugHooks(): () => void {
   window.debugWinGame = () => debugHandlers.win?.();
   window.debugHold = (direction, ms) => debugHandlers.hold?.(direction, ms);
   window.debugGoto = (target) => {
@@ -48,5 +48,10 @@ export function installDebugHooks(): void {
       return;
     }
     debugHandlers.goto?.(target);
+  };
+  return () => {
+    delete window.debugWinGame;
+    delete window.debugHold;
+    delete window.debugGoto;
   };
 }

@@ -1,11 +1,11 @@
 "use client";
 
-import { buttonStyles, CodexCard } from "@vhg/ui";
+import { buttonStyles, CodexCard } from "@/components/ui";
 import Link from "next/link";
 
-import { KimDongArt } from "@/components/kim-dong/codex-illustration";
+import { KimDongArt } from "@/features/kimdong/ui/codex-illustration";
 import { CHAPTERS } from "@/data/chapters";
-import { CODEX } from "@/data/kimdong-story";
+import { CODEX } from "@/features/kimdong/data/story";
 import { selectIsCodexUnlocked, useProgressStore } from "@/stores/progress-store";
 import { useProgressHydrated } from "@/stores/use-progress-hydrated";
 

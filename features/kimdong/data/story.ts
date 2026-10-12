@@ -1,4 +1,4 @@
-import type { ChapterPhase, DialogueId } from "@vhg/engine";
+import type { ChapterPhase, DialogueId } from "@/lib/engine";
 
 /** Short objective shown in the HUD for each story phase. */
 export const PHASE_OBJECTIVES: Record<ChapterPhase, string> = {

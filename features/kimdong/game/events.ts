@@ -1,11 +1,12 @@
-import { TypedEmitter, type DialogueId } from "@vhg/engine";
+import { TypedEmitter, type DialogueId } from "@/lib/engine";
 
-/** Commands arriving from the host page (translated from postMessage in host-bridge.ts). */
+/** Commands arriving from the React UI (see `useKimDongBridge`). */
 export const hostEvents = new TypedEmitter<{
-  hello: undefined;
   start: undefined;
   restart: undefined;
   "dialogue-closed": DialogueId;
+  /** Whether Phaser may read (and swallow) the keyboard; off while React dialogs have focus. */
+  keyboard: boolean;
 }>();
 
 /** Events between Phaser scenes (gameplay scenes ⇄ UiScene). */

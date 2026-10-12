@@ -1,4 +1,4 @@
-import type { ChapterId } from "@vhg/engine";
+import type { ChapterId } from "@/lib/engine";
 
 export interface ChapterInfo {
   /** Present for chapters that exist; "coming soon" slots have no id yet. */
@@ -22,8 +22,8 @@ export const CHAPTERS: readonly ChapterInfo[] = [
     period: "Cao Bằng · 1941 – 1943",
     description:
       "Nhập vai Dền, băng qua núi rừng Cao Bằng, nhặt mật thư, tránh tầm mắt của lính tuần và bảo vệ cán bộ.",
-    href: "/chapters/kim-dong",
-    codexHref: "/chapters/kim-dong/codex",
+    href: "/kimdong",
+    codexHref: "/kimdong/codex",
   },
   {
     chapterLabel: "Chương 2",

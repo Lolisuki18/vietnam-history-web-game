@@ -1,4 +1,4 @@
-import { buttonStyles } from "@vhg/ui";
+import { buttonStyles } from "@/components/ui";
 import { ChevronDown, Star } from "lucide-react";
 
 /** Full-screen opening section of the home page. */

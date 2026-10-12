@@ -124,6 +124,8 @@ export function ChapterCard({
           )}
         >
           {coverSrc ? (
+            // Cover art is an arbitrary, caller-provided URL: next/image would need its domain allow-listed.
+            // eslint-disable-next-line @next/next/no-img-element
             <img src={coverSrc} alt={coverAlt} loading="lazy" className="size-full object-cover" />
           ) : (
             (cover ?? <DefaultCover />)
