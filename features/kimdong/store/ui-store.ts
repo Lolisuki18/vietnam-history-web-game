@@ -1,4 +1,4 @@
-import type { ChapterOutcome, ChapterPhase, DialogueId } from "@/lib/engine";
+import type { ChapterPhase, DialogueId, KimDongOutcome } from "../types";
 import { create } from "zustand";
 
 export type KimDongScreen = "menu" | "playing" | "result";
@@ -27,7 +27,7 @@ interface RunState {
   dialogue: DialogueState | null;
   dialogueOpen: boolean;
   toast: ToastState | null;
-  outcome: ChapterOutcome | null;
+  outcome: KimDongOutcome | null;
 }
 
 const initialRun: RunState = {
@@ -60,7 +60,7 @@ interface KimDongUiState extends RunState {
   closeDialogue: () => void;
   showToast: (letterIndex: number) => void;
   hideToast: (key: number) => void;
-  finish: (outcome: ChapterOutcome) => void;
+  finish: (outcome: KimDongOutcome) => void;
 }
 
 let toastCounter = 0;

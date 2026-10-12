@@ -1,20 +1,17 @@
 import Phaser from "phaser";
 
+import { LoadingBar } from "@/lib/game/loading-bar";
+
 import { createAnimations } from "../assets/animations";
 import { ASSET_KEYS, ASSET_URLS, SPRITE_FRAME } from "../assets/manifest";
 import { createPlaceholderTextures } from "../assets/placeholder-art";
-
-const BAR_WIDTH = 320;
-const BAR_HEIGHT = 18;
 
 /**
  * Loads the artwork before the game starts and shows a loading bar. Files that cannot be
  * loaded (not drawn yet) are replaced by generated stand-ins, so the game never breaks.
  */
 export class PreloaderScene extends Phaser.Scene {
-  private barFill!: Phaser.GameObjects.Rectangle;
-  private barBack!: Phaser.GameObjects.Rectangle;
-  private title!: Phaser.GameObjects.Text;
+  private loadingBar!: LoadingBar;
   private readonly failed: string[] = [];
 
   constructor() {
@@ -26,7 +23,7 @@ export class PreloaderScene extends Phaser.Scene {
   }
 
   preload(): void {
-    this.createLoadingBar();
+    this.loadingBar = new LoadingBar(this);
 
     this.load.on(Phaser.Loader.Events.PROGRESS, this.onProgress, this);
     // A missing file is expected until the artwork is added: remember it and carry on.
@@ -56,38 +53,8 @@ export class PreloaderScene extends Phaser.Scene {
     this.scene.start("stealth");
   }
 
-  private createLoadingBar(): void {
-    const { width, height } = this.scale;
-    this.title = this.add
-      .text(width / 2, height / 2 - 34, "Đang tải…", {
-        fontFamily: "sans-serif",
-        fontSize: "22px",
-        fontStyle: "bold",
-        color: "#fff7d6",
-      })
-      .setOrigin(0.5);
-    this.barBack = this.add
-      .rectangle(width / 2, height / 2, BAR_WIDTH, BAR_HEIGHT, 0x000000, 0.5)
-      .setStrokeStyle(2, 0xffe08a);
-    this.barFill = this.add
-      .rectangle(width / 2 - BAR_WIDTH / 2 + 2, height / 2, 1, BAR_HEIGHT - 4, 0xfacc15)
-      .setOrigin(0, 0.5);
-
-    const reposition = (): void => {
-      const w = this.scale.width;
-      const h = this.scale.height;
-      this.title.setPosition(w / 2, h / 2 - 34);
-      this.barBack.setPosition(w / 2, h / 2);
-      this.barFill.setPosition(w / 2 - BAR_WIDTH / 2 + 2, h / 2);
-    };
-    this.scale.on(Phaser.Scale.Events.RESIZE, reposition);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () =>
-      this.scale.off(Phaser.Scale.Events.RESIZE, reposition),
-    );
-  }
-
   private onProgress(value: number): void {
-    this.barFill.setSize(Math.max(1, (BAR_WIDTH - 4) * value), BAR_HEIGHT - 4);
+    this.loadingBar.setProgress(value);
   }
 
   private onFileError(file: Phaser.Loader.File): void {

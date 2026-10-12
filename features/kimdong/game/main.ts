@@ -1,44 +1,34 @@
-import Phaser from "phaser";
+import {
+  createPhaserGame,
+  destroyPhaserGame,
+  setKeyboardEnabled,
+  type GameHandle,
+} from "@/lib/game/phaser";
+import { installDebugHooks } from "@/lib/game/debug";
+import { resetTouchInput } from "@/lib/game/touch-input";
 
 import { PIXEL_ART } from "./config";
-import { debugHandlers, installDebugHooks } from "./debug";
+import { debug, debugHandlers } from "./debug";
 import { gameEvents, hostEvents } from "./events";
 import { chapterEvents } from "./host-bridge";
-import { clearTouchDirections, touchInput } from "./input-state";
+import { touchInput } from "./input-state";
 import { PreloaderScene } from "./scenes/preloader-scene";
 import { RunnerScene } from "./scenes/runner-scene";
 import { StealthScene } from "./scenes/stealth-scene";
 import { UiScene } from "./scenes/ui-scene";
 
-export interface GameHandle {
-  /** Stop every scene, remove the canvas and drop all listeners. */
-  destroy: () => void;
-}
-
 /**
  * Create the Kim Đồng game inside `parent`. Call from an effect and run `destroy` in its cleanup:
- * the module-level emitters outlive the Phaser instance, so they are emptied on teardown.
+ * the module-level emitters of this game outlive the Phaser instance, so they are emptied on
+ * teardown.
  */
 export function createGame(parent: HTMLElement): GameHandle {
-  const dev = process.env.NODE_ENV !== "production";
-  // Dev-only: `?timeoutloop` drives the game loop with setTimeout instead of requestAnimationFrame,
-  // which keeps it running at full speed in browsers that pause rAF for hidden panes.
-  const useTimeoutLoop = dev && new URLSearchParams(location.search).has("timeoutloop");
-
-  const game = new Phaser.Game({
-    type: Phaser.AUTO,
-    parent,
+  const game = createPhaserGame(parent, {
     backgroundColor: "#14231a",
-    // React decides who has keyboard focus (dialogues take it); never grab it back.
-    autoFocus: false,
-    fps: { forceSetTimeOut: useTimeoutLoop },
-    // Fill the whole container; scenes adapt the camera zoom to the available size.
-    scale: { mode: Phaser.Scale.RESIZE, width: "100%", height: "100%" },
-    physics: { default: "arcade", arcade: { debug: false } },
     pixelArt: PIXEL_ART,
     // Only the first scene starts automatically: PreloaderScene loads the art, then starts
     // StealthScene, which launches UiScene on top of itself.
-    scene: [PreloaderScene, StealthScene, UiScene, RunnerScene],
+    scenes: [PreloaderScene, StealthScene, UiScene, RunnerScene],
   });
 
   const cleanups: (() => void)[] = [
@@ -47,14 +37,13 @@ export function createGame(parent: HTMLElement): GameHandle {
       game.scene.stop("runner");
       game.scene.start("stealth", { autostart: true });
     }),
-    hostEvents.on("keyboard", (enabled) => {
-      // A disabled keyboard manager neither reports keys nor calls preventDefault on them.
-      if (game.input.keyboard) game.input.keyboard.enabled = enabled;
-    }),
+    hostEvents.on("keyboard", (enabled) => setKeyboardEnabled(game, enabled)),
   ];
 
-  if (dev) {
-    cleanups.push(installDebugHooks());
+  if (process.env.NODE_ENV !== "production") {
+    cleanups.push(
+      installDebugHooks(debug, { onAction: () => gameEvents.emit("touch:action", undefined) }),
+    );
     // Leak checks: listener and display-object counts must not grow when the chapter restarts.
     window.debugStats = () => ({
       hostListeners: hostEvents.listenerCount(),
@@ -78,15 +67,10 @@ export function createGame(parent: HTMLElement): GameHandle {
   return {
     destroy: () => {
       for (const cleanup of cleanups) cleanup();
-      // Scenes release their own listeners / audio in their SHUTDOWN handlers, which Phaser only
-      // emits when a scene is stopped (destroying the game skips it).
-      for (const scene of game.scene.getScenes(false)) game.scene.stop(scene.scene.key);
-      game.destroy(true);
+      destroyPhaserGame(game);
       hostEvents.clear();
       gameEvents.clear();
-      touchInput.enabled = false;
-      touchInput.visible = false;
-      clearTouchDirections();
+      resetTouchInput(touchInput);
     },
   };
 }

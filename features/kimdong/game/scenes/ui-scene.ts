@@ -1,24 +1,13 @@
 import Phaser from "phaser";
 
+import { TouchControls } from "@/lib/game/touch-controls";
+import { wantsTouchControls } from "@/lib/game/touch-input";
+
 import { GameAudio } from "../audio";
 import { gameEvents } from "../events";
+import { touchInput } from "../input-state";
 import { ClimaxPrompt } from "../systems/climax-prompt";
 import { RhythmGame } from "../systems/rhythm-game";
-import { TouchControls } from "../systems/touch-controls";
-
-/** Windows narrower than this get the on-screen controls even without a touch screen. */
-const SMALL_WINDOW_WIDTH = 700;
-
-/**
- * Whether to show the virtual controls: touch-capable device, or a small window. The URL can
- * force it either way (`?touch=1` / `?touch=0`), which is handy for testing on a desktop.
- */
-function wantsTouchControls(game: Phaser.Game, width: number): boolean {
-  const forced = new URLSearchParams(window.location.search).get("touch");
-  if (forced === "1") return true;
-  if (forced === "0") return false;
-  return game.device.input.touch || width < SMALL_WINDOW_WIDTH;
-}
 
 /**
  * Screen-space Phaser overlay running above the gameplay scenes (no camera zoom, so
@@ -54,7 +43,9 @@ export class UiScene extends Phaser.Scene {
       .setDepth(100)
       .setAlpha(0);
 
-    this.touchControls = new TouchControls(this);
+    this.touchControls = new TouchControls(this, touchInput, () =>
+      gameEvents.emit("touch:action", undefined),
+    );
 
     this.layout();
     this.scale.on(Phaser.Scale.Events.RESIZE, this.layout, this);

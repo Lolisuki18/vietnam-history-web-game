@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 
-import { createChapterProgress, segmentIntersectsRect, type DialogueId } from "@/lib/engine";
+import { createChapterProgress, segmentIntersectsRect } from "@/lib/engine";
 
 import { GameAudio } from "../audio";
 import { ALERT, CLIMAX, PEBBLE, PLAYER } from "../config";
@@ -17,6 +17,7 @@ import { OxygenMeter } from "../systems/oxygen-meter";
 import { PebbleThrower } from "../systems/pebble";
 import { createBushes, createWorld } from "../systems/world-renderer";
 import { isInBush, isInWater } from "../systems/zones";
+import { KIMDONG_ID, type DialogueId } from "../../types";
 import {
   GUARD_ROUTES,
   LETTER_SPOTS,
@@ -216,7 +217,7 @@ export class StealthScene extends Phaser.Scene {
     this.collected += 1;
     sendToHost({
       type: "chapter:progress",
-      progress: createChapterProgress("kim-dong", this.collected, LETTER_SPOTS.length),
+      progress: createChapterProgress(KIMDONG_ID, this.collected, LETTER_SPOTS.length),
     });
     sendToHost({ type: "chapter:letter", index: this.collected - 1 });
     if (this.collected >= LETTER_SPOTS.length) {

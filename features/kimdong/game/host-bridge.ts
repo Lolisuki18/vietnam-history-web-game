@@ -1,4 +1,6 @@
-import { TypedEmitter, type ChapterMessage } from "@/lib/engine";
+import { TypedEmitter } from "@/lib/engine";
+
+import type { ChapterMessage } from "../types";
 
 /** Messages from the game up to the React UI (`useKimDongBridge` subscribes to this). */
 export const chapterEvents = new TypedEmitter<{ message: ChapterMessage }>();
