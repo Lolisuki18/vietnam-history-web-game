@@ -1,7 +1,12 @@
-import base from "@vhg/config/prettier";
-
 /** @type {import("prettier").Config} */
-export default {
-  ...base,
-  tailwindStylesheet: "./apps/web-client/app/globals.css",
+const config = {
+  semi: true,
+  singleQuote: false,
+  trailingComma: "all",
+  printWidth: 100,
+  tabWidth: 2,
+  plugins: ["prettier-plugin-tailwindcss"],
+  tailwindStylesheet: "./app/globals.css",
 };
+
+export default config;

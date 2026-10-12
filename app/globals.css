@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+/* Theme: "Lịch sử Việt Nam hào hùng" – dark stone, amber and lacquer red, serif headings. */
+@theme inline {
+  --font-serif: ui-serif, "Palatino Linotype", Georgia, Cambria, "Times New Roman", serif;
+}
+
+/* Gold lettering with a dark drop shadow and a soft glow. */
+@utility text-glow {
+  text-shadow:
+    0 2px 0 rgb(0 0 0 / 0.65),
+    0 0 28px rgb(245 158 11 / 0.35);
+}
+
+/* Fade a whole page in. Opacity only: a transform on an ancestor would break `position: fixed`. */
+@keyframes page-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@utility animate-page-in {
+  animation: page-in 0.7s ease-out both;
+}
+
+/* Slide a block up while fading in (used inside pages, never around fixed layers). */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility animate-rise-in {
+  animation: rise-in 0.8s ease-out both;
+}
+
+/* Hero backdrop: lacquer red glow on top, amber glow below, concentric rings like a bronze drum. */
+@utility bg-hero {
+  background-color: #0c0a09;
+  background-image:
+    radial-gradient(ellipse 70% 55% at 50% 0%, rgb(153 27 27 / 0.45), transparent 70%),
+    radial-gradient(ellipse 60% 45% at 50% 100%, rgb(217 119 6 / 0.25), transparent 70%),
+    repeating-radial-gradient(
+      circle at 50% 108%,
+      transparent 0 34px,
+      rgb(245 158 11 / 0.07) 34px 36px
+    );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-page-in,
+  .animate-rise-in {
+    animation: none;
+  }
+}
