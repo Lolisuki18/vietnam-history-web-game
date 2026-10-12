@@ -1,4 +1,6 @@
-import { TypedEmitter, type DialogueId } from "@/lib/engine";
+import { TypedEmitter } from "@/lib/engine";
+
+import type { DialogueId } from "../types";
 
 /** Commands arriving from the React UI (see `useKimDongBridge`). */
 export const hostEvents = new TypedEmitter<{

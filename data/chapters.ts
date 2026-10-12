@@ -12,7 +12,11 @@ export interface ChapterInfo {
   codexHref?: string;
 }
 
-/** The chapter list on the home page. Only chapter 1 is playable so far. */
+/**
+ * The chapter list on the home page, in display order. To add a game: add its id to
+ * `CHAPTER_IDS` (lib/engine/chapter.ts), describe it here and in `features/registry.tsx`.
+ * `href` is `/<slug>` and `codexHref` is `/<slug>/codex` (checked by chapters.test.ts).
+ */
 export const CHAPTERS: readonly ChapterInfo[] = [
   {
     id: "kim-dong",

@@ -1,28 +1,7 @@
-import Phaser from "phaser";
+import { Synth } from "@/lib/game/synth";
 
-interface ToneSpec {
-  from: number;
-  to: number;
-  /** Seconds after "now". */
-  offset: number;
-  duration: number;
-  volume: number;
-}
-
-/**
- * Small Web Audio synthesiser so the game needs no sound files: a cuckoo call (chim tu hú)
- * and a dull thud. It reuses the AudioContext of Phaser's sound manager; browsers keep that
- * suspended until the player interacts, so every call tries to resume it first.
- */
-export class GameAudio {
-  private readonly context: AudioContext | null;
-  private noiseBuffer: AudioBuffer | null = null;
-
-  constructor(scene: Phaser.Scene) {
-    const manager = scene.sound;
-    this.context = manager instanceof Phaser.Sound.WebAudioSoundManager ? manager.context : null;
-  }
-
+/** Kim Đồng's sound effects: a cuckoo call (chim tu hú), a thud, a rifle shot and forest ambience. */
+export class GameAudio extends Synth {
   /** The "tu-hú" call: two falling notes. */
   cuckoo(volume = 0.25): void {
     this.tone({ from: 720, to: 660, offset: 0, duration: 0.2, volume });
@@ -76,57 +55,5 @@ export class GameAudio {
       gain.gain.exponentialRampToValueAtTime(0.0001, end + 1.5);
       source.stop(end + 1.6);
     };
-  }
-
-  private ready(): AudioContext | null {
-    const context = this.context;
-    if (!context) return null;
-    if (context.state === "suspended") void context.resume();
-    return context;
-  }
-
-  private tone({ from, to, offset, duration, volume }: ToneSpec): void {
-    const context = this.ready();
-    if (!context) return;
-    const start = context.currentTime + offset;
-    const oscillator = context.createOscillator();
-    const gain = context.createGain();
-    oscillator.type = "sine";
-    oscillator.frequency.setValueAtTime(from, start);
-    oscillator.frequency.exponentialRampToValueAtTime(to, start + duration);
-    gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.exponentialRampToValueAtTime(volume, start + 0.03);
-    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-    oscillator.connect(gain).connect(context.destination);
-    oscillator.start(start);
-    oscillator.stop(start + duration + 0.05);
-  }
-
-  private noise(spec: { duration: number; lowpassHz: number; volume: number }): void {
-    const context = this.ready();
-    if (!context) return;
-    const source = context.createBufferSource();
-    source.buffer = this.getNoiseBuffer(context);
-    const filter = context.createBiquadFilter();
-    filter.type = "lowpass";
-    filter.frequency.value = spec.lowpassHz;
-    const gain = context.createGain();
-    const start = context.currentTime;
-    gain.gain.setValueAtTime(spec.volume, start);
-    gain.gain.exponentialRampToValueAtTime(0.0001, start + spec.duration);
-    source.connect(filter).connect(gain).connect(context.destination);
-    source.start(start);
-    source.stop(start + spec.duration + 0.05);
-  }
-
-  /** One second of white noise, created once and shared by every noise effect. */
-  private getNoiseBuffer(context: AudioContext): AudioBuffer {
-    if (!this.noiseBuffer) {
-      const buffer = context.createBuffer(1, context.sampleRate, context.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
-      this.noiseBuffer = buffer;
-    }
-    return this.noiseBuffer;
   }
 }
