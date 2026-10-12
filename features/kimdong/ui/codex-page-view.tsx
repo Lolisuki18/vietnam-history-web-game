@@ -19,7 +19,7 @@ export function CodexPageView() {
   const isCodexUnlocked = useProgressStore(selectIsCodexUnlocked(KIMDONG_ID));
 
   return (
-    <div className="flex min-h-screen flex-col bg-stone-950">
+    <div className="flex min-h-screen flex-col">
       <main className="flex-1">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
           <nav aria-label="Đường dẫn" className="flex items-center gap-2 text-sm text-stone-400">

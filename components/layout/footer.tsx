@@ -7,7 +7,7 @@ const PLAYABLE = CHAPTERS.filter((chapter) => chapter.href);
 
 export function Footer() {
   return (
-    <footer id="footer" className="border-t border-amber-900/40 bg-stone-950 text-stone-400">
+    <footer id="footer" className="border-t border-amber-900/40 bg-stone-950/70 text-stone-400">
       <div className="mx-auto max-w-7xl px-5 py-12 sm:px-8">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-12">
           <div className="flex flex-col gap-4 md:col-span-5">

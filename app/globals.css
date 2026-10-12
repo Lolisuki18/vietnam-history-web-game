@@ -1,12 +1,30 @@
 @import "tailwindcss";
 
-/* Theme: dark stone, amber and lacquer red, serif headings. */
+/*
+ * Theme: dark, aged yellow paper. Slab-serif lettering, no glow and no drop shadows anywhere.
+ * The stone shades are redefined as warm brown-blacks so cards and frames sit on the paper
+ * instead of looking like grey boxes.
+ */
+@theme {
+  --color-stone-700: #5a4a30;
+  --color-stone-800: #3d3220;
+  --color-stone-900: #2a2013;
+  --color-stone-950: #1a140a;
+}
+
 @theme inline {
-  --font-serif:
-    var(--font-playfair), ui-serif, "Palatino Linotype", Georgia, Cambria, "Times New Roman", serif;
-  --font-sans:
-    var(--font-be-vietnam), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Roboto, sans-serif;
+  --font-serif: var(--font-slab), "Rockwell", "Roboto Slab", ui-serif, Georgia, serif;
+  --font-sans: var(--font-slab), "Rockwell", "Roboto Slab", ui-serif, Georgia, serif;
+}
+
+/*
+ * Page background: a tileable aged-paper texture. The picture is a separate file
+ * (public/textures/paper-dark.svg); the colour is what shows before it loads.
+ */
+@utility bg-paper {
+  background-color: #2a2013;
+  background-image: url("/textures/paper-dark.svg");
+  background-size: 600px 600px;
 }
 
 /* Fade a whole page in. Opacity only: a transform on an ancestor would break `position: fixed`. */
@@ -37,16 +55,6 @@
 
 @utility animate-rise-in {
   animation: rise-in 0.8s ease-out both;
-}
-
-/* Hero backdrop: near-black with one dark red glow at the top. */
-@utility bg-hero {
-  background-color: #0c0a09;
-  background-image: radial-gradient(
-    ellipse 70% 55% at 50% 0%,
-    rgb(153 27 27 / 0.35),
-    transparent 70%
-  );
 }
 
 @media (prefers-reduced-motion: reduce) {

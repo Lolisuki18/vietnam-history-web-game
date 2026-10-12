@@ -51,14 +51,9 @@ function StatusBadge({ status }: { status: ChapterStatus }) {
   );
 }
 
-/** Placeholder cover: a dark red-to-amber gradient with concentric rings (like a bronze drum). */
+/** Placeholder cover for chapters without artwork yet: a flat dark panel. */
 function DefaultCover() {
-  return (
-    <div
-      aria-hidden
-      className="size-full bg-stone-900 bg-[radial-gradient(circle_at_50%_120%,rgba(245,158,11,0.25),transparent_60%),repeating-radial-gradient(circle_at_50%_120%,transparent_0_26px,rgba(245,158,11,0.08)_26px_28px)]"
-    />
-  );
+  return <div aria-hidden className="size-full bg-stone-800" />;
 }
 
 export interface ChapterCardProps {

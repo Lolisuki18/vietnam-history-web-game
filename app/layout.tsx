@@ -1,4 +1,4 @@
-import { Be_Vietnam_Pro, Playfair_Display } from "next/font/google";
+import { Roboto_Slab } from "next/font/google";
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 
@@ -7,16 +7,10 @@ import { StoreHydrator } from "@/components/store-hydrator";
 
 import "./globals.css";
 
-const playfair = Playfair_Display({
+/** One slab-serif ("chữ bệt") family for the whole site; variable weights, with Vietnamese. */
+const slab = Roboto_Slab({
   subsets: ["vietnamese", "latin"],
-  variable: "--font-playfair",
-  display: "swap",
-});
-
-const beVietnam = Be_Vietnam_Pro({
-  weight: ["300", "400", "500", "600", "700", "800"],
-  subsets: ["vietnamese", "latin"],
-  variable: "--font-be-vietnam",
+  variable: "--font-slab",
   display: "swap",
 });
 
@@ -26,13 +20,13 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1c1917",
+  themeColor: "#2a2013",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="vi" className={`${playfair.variable} ${beVietnam.variable}`}>
-      <body className="min-h-screen bg-stone-950 font-sans text-stone-200 antialiased selection:bg-amber-600 selection:text-white">
+    <html lang="vi" className={slab.variable}>
+      <body className="min-h-screen bg-paper font-sans text-stone-200 antialiased selection:bg-amber-600 selection:text-white">
         <StoreHydrator />
         <Navbar />
         {children}

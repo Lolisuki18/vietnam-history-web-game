@@ -63,7 +63,7 @@ export function DialogueBox({ onClose }: { onClose: (id: DialogueId) => void }) 
             role="dialog"
             aria-modal="true"
             aria-label="Hội thoại"
-            className="relative max-h-[88svh] w-full max-w-2xl overflow-y-auto rounded-xl border-[3px] border-red-950 bg-gradient-to-b from-[#f7e8c3] via-[#edd59d] to-[#deb87a] p-1.5 shadow-2xl shadow-black/80"
+            className="relative max-h-[88svh] w-full max-w-2xl overflow-y-auto rounded-xl border-[3px] border-red-950 bg-[#ecd9a8] p-1.5"
           >
             <div
               aria-hidden
@@ -74,7 +74,7 @@ export function DialogueBox({ onClose }: { onClose: (id: DialogueId) => void }) 
                 <div className="flex items-center gap-3.5">
                   <div
                     aria-hidden
-                    className="flex size-14 shrink-0 items-center justify-center rounded-full border-2 border-red-950 bg-red-800 font-serif text-xl font-black text-amber-100 shadow-md shadow-black/40"
+                    className="flex size-14 shrink-0 items-center justify-center rounded-full border-2 border-red-950 bg-red-800 font-serif text-xl font-black text-amber-100"
                   >
                     {initials(line.speaker)}
                   </div>

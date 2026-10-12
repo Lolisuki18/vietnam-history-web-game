@@ -11,9 +11,6 @@ import {
 import { useCoarsePointer } from "@/lib/use-coarse-pointer";
 import { useKimDongUiStore } from "@/features/kimdong/store/ui-store";
 
-/** Dark outline so amber lettering stays readable on top of the forest. */
-const TEXT_OUTLINE = "[text-shadow:0_2px_3px_rgb(0_0_0/0.95),0_0_10px_rgb(0_0_0/0.8)]";
-
 /** The alert meter track: green -> yellow -> red with status label. */
 function AlertBar({ value }: { value: number }) {
   const danger = value >= 85;
@@ -22,12 +19,8 @@ function AlertBar({ value }: { value: number }) {
   return (
     <div
       className={cn(
-        "w-36 rounded-md border-2 bg-stone-950/90 px-2.5 py-1.5 shadow-lg shadow-black/60 sm:w-52",
-        danger
-          ? "animate-pulse border-red-500 shadow-red-700/60"
-          : warning
-            ? "border-amber-500 shadow-amber-900/40"
-            : "border-stone-700",
+        "w-36 rounded-md border-2 bg-stone-950/90 px-2.5 py-1.5 sm:w-52",
+        danger ? "animate-pulse border-red-500" : warning ? "border-amber-500" : "border-stone-700",
       )}
     >
       <div className="mb-1 flex items-baseline justify-between font-serif text-[11px] font-bold tracking-wider uppercase sm:text-xs">
@@ -79,7 +72,7 @@ export function Hud({ onPause }: HudProps) {
   const isDanger = showAlert && alert >= 85;
 
   const hintClass =
-    "w-fit max-w-full self-center rounded-md border border-amber-900/60 bg-stone-950/85 px-3 py-1.5 text-center font-serif text-xs text-amber-100 shadow-lg backdrop-blur sm:text-sm";
+    "w-fit max-w-full self-center rounded-md border border-amber-900/60 bg-stone-950/85 px-3 py-1.5 text-center font-serif text-xs text-amber-100 backdrop-blur sm:text-sm";
 
   return (
     <>
@@ -95,21 +88,16 @@ export function Hud({ onPause }: HudProps) {
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
             {/* Letter counter */}
-            <div className="flex items-center gap-2 rounded-md border-2 border-amber-700/80 bg-stone-950/85 px-3 py-1.5 shadow-lg shadow-black/60 backdrop-blur">
+            <div className="flex items-center gap-2 rounded-md border-2 border-amber-700/80 bg-stone-950/85 px-3 py-1.5 backdrop-blur">
               <Mail className="size-5 text-amber-400" aria-hidden />
-              <span
-                className={cn(
-                  "font-serif text-lg font-bold text-amber-400 sm:text-xl",
-                  TEXT_OUTLINE,
-                )}
-              >
+              <span className="font-serif text-lg font-bold text-amber-400 sm:text-xl">
                 Mật thư: {collected}/{total}
               </span>
             </div>
 
             {/* Phase Objective Banner */}
             {phase ? (
-              <p className="order-last w-full rounded-md border border-amber-900/50 bg-stone-950/85 px-3 py-1.5 text-center font-serif text-sm font-medium text-amber-100 shadow-md backdrop-blur sm:order-none sm:w-auto sm:max-w-md sm:px-4 sm:text-base">
+              <p className="order-last w-full rounded-md border border-amber-900/50 bg-stone-950/85 px-3 py-1.5 text-center font-serif text-sm font-medium text-amber-100 backdrop-blur sm:order-none sm:w-auto sm:max-w-md sm:px-4 sm:text-base">
                 {PHASE_OBJECTIVES[phase]}
               </p>
             ) : null}
@@ -131,7 +119,7 @@ export function Hud({ onPause }: HudProps) {
                   onClick={onPause}
                   aria-label="Tạm dừng trò chơi"
                   title="Tạm dừng trò chơi (ESC)"
-                  className="pointer-events-auto flex size-9 items-center justify-center rounded-md border border-amber-700/70 bg-stone-950/85 text-amber-400 shadow-lg transition-transform hover:scale-105 hover:bg-stone-900 active:scale-95"
+                  className="pointer-events-auto flex size-9 items-center justify-center rounded-md border border-amber-700/70 bg-stone-950/85 text-amber-400 transition-transform hover:scale-105 hover:bg-stone-900 active:scale-95"
                 >
                   <Pause className="size-4" />
                 </button>

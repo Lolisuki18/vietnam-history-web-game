@@ -110,7 +110,7 @@ export function CodexText({ className }: { className?: string }) {
                 <li key={entry.date} className="relative">
                   <span
                     aria-hidden
-                    className="absolute top-1.5 -left-[1.95rem] size-3.5 rounded-full border-2 border-amber-300 bg-red-700 shadow sm:-left-[2.45rem]"
+                    className="absolute top-1.5 -left-[1.95rem] size-3.5 rounded-full border-2 border-amber-300 bg-red-700 sm:-left-[2.45rem]"
                   />
                   <p className="font-serif text-lg font-black text-amber-400">{entry.date}</p>
                   <p className="mt-0.5 text-stone-300">{entry.text}</p>

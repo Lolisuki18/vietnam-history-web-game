@@ -36,10 +36,10 @@ function ToastCard({ toastKey, letterIndex }: { toastKey: number; letterIndex: n
       role="status"
       aria-live="polite"
       className={cn(
-        "w-[min(26rem,calc(100vw-1.5rem))] rounded-xl border-2 p-4.5 shadow-2xl backdrop-blur-md transition-all ease-out",
+        "w-[min(26rem,calc(100vw-1.5rem))] rounded-xl border-2 p-4.5 backdrop-blur-md transition-all ease-out",
         letter.urgent
-          ? "border-red-500 bg-red-950/95 text-red-50 shadow-red-950/80"
-          : "border-amber-500/80 bg-stone-950/95 text-amber-50 shadow-black/80",
+          ? "border-red-500 bg-red-950/95 text-red-50"
+          : "border-amber-500/80 bg-stone-950/95 text-amber-50",
         phase === "entering" && "translate-x-[120%] opacity-0",
         phase === "shown" && "translate-x-0 opacity-100",
         phase === "leaving" && "translate-x-4 opacity-0",

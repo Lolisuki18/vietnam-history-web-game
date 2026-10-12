@@ -8,14 +8,14 @@ export function Hero() {
   return (
     <section
       id="hero"
-      className="relative flex min-h-[calc(100svh-4rem)] flex-col items-center justify-center overflow-hidden bg-hero px-5 py-20 text-center"
+      className="relative flex min-h-[calc(100svh-4rem)] flex-col items-center justify-center overflow-hidden px-5 py-20 text-center"
     >
       {/* A bronze drum, still and faint, behind the title. */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden select-none"
       >
-        <SvgIcon name="dong-son-drum" size={720} className="text-amber-400 opacity-[0.07]" />
+        <SvgIcon name="dong-son-drum" size={720} className="text-amber-400 opacity-[0.05]" />
       </div>
 
       <div className="relative z-10 flex max-w-3xl flex-col items-center gap-6">

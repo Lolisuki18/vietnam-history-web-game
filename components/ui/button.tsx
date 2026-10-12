@@ -12,10 +12,10 @@ const base =
 
 const variants: Record<ButtonVariant, string> = {
   primary:
-    "bg-red-800 text-amber-50 shadow-lg shadow-black/40 hover:-translate-y-0.5 hover:bg-amber-600 " +
-    "hover:text-stone-950 hover:shadow-amber-600/30 active:translate-y-0",
+    "bg-red-800 text-amber-50 hover:-translate-y-0.5 hover:bg-amber-600 " +
+    "hover:text-stone-950 active:translate-y-0",
   secondary:
-    "border border-amber-500/50 bg-stone-900/60 text-amber-400 shadow-lg shadow-black/30 " +
+    "border border-amber-500/50 bg-stone-900/60 text-amber-400 " +
     "hover:-translate-y-0.5 hover:border-amber-400 hover:bg-amber-600 hover:text-stone-950 active:translate-y-0",
   ghost: "text-stone-300 hover:bg-white/10 hover:text-amber-300",
 };

@@ -33,7 +33,7 @@ export default function HomePage() {
       <section
         id="codex"
         aria-labelledby="codex-heading"
-        className="relative border-t border-amber-900/30 bg-stone-950/80"
+        className="relative border-t border-amber-900/40"
       >
         <div className="mx-auto max-w-7xl scroll-mt-20 px-5 py-16 sm:px-8 sm:py-24">
           <SectionHeading
