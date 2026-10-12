@@ -1,20 +1,14 @@
 "use client";
 
-import {
-  listenChapterMessages,
-  postHostMessage,
-  type ChapterMessage,
-  type HostMessageInput,
-} from "@vhg/engine";
-import { useCallback, useEffect, type RefObject } from "react";
+import { useEffect } from "react";
 
-import { CHAPTER_KIMDONG_ORIGIN } from "@/lib/env";
+import { chapterEvents } from "@/features/kimdong/game/host-bridge";
+import { hostEvents } from "@/features/kimdong/game/events";
+import { useKimDongUiStore } from "@/features/kimdong/store/ui-store";
+import type { ChapterMessage, HostMessage } from "@/lib/engine";
 import { useProgressStore } from "@/stores/progress-store";
-import { useKimDongUiStore } from "@/stores/kimdong-ui-store";
 
-const HELLO_INTERVAL_MS = 400;
-
-/** Route a message from the game iframe into the Zustand stores. */
+/** Route a message from the game into the Zustand stores. */
 function applyChapterMessage(message: ChapterMessage): void {
   const ui = useKimDongUiStore.getState();
   switch (message.type) {
@@ -44,41 +38,25 @@ function applyChapterMessage(message: ChapterMessage): void {
   }
 }
 
+/** Send a command down to the game. */
+export function sendToGame(message: HostMessage): void {
+  switch (message.type) {
+    case "host:start":
+      hostEvents.emit("start", undefined);
+      break;
+    case "host:restart":
+      hostEvents.emit("restart", undefined);
+      break;
+    case "host:dialogue-closed":
+      hostEvents.emit("dialogue-closed", message.id);
+      break;
+  }
+}
+
 /**
- * Connects the page to the chapter iframe: incoming messages update the stores,
- * and the returned `send` posts commands down to the game.
+ * Connects the page to the game running in the same window: game messages update the stores.
+ * Must be subscribed before the game is created (the game announces `chapter:ready` once).
  */
-export function useKimDongBridge(frameRef: RefObject<HTMLIFrameElement | null>) {
-  // Handshake: the game may have announced itself before this listener existed (or before the
-  // iframe finished loading), so keep saying hello until it answers with `chapter:ready`.
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      if (useKimDongUiStore.getState().ready) {
-        window.clearInterval(timer);
-        return;
-      }
-      postHostMessage(
-        frameRef.current?.contentWindow,
-        { type: "host:hello" },
-        CHAPTER_KIMDONG_ORIGIN,
-      );
-    }, HELLO_INTERVAL_MS);
-    return () => window.clearInterval(timer);
-  }, [frameRef]);
-
-  useEffect(
-    () =>
-      listenChapterMessages(
-        applyChapterMessage,
-        CHAPTER_KIMDONG_ORIGIN,
-        () => frameRef.current?.contentWindow,
-      ),
-    [frameRef],
-  );
-
-  return useCallback(
-    (message: HostMessageInput) =>
-      postHostMessage(frameRef.current?.contentWindow, message, CHAPTER_KIMDONG_ORIGIN),
-    [frameRef],
-  );
+export function useKimDongBridge(): void {
+  useEffect(() => chapterEvents.on("message", applyChapterMessage), []);
 }

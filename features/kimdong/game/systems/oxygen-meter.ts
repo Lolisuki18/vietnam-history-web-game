@@ -1,4 +1,4 @@
-import { clamp } from "@vhg/engine";
+import { clamp } from "@/lib/engine";
 import type Phaser from "phaser";
 
 import { OXYGEN } from "../config";

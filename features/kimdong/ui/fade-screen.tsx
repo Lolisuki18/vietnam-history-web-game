@@ -1,4 +1,4 @@
-import { cn } from "@vhg/ui";
+import { cn } from "@/components/ui";
 import type { ReactNode } from "react";
 
 interface FadeScreenProps {

@@ -1,11 +1,11 @@
 "use client";
 
-import { cn } from "@vhg/ui";
+import { cn } from "@/components/ui";
 import { Lightbulb, Mail, TriangleAlert } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { LETTERS, TOAST_DURATION_MS } from "@/data/kimdong-story";
-import { useKimDongUiStore } from "@/stores/kimdong-ui-store";
+import { LETTERS, TOAST_DURATION_MS } from "@/features/kimdong/data/story";
+import { useKimDongUiStore } from "@/features/kimdong/store/ui-store";
 
 const ENTER_DELAY_MS = 30;
 const FADE_MS = 500;

@@ -1,10 +1,10 @@
 "use client";
 
-import { buttonStyles, CodexCard } from "@vhg/ui";
+import { buttonStyles, CodexCard } from "@/components/ui";
 import { ArrowLeft, Lock } from "lucide-react";
 import Link from "next/link";
 
-import { CODEX } from "@/data/kimdong-story";
+import { CODEX } from "@/features/kimdong/data/story";
 import { selectIsCodexUnlocked, useProgressStore } from "@/stores/progress-store";
 import { useProgressHydrated } from "@/stores/use-progress-hydrated";
 
@@ -13,7 +13,7 @@ import { KimDongArt } from "./codex-illustration";
 
 /**
  * The Codex page. `isCodexUnlocked` comes from the Zustand store, which the game fills in
- * (through `postMessage`) when the chapter is completed.
+ * (through the game bridge) when the chapter is completed.
  */
 export function CodexPageView() {
   const hydrated = useProgressHydrated();
@@ -54,7 +54,7 @@ export function CodexPageView() {
             <p className="font-serif text-xl text-stone-300">
               Bạn cần hoàn thành Chapter Kim Đồng để xem hồ sơ này
             </p>
-            <Link href="/chapters/kim-dong" className={buttonStyles({ size: "lg" })}>
+            <Link href="/kimdong" className={buttonStyles({ size: "lg" })}>
               Chơi Chapter Kim Đồng
             </Link>
           </div>

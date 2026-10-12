@@ -1,4 +1,4 @@
-import { isPointInCone, rotateToward, type Point } from "@vhg/engine";
+import { isPointInCone, rotateToward, type Point } from "@/lib/engine";
 import type Phaser from "phaser";
 
 import type { SoldierAnimKey } from "../assets/animations";

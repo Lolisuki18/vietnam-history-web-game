@@ -3,7 +3,7 @@ import {
   createStickState,
   resolveStick,
   stickDirections,
-} from "@vhg/engine";
+} from "@/lib/engine";
 import type Phaser from "phaser";
 
 import { gameEvents } from "../events";

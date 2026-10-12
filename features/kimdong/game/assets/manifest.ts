@@ -4,7 +4,7 @@
  * else — animations, hitboxes, the fallback art — follows.
  */
 
-const BASE = import.meta.env.BASE_URL;
+const BASE = "/assets/kimdong/";
 
 /** Texture / tilemap keys. */
 export const ASSET_KEYS = {
@@ -17,12 +17,12 @@ export const ASSET_KEYS = {
 } as const;
 
 export const ASSET_URLS = {
-  kimdong: `${BASE}assets/sprites/kimdong.png`,
-  soldier: `${BASE}assets/sprites/french_soldier.png`,
-  tiles: `${BASE}assets/images/forest_tiles.png`,
-  map: `${BASE}assets/maps/level1.json`,
-  letter: `${BASE}assets/images/letter.png`,
-  bush: `${BASE}assets/images/bush.png`,
+  kimdong: `${BASE}sprites/kimdong.png`,
+  soldier: `${BASE}sprites/french_soldier.png`,
+  tiles: `${BASE}images/forest_tiles.png`,
+  map: `${BASE}maps/level1.json`,
+  letter: `${BASE}images/letter.png`,
+  bush: `${BASE}images/bush.png`,
 } as const;
 
 /** Size of one frame of the character spritesheets. */

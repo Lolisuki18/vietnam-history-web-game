@@ -1,4 +1,4 @@
-import { sampleCatmullRom, type Point } from "@vhg/engine";
+import { sampleCatmullRom, type Point } from "@/lib/engine";
 
 export interface Circle extends Point {
   r: number;

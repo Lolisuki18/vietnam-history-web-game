@@ -1,17 +1,17 @@
 "use client";
 
-import { Button, buttonStyles, cn } from "@vhg/ui";
+import { Button, buttonStyles, cn } from "@/components/ui";
 import { BookOpen, House, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 
 import { useStagedReveal } from "@/lib/use-staged-reveal";
-import { useKimDongUiStore } from "@/stores/kimdong-ui-store";
+import { useKimDongUiStore } from "@/features/kimdong/store/ui-store";
 
 /** ms after the screen appears: the closing line fades in, then the actions appear. */
 const REVEAL_DELAYS = [400, 3000] as const;
 
-const CODEX_HREF = "/chapters/kim-dong/codex";
+const CODEX_HREF = "/kimdong/codex";
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (

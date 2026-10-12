@@ -1,4 +1,4 @@
-import type { Point } from "@vhg/engine";
+import type { Point } from "@/lib/engine";
 import type Phaser from "phaser";
 
 import { GUARD, PEBBLE } from "../config";

@@ -1,14 +1,14 @@
 "use client";
 
-import { Button } from "@vhg/ui";
+import { Button } from "@/components/ui";
 import { ChevronRight, Lightbulb } from "lucide-react";
 import { useEffect, useRef } from "react";
 
-import type { DialogueId } from "@vhg/engine";
+import type { DialogueId } from "@/lib/engine";
 
-import { DIALOGUES } from "@/data/kimdong-story";
+import { DIALOGUES } from "@/features/kimdong/data/story";
 import { useCoarsePointer } from "@/lib/use-coarse-pointer";
-import { useKimDongUiStore } from "@/stores/kimdong-ui-store";
+import { useKimDongUiStore } from "@/features/kimdong/store/ui-store";
 
 import { FadeScreen } from "./fade-screen";
 

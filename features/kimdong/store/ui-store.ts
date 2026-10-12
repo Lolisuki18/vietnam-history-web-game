@@ -1,4 +1,4 @@
-import type { ChapterOutcome, ChapterPhase, DialogueId } from "@vhg/engine";
+import type { ChapterOutcome, ChapterPhase, DialogueId } from "@/lib/engine";
 import { create } from "zustand";
 
 export type KimDongScreen = "menu" | "playing" | "result";
@@ -42,7 +42,7 @@ const initialRun: RunState = {
 };
 
 interface KimDongUiState extends RunState {
-  /** The game iframe has loaded and is waiting for `host:start`. */
+  /** The game has loaded and is waiting for `host:start`. */
   ready: boolean;
   screen: KimDongScreen;
 

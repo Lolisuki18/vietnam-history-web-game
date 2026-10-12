@@ -1,4 +1,4 @@
-import { distanceToPolyline, isInsideCircle } from "@vhg/engine";
+import { distanceToPolyline, isInsideCircle } from "@/lib/engine";
 
 import { BUSHES, RIVER_POLYLINE, RIVER_WIDTH } from "../world-data";
 

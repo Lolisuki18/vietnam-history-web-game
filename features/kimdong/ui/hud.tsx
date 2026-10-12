@@ -1,11 +1,15 @@
 "use client";
 
-import { cn } from "@vhg/ui";
+import { cn } from "@/components/ui";
 import { Mail } from "lucide-react";
 
-import { PHASE_CONTROLS, PHASE_CONTROLS_TOUCH, PHASE_OBJECTIVES } from "@/data/kimdong-story";
+import {
+  PHASE_CONTROLS,
+  PHASE_CONTROLS_TOUCH,
+  PHASE_OBJECTIVES,
+} from "@/features/kimdong/data/story";
 import { useCoarsePointer } from "@/lib/use-coarse-pointer";
-import { useKimDongUiStore } from "@/stores/kimdong-ui-store";
+import { useKimDongUiStore } from "@/features/kimdong/store/ui-store";
 
 /** Dark outline so amber lettering stays readable on top of the forest. */
 const TEXT_OUTLINE = "[text-shadow:0_2px_3px_rgb(0_0_0/0.95),0_0_10px_rgb(0_0_0/0.8)]";

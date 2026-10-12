@@ -1,27 +1,26 @@
 "use client";
 
-import type { DialogueId } from "@vhg/engine";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
-import { CHAPTER_KIMDONG_URL } from "@/lib/env";
-import { useKimDongUiStore } from "@/stores/kimdong-ui-store";
+import { hostEvents } from "@/features/kimdong/game/events";
+import { useKimDongUiStore } from "@/features/kimdong/store/ui-store";
+import type { DialogueId } from "@/lib/engine";
 
 import { DialogueBox } from "./dialogue-box";
 import { FadeScreen } from "./fade-screen";
+import { GameCanvas } from "./game-canvas";
 import { Hud } from "./hud";
 import { MenuScreen } from "./menu-screen";
 import { ResultScreen } from "./result-screen";
 import { ToastNotification } from "./toast-notification";
-import { useKimDongBridge } from "./use-kimdong-bridge";
+import { sendToGame, useKimDongBridge } from "./use-kimdong-bridge";
 
 /**
- * Full-viewport shell: the Phaser game (iframe) is the background and React screens are
+ * Full-viewport shell: the Phaser game (canvas) is the background and React screens are
  * layered on top of it. Overlays let pointer events through unless they need them.
  * Menu → gameplay → result are cross-faded with CSS only.
  */
 export function ChapterShell() {
-  const frameRef = useRef<HTMLIFrameElement>(null);
-
   // The store outlives this page during client-side navigation: start (and leave) clean.
   useEffect(() => {
     const { reset } = useKimDongUiStore.getState();
@@ -29,42 +28,37 @@ export function ChapterShell() {
     return reset;
   }, []);
 
-  const send = useKimDongBridge(frameRef);
+  useKimDongBridge();
 
   const screen = useKimDongUiStore((state) => state.screen);
   const dialogueOpen = useKimDongUiStore((state) => state.dialogueOpen);
   const startRun = useKimDongUiStore((state) => state.startRun);
   const closeDialogue = useKimDongUiStore((state) => state.closeDialogue);
 
-  // Keyboard input must go to the game while playing; dialogues take focus themselves.
+  // Keys belong to the game only while playing; menus and dialogues take them back (Space on a
+  // focused button must not be swallowed by Phaser).
   useEffect(() => {
-    if (screen === "playing" && !dialogueOpen) frameRef.current?.focus();
+    hostEvents.emit("keyboard", screen === "playing" && !dialogueOpen);
   }, [screen, dialogueOpen]);
 
   const handleStart = () => {
     startRun();
-    send({ type: "host:start" });
+    sendToGame({ type: "host:start" });
   };
 
   const handleReplay = () => {
     startRun();
-    send({ type: "host:restart" });
+    sendToGame({ type: "host:restart" });
   };
 
   const handleDialogueClosed = (id: DialogueId) => {
     closeDialogue();
-    send({ type: "host:dialogue-closed", id });
+    sendToGame({ type: "host:dialogue-closed", id });
   };
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-[#14231a]">
-      <iframe
-        ref={frameRef}
-        src={CHAPTER_KIMDONG_URL}
-        title="Chương Kim Đồng"
-        allow="autoplay; fullscreen"
-        className="absolute inset-0 size-full border-0"
-      />
+      <GameCanvas />
 
       <FadeScreen show={screen === "playing"} className="pointer-events-none">
         <Hud />

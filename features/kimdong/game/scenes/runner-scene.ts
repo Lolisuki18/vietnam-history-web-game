@@ -146,7 +146,7 @@ export class RunnerScene extends Phaser.Scene {
       () => this.stopAmbience?.(),
       () => gameEvents.emit("controls:active", false),
     );
-    if (import.meta.env.DEV) {
+    if (process.env.NODE_ENV !== "production") {
       this.cleanups.push(
         plugDebugHandlers({
           win: () => this.startEnding(),

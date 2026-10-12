@@ -1,6 +1,6 @@
-import { cn } from "@vhg/ui";
+import { cn } from "@/components/ui";
 
-import { CODEX } from "@/data/kimdong-story";
+import { CODEX } from "@/features/kimdong/data/story";
 
 /**
  * The historical text of the Codex (key numbers, sections, timeline, note) in sharp serif

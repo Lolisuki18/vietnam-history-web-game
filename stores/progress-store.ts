@@ -1,4 +1,4 @@
-import type { ChapterId, ChapterOutcome, ChapterProgress } from "@vhg/engine";
+import type { ChapterId, ChapterOutcome, ChapterProgress } from "@/lib/engine";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 

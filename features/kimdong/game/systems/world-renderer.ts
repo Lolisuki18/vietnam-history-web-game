@@ -1,4 +1,4 @@
-import { distanceToPolyline, sampleCatmullRom, type Point } from "@vhg/engine";
+import { distanceToPolyline, sampleCatmullRom, type Point } from "@/lib/engine";
 import Phaser from "phaser";
 
 import { ASSET_KEYS, BUSH_DISPLAY_FACTOR } from "../assets/manifest";

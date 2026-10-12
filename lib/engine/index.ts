@@ -16,15 +16,7 @@ export type {
   ChapterProgress,
   DialogueId,
 } from "./chapter";
-export {
-  isChapterMessage,
-  isHostMessage,
-  listenChapterMessages,
-  listenHostMessages,
-  postChapterMessage,
-  postHostMessage,
-} from "./bridge";
-export type { ChapterMessage, ChapterMessageInput, HostMessage, HostMessageInput } from "./bridge";
+export type { ChapterMessage, HostMessage } from "./messages";
 export {
   angleDifference,
   distanceToPolyline,

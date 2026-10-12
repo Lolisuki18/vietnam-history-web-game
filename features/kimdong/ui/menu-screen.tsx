@@ -1,10 +1,10 @@
 "use client";
 
-import { Button, buttonStyles } from "@vhg/ui";
+import { Button, buttonStyles } from "@/components/ui";
 import { ArrowLeft, BookOpen, Loader2, Play } from "lucide-react";
 import Link from "next/link";
 
-import { useKimDongUiStore } from "@/stores/kimdong-ui-store";
+import { useKimDongUiStore } from "@/features/kimdong/store/ui-store";
 import { useProgressStore } from "@/stores/progress-store";
 
 export function MenuScreen({ onStart }: { onStart: () => void }) {
@@ -37,7 +37,7 @@ export function MenuScreen({ onStart }: { onStart: () => void }) {
           </Button>
           {codexUnlocked ? (
             <Link
-              href="/chapters/kim-dong/codex"
+              href="/kimdong/codex"
               className={buttonStyles({ variant: "secondary", size: "lg" })}
             >
               <BookOpen className="size-5" aria-hidden /> Hồ sơ lịch sử
