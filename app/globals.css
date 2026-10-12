@@ -1,8 +1,5 @@
 @import "tailwindcss";
 
-/* Workspace packages live in node_modules (symlinks), which Tailwind ignores by default. */
-@source "../../../packages/ui/src";
-
 /* Theme: "Lịch sử Việt Nam hào hùng" – dark stone, amber and lacquer red, serif headings. */
 @theme inline {
   --font-serif: ui-serif, "Palatino Linotype", Georgia, Cambria, "Times New Roman", serif;

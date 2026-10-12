@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { ChapterShell } from "@/components/kim-dong/chapter-shell";
+import { ChapterShell } from "@/features/kimdong/ui/chapter-shell";
 
 export const metadata: Metadata = {
   title: "Kim Đồng – Người liên lạc nhỏ",

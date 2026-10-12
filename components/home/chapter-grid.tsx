@@ -1,10 +1,10 @@
 "use client";
 
-import { ChapterCard } from "@vhg/ui";
+import { ChapterCard } from "@/components/ui";
 import { BookOpen } from "lucide-react";
 import Link from "next/link";
 
-import { KimDongArt } from "@/components/kim-dong/codex-illustration";
+import { KimDongArt } from "@/features/kimdong/ui/codex-illustration";
 import { CHAPTERS } from "@/data/chapters";
 import {
   selectIsCodexUnlocked,
