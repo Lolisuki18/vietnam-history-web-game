@@ -3,7 +3,7 @@ import Phaser from "phaser";
 import { LoadingBar } from "@/lib/game/loading-bar";
 
 import { createAnimations } from "../assets/animations";
-import { ASSET_KEYS, ASSET_URLS, SPRITE_FRAME } from "../assets/manifest";
+import { ASSET_KEYS, ASSET_URLS, AUDIO_KEYS, AUDIO_URLS, SPRITE_FRAME } from "../assets/manifest";
 import { createPlaceholderTextures } from "../assets/placeholder-art";
 
 /**
@@ -36,6 +36,16 @@ export class PreloaderScene extends Phaser.Scene {
     this.load.image(ASSET_KEYS.bush, ASSET_URLS.bush);
     this.load.image(ASSET_KEYS.tiles, ASSET_URLS.tiles);
     this.load.tilemapTiledJSON(ASSET_KEYS.map, ASSET_URLS.map);
+
+    // Audio assets
+    this.load.audio(AUDIO_KEYS.cuckoo, AUDIO_URLS.cuckoo);
+    this.load.audio(AUDIO_KEYS.gunshot, AUDIO_URLS.gunshot);
+    this.load.audio(AUDIO_KEYS.pebble, AUDIO_URLS.pebble);
+    this.load.audio(AUDIO_KEYS.footsteps, AUDIO_URLS.footsteps);
+    this.load.audio(AUDIO_KEYS.splash, AUDIO_URLS.splash);
+    this.load.audio(AUDIO_KEYS.bgmExplore, AUDIO_URLS.bgmExplore);
+    this.load.audio(AUDIO_KEYS.bgmTension, AUDIO_URLS.bgmTension);
+    this.load.audio(AUDIO_KEYS.bgmRunner, AUDIO_URLS.bgmRunner);
   }
 
   create(): void {

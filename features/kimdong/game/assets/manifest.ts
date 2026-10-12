@@ -25,6 +25,29 @@ export const ASSET_URLS = {
   bush: `${BASE}images/bush.png`,
 } as const;
 
+/** Audio asset keys. */
+export const AUDIO_KEYS = {
+  cuckoo: "sfx_cuckoo",
+  gunshot: "sfx_gunshot",
+  pebble: "sfx_pebble_throw",
+  footsteps: "sfx_footsteps",
+  splash: "sfx_water_splash",
+  bgmExplore: "bgm_explore",
+  bgmTension: "bgm_tension",
+  bgmRunner: "bgm_runner",
+} as const;
+
+export const AUDIO_URLS = {
+  cuckoo: `${BASE}audio/sfx_cuckoo.wav`,
+  gunshot: `${BASE}audio/sfx_gunshot.wav`,
+  pebble: `${BASE}audio/sfx_pebble_throw.wav`,
+  footsteps: `${BASE}audio/sfx_footsteps.wav`,
+  splash: `${BASE}audio/sfx_water_splash.wav`,
+  bgmExplore: `${BASE}audio/bgm_explore.wav`,
+  bgmTension: `${BASE}audio/bgm_tension.wav`,
+  bgmRunner: `${BASE}audio/bgm_runner.wav`,
+} as const;
+
 /** Size of one frame of the character spritesheets. */
 export const SPRITE_FRAME = { width: 32, height: 48 } as const;
 
