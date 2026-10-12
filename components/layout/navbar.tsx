@@ -1,228 +1,160 @@
 "use client";
 
-import { buttonStyles, DongSonDrum } from "@/components/ui";
-import { BookOpen, Menu, ScrollText, ShieldCheck, Swords, Volume2, VolumeX, X } from "lucide-react";
+import { buttonStyles, cn, SvgIcon } from "@/components/ui";
+import { Menu, Volume2, VolumeX, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
+import { CHAPTERS, FIRST_PLAYABLE_HREF } from "@/data/chapters";
 import { ambientSound } from "@/lib/audio/ambient-sound";
-import { KIMDONG_ID } from "@/features/kimdong/types";
-import { selectIsCompleted, useProgressStore } from "@/stores/progress-store";
+import { useProgressStore } from "@/stores/progress-store";
 import { useProgressHydrated } from "@/stores/use-progress-hydrated";
+
+const NAV_LINKS = [
+  { href: "/", label: "Trang chủ" },
+  { href: "/#chapters", label: "Các chương" },
+  { href: "/#codex", label: "Hồ sơ lịch sử" },
+] as const;
+
+/** Routes where a game runs full screen (and plays its own sound): no site navbar there. */
+const GAME_ROUTES: readonly string[] = CHAPTERS.flatMap((chapter) =>
+  chapter.href ? [chapter.href] : [],
+);
 
 export function Navbar() {
   const pathname = usePathname();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   const hydrated = useProgressHydrated();
-  const kimDongCompleted = useProgressStore(selectIsCompleted(KIMDONG_ID));
-  const completedCount = hydrated && kimDongCompleted ? 1 : 0;
+  const finishedCount = useProgressStore((state) => Object.keys(state.completions).length);
+  const progressLabel = `${hydrated ? finishedCount : 0}/${CHAPTERS.length}`;
 
-  // Don't show the website navbar when playing full-screen inside game routes if not desired,
-  // or show a streamlined version. For /kimdong, the Phaser game has its own shell.
-  const isGameRoute = pathname === "/kimdong";
+  const musicOn = useSyncExternalStore(ambientSound.subscribe, ambientSound.getStatus, () => false);
+
+  const isGameRoute = GAME_ROUTES.includes(pathname);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const toggleSound = () => {
-    const active = ambientSound.toggle();
-    setIsAudioPlaying(active);
-  };
+  // A game has its own sound and no navbar to turn this music off: stop it when entering one.
+  useEffect(() => {
+    if (isGameRoute) ambientSound.stop();
+  }, [isGameRoute]);
 
-  if (isGameRoute) {
-    // In game screen, render minimal or return null so game canvas has complete control
-    return null;
-  }
+  if (isGameRoute) return null;
+
+  const linkClass =
+    "rounded-md px-3 py-2 text-sm font-semibold whitespace-nowrap text-stone-300 transition-colors hover:text-amber-400";
 
   return (
     <header
-      className={`sticky top-0 z-40 w-full transition-all duration-300 ${
+      className={cn(
+        "sticky top-0 z-40 w-full border-b transition-colors duration-300",
         scrolled
-          ? "border-b border-amber-900/50 bg-stone-950/90 shadow-xl shadow-black/60 backdrop-blur-md"
-          : "border-b border-amber-900/20 bg-stone-950/60 backdrop-blur-sm"
-      }`}
+          ? "border-amber-900/50 bg-stone-950/95 backdrop-blur"
+          : "border-amber-900/20 bg-stone-950/70 backdrop-blur-sm",
+      )}
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 sm:py-3.5">
-        {/* Brand / Logo */}
-        <Link
-          href="/"
-          className="group flex items-center gap-3 transition-transform hover:scale-[1.02]"
-        >
-          <div className="relative flex size-10 items-center justify-center rounded-full border border-amber-500/60 bg-gradient-to-br from-amber-600/30 to-red-950/80 shadow-md shadow-amber-900/40">
-            <DongSonDrum
-              size={32}
-              className="text-amber-400 transition-transform duration-700 group-hover:rotate-45"
-            />
-          </div>
-          <div className="flex flex-col">
-            <span className="font-serif text-lg font-black tracking-wider text-amber-400 uppercase text-glow sm:text-xl">
-              Hào Khí Việt Nam
-            </span>
-            <span className="text-[10px] font-semibold tracking-[0.25em] text-red-400 uppercase">
-              Web Game Lịch Sử
-            </span>
-          </div>
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+        <Link href="/" className="flex items-center gap-2.5 whitespace-nowrap">
+          <SvgIcon name="dong-son-drum" size={30} className="text-amber-500" />
+          <span className="font-serif text-lg font-bold text-amber-400 sm:text-xl">
+            Hào khí Việt Nam
+          </span>
         </Link>
 
-        {/* Desktop Nav Links */}
-        <nav className="hidden items-center gap-1 md:flex lg:gap-2" aria-label="Điều hướng chính">
-          <Link
-            href="/"
-            className="flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-semibold text-stone-300 transition-colors hover:bg-stone-800/60 hover:text-amber-400"
-          >
-            <ScrollText className="size-4 text-amber-500/80" />
-            Trang chủ
-          </Link>
-
-          <Link
-            href="/#chapters"
-            className="flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-semibold text-stone-300 transition-colors hover:bg-stone-800/60 hover:text-amber-400"
-          >
-            <Swords className="size-4 text-amber-500/80" />
-            Hành trình
-          </Link>
-
-          <Link
-            href="/#codex"
-            className="flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-semibold text-stone-300 transition-colors hover:bg-stone-800/60 hover:text-amber-400"
-          >
-            <BookOpen className="size-4 text-amber-500/80" />
-            Tàng Kinh Các
-          </Link>
-
-          <Link
-            href="/kimdong/codex"
-            className="flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-semibold text-stone-300 transition-colors hover:bg-stone-800/60 hover:text-amber-400"
-          >
-            <ShieldCheck className="size-4 text-amber-500/80" />
-            Hồ sơ Kim Đồng
-          </Link>
+        <nav className="hidden items-center gap-1 lg:flex" aria-label="Điều hướng chính">
+          {NAV_LINKS.map((link) => (
+            <Link key={link.href} href={link.href} className={linkClass}>
+              {link.label}
+            </Link>
+          ))}
         </nav>
 
-        {/* Right Action Bar */}
-        <div className="flex items-center gap-2.5 sm:gap-3">
-          {/* Progress Indicator */}
-          <div
-            title="Tiến độ hoàn thành các chương"
-            className="hidden items-center gap-2 rounded-full border border-amber-800/50 bg-stone-900/80 px-3 py-1.5 text-xs font-semibold text-amber-300/90 shadow-inner sm:flex"
+        <div className="flex items-center gap-2 sm:gap-3">
+          <p
+            className="hidden text-xs whitespace-nowrap text-stone-400 sm:block"
+            title="Số chương đã hoàn thành"
           >
-            <span className="size-2 animate-pulse rounded-full bg-amber-400" />
-            <span>Tiến độ:</span>
-            <span className="font-bold text-amber-400">{completedCount}/3</span>
-          </div>
+            Đã hoàn thành <span className="font-bold text-amber-400">{progressLabel}</span>
+          </p>
 
-          {/* Ambient Audio Toggle */}
           <button
             type="button"
-            onClick={toggleSound}
-            aria-label={isAudioPlaying ? "Tắt âm thanh không gian" : "Bật âm thanh không gian"}
-            title={isAudioPlaying ? "Tắt âm thanh không gian" : "Bật âm thanh hào hùng"}
-            className={`flex size-9 items-center justify-center rounded-lg border transition-all ${
-              isAudioPlaying
-                ? "border-amber-400 bg-amber-500/20 text-amber-300 shadow-md shadow-amber-500/30"
-                : "border-stone-700 bg-stone-900/60 text-stone-400 hover:border-amber-600 hover:text-amber-300"
-            }`}
+            onClick={() => (musicOn ? ambientSound.stop() : ambientSound.play())}
+            aria-label={musicOn ? "Tắt nhạc nền" : "Bật nhạc nền"}
+            aria-pressed={musicOn}
+            className={cn(
+              "flex size-9 items-center justify-center rounded-md border transition-colors",
+              musicOn
+                ? "border-amber-500 text-amber-300"
+                : "border-stone-700 text-stone-400 hover:border-amber-600 hover:text-amber-300",
+            )}
           >
-            {isAudioPlaying ? (
-              <Volume2 className="size-4 animate-pulse text-amber-400" />
+            {musicOn ? (
+              <Volume2 className="size-4" aria-hidden />
             ) : (
-              <VolumeX className="size-4" />
+              <VolumeX className="size-4" aria-hidden />
             )}
           </button>
 
-          {/* Play Now Direct Button */}
           <Link
-            href="/kimdong"
+            href={FIRST_PLAYABLE_HREF}
             className={buttonStyles({
               size: "sm",
-              className: "hidden px-4 font-bold tracking-wide shadow-md sm:inline-flex",
+              className: "hidden px-4 whitespace-nowrap sm:inline-flex",
             })}
           >
             Chơi ngay
           </Link>
 
-          {/* Mobile Menu Button */}
           <button
             type="button"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label={mobileMenuOpen ? "Đóng menu" : "Mở menu"}
-            className="flex size-9 items-center justify-center rounded-lg border border-stone-700 bg-stone-900/60 text-stone-300 hover:text-amber-400 md:hidden"
+            onClick={() => setMenuOpen((open) => !open)}
+            aria-label={menuOpen ? "Đóng menu" : "Mở menu"}
+            aria-expanded={menuOpen}
+            className="flex size-9 items-center justify-center rounded-md border border-stone-700 text-stone-300 hover:text-amber-400 lg:hidden"
           >
-            {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+            {menuOpen ? (
+              <X className="size-5" aria-hidden />
+            ) : (
+              <Menu className="size-5" aria-hidden />
+            )}
           </button>
         </div>
       </div>
 
-      {/* Mobile Drawer Menu */}
-      {mobileMenuOpen && (
-        <div className="animate-rise-in border-t border-amber-900/40 bg-stone-950/95 px-5 py-5 shadow-2xl backdrop-blur-xl md:hidden">
-          <nav className="flex flex-col gap-2">
+      {menuOpen && (
+        <nav
+          aria-label="Menu di động"
+          className="flex flex-col gap-1 border-t border-amber-900/40 bg-stone-950 px-4 py-4 lg:hidden"
+        >
+          {NAV_LINKS.map((link) => (
             <Link
-              href="/"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-semibold text-stone-200 hover:bg-stone-800/80 hover:text-amber-400"
+              key={link.href}
+              href={link.href}
+              onClick={() => setMenuOpen(false)}
+              className="rounded-md px-3 py-2.5 text-base font-semibold text-stone-200 hover:bg-stone-900 hover:text-amber-400"
             >
-              <ScrollText className="size-5 text-amber-500" />
-              Trang chủ
+              {link.label}
             </Link>
-
-            <Link
-              href="/#chapters"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-semibold text-stone-200 hover:bg-stone-800/80 hover:text-amber-400"
-            >
-              <Swords className="size-5 text-amber-500" />
-              Hành trình các chương
-            </Link>
-
-            <Link
-              href="/#codex"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-semibold text-stone-200 hover:bg-stone-800/80 hover:text-amber-400"
-            >
-              <BookOpen className="size-5 text-amber-500" />
-              Tàng Kinh Các (Hồ sơ)
-            </Link>
-
-            <Link
-              href="/kimdong/codex"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-semibold text-stone-200 hover:bg-stone-800/80 hover:text-amber-400"
-            >
-              <ShieldCheck className="size-5 text-amber-500" />
-              Hồ sơ Anh hùng Kim Đồng
-            </Link>
-
-            <div className="mt-3 flex items-center justify-between border-t border-stone-800 pt-4">
-              <span className="text-sm text-stone-400">Tiến độ lưu:</span>
-              <span className="rounded-full border border-amber-700/60 bg-amber-950/60 px-3 py-0.5 text-xs font-bold text-amber-400">
-                {completedCount}/3 Chương
-              </span>
-            </div>
-
-            <div className="mt-2 pt-2">
-              <Link
-                href="/kimdong"
-                onClick={() => setMobileMenuOpen(false)}
-                className={buttonStyles({
-                  size: "md",
-                  className: "w-full justify-center text-center",
-                })}
-              >
-                Vào chơi Chapter Kim Đồng
-              </Link>
-            </div>
-          </nav>
-        </div>
+          ))}
+          <p className="px-3 pt-3 text-sm text-stone-400">
+            Đã hoàn thành <span className="font-bold text-amber-400">{progressLabel}</span> chương
+          </p>
+          <Link
+            href={FIRST_PLAYABLE_HREF}
+            onClick={() => setMenuOpen(false)}
+            className={buttonStyles({ size: "md", className: "mt-2 w-full justify-center" })}
+          >
+            Chơi ngay
+          </Link>
+        </nav>
       )}
     </header>
   );

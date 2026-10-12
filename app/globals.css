@@ -1,27 +1,12 @@
 @import "tailwindcss";
 
-/* Theme: "Lịch sử Việt Nam hào hùng" – dark stone, amber, gold and lacquer red, serif headings. */
+/* Theme: dark stone, amber and lacquer red, serif headings. */
 @theme inline {
   --font-serif:
     var(--font-playfair), ui-serif, "Palatino Linotype", Georgia, Cambria, "Times New Roman", serif;
   --font-sans:
     var(--font-be-vietnam), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, sans-serif;
-}
-
-/* Gold lettering with a dark drop shadow and a soft glow. */
-@utility text-glow {
-  text-shadow:
-    0 2px 0 rgb(0 0 0 / 0.75),
-    0 0 24px rgb(245 158 11 / 0.45),
-    0 0 48px rgb(217 119 6 / 0.25);
-}
-
-/* Lacquer red lettering glow. */
-@utility text-glow-red {
-  text-shadow:
-    0 2px 0 rgb(0 0 0 / 0.75),
-    0 0 20px rgb(220 38 38 / 0.5);
 }
 
 /* Fade a whole page in. Opacity only: a transform on an ancestor would break `position: fixed`. */
@@ -54,104 +39,19 @@
   animation: rise-in 0.8s ease-out both;
 }
 
-/* Very slow rotation for ambient background Dong Son sunburst */
-@keyframes spin-slow {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@utility animate-spin-slow {
-  animation: spin-slow 90s linear infinite;
-}
-
-/* Slow ambient breathing pulse */
-@keyframes pulse-slow {
-  0%,
-  100% {
-    opacity: 0.35;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.65;
-    transform: scale(1.03);
-  }
-}
-
-@utility animate-pulse-slow {
-  animation: pulse-slow 6s ease-in-out infinite;
-}
-
-/* Card shimmer highlight sweep */
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-@utility animate-shimmer {
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(245, 158, 11, 0.15) 50%,
-    transparent 100%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 4s infinite;
-}
-
-/* Hero backdrop: lacquer red glow on top, amber glow below, concentric rings like a bronze drum. */
+/* Hero backdrop: near-black with one dark red glow at the top. */
 @utility bg-hero {
   background-color: #0c0a09;
-  background-image:
-    radial-gradient(ellipse 70% 55% at 50% 0%, rgb(185 28 28 / 0.4), transparent 70%),
-    radial-gradient(ellipse 60% 45% at 50% 100%, rgb(217 119 6 / 0.25), transparent 70%),
-    repeating-radial-gradient(
-      circle at 50% 108%,
-      transparent 0 34px,
-      rgb(245 158 11 / 0.06) 34px 36px
-    );
-}
-
-/* Glass panel with bronze border */
-@utility glass-card {
-  background-color: rgb(28 25 23 / 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgb(180 83 9 / 0.3);
-}
-
-@utility glass-card-hover {
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-track {
-  background: #0c0a09;
-}
-::-webkit-scrollbar-thumb {
-  background: #44403c;
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #d97706;
+  background-image: radial-gradient(
+    ellipse 70% 55% at 50% 0%,
+    rgb(153 27 27 / 0.35),
+    transparent 70%
+  );
 }
 
 @media (prefers-reduced-motion: reduce) {
   .animate-page-in,
-  .animate-rise-in,
-  .animate-spin-slow,
-  .animate-pulse-slow,
-  .animate-shimmer {
+  .animate-rise-in {
     animation: none;
   }
 }

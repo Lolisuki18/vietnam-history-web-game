@@ -2,27 +2,14 @@ import { ChapterGrid } from "@/components/home/chapter-grid";
 import { CodexShelf } from "@/components/home/codex-shelf";
 import { Hero } from "@/components/home/hero";
 import { Footer } from "@/components/layout/footer";
-import { DongSonDrum } from "@/components/ui";
 
 function SectionHeading({ kicker, title, id }: { kicker: string; title: string; id: string }) {
   return (
-    <header className="mb-10 flex flex-col items-center gap-2.5 text-center sm:mb-14">
-      <div className="flex items-center gap-2">
-        <DongSonDrum size={18} className="text-amber-500/80" />
-        <p className="text-xs font-bold tracking-[0.28em] text-red-500 uppercase">{kicker}</p>
-        <DongSonDrum size={18} className="text-amber-500/80" />
-      </div>
-      <h2
-        id={id}
-        className="font-serif text-3xl font-black tracking-tight text-amber-400 text-glow sm:text-4xl md:text-5xl"
-      >
+    <header className="mb-10 sm:mb-12">
+      <p className="text-sm font-semibold text-red-500">{kicker}</p>
+      <h2 id={id} className="mt-1 font-serif text-3xl font-bold text-amber-400 sm:text-4xl">
         {title}
       </h2>
-      <div className="flex items-center gap-2 pt-1">
-        <span className="h-px w-16 bg-gradient-to-r from-transparent to-amber-600/70 sm:w-24" />
-        <span className="size-1.5 rotate-45 bg-amber-500" />
-        <span className="h-px w-16 bg-gradient-to-l from-transparent to-amber-600/70 sm:w-24" />
-      </div>
     </header>
   );
 }
@@ -38,11 +25,7 @@ export default function HomePage() {
         aria-labelledby="chapters-heading"
         className="mx-auto max-w-7xl scroll-mt-20 px-5 py-16 sm:px-8 sm:py-24"
       >
-        <SectionHeading
-          kicker="Hành trình cứu quốc"
-          title="Các Chương Lịch Sử"
-          id="chapters-heading"
-        />
+        <SectionHeading kicker="Các chương" title="Chọn một câu chuyện" id="chapters-heading" />
         <ChapterGrid />
       </section>
 
@@ -54,8 +37,8 @@ export default function HomePage() {
       >
         <div className="mx-auto max-w-7xl scroll-mt-20 px-5 py-16 sm:px-8 sm:py-24">
           <SectionHeading
-            kicker="Tàng Kinh Các"
-            title="Hồ Sơ Anh Hùng Lịch Sử"
+            kicker="Hồ sơ lịch sử"
+            title="Những con người trong từng chương"
             id="codex-heading"
           />
           <CodexShelf />
