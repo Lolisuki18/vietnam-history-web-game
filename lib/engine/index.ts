@@ -1,22 +1,7 @@
 export { TypedEmitter } from "./emitter";
 export { clamp } from "./math";
-export {
-  CHAPTER_IDS,
-  CHAPTER_PHASES,
-  DIALOGUE_IDS,
-  createChapterProgress,
-  isChapterId,
-  isChapterPhase,
-  isDialogueId,
-} from "./chapter";
-export type {
-  ChapterId,
-  ChapterOutcome,
-  ChapterPhase,
-  ChapterProgress,
-  DialogueId,
-} from "./chapter";
-export type { ChapterMessage, HostMessage } from "./messages";
+export { CHAPTER_IDS, createChapterProgress, isChapterId } from "./chapter";
+export type { ChapterId, ChapterOutcome, ChapterProgress } from "./chapter";
 export {
   angleDifference,
   distanceToPolyline,

@@ -6,8 +6,7 @@ import {
 } from "@/lib/engine";
 import type Phaser from "phaser";
 
-import { gameEvents } from "../events";
-import { clearTouchDirections, touchInput } from "../input-state";
+import { clearTouchDirections, type TouchInput } from "./touch-input";
 
 const MARGIN = 28;
 const DEPTH = 200;
@@ -21,7 +20,7 @@ const NO_POINTER = -1;
  *
  * Every control remembers the id of the finger that grabbed it, so the player can steer and
  * press the action button at the same time (multi-touch). The joystick is read as the same
- * 8-way direction flags the keyboard produces (see `touchInput`).
+ * 8-way direction flags the keyboard produces (see `TouchInput`).
  */
 export class TouchControls {
   private readonly base: Phaser.GameObjects.Arc;
@@ -44,7 +43,15 @@ export class TouchControls {
   private readonly stick = createStickState();
   private readonly directions = createStickDirections();
 
-  constructor(private readonly scene: Phaser.Scene) {
+  /**
+   * @param input the game's own `TouchInput`, which this class writes the joystick flags into
+   * @param onAction called when the action button is pressed (like Space / left click)
+   */
+  constructor(
+    private readonly scene: Phaser.Scene,
+    private readonly input: TouchInput,
+    private readonly onAction: () => void,
+  ) {
     // Mouse + 4 touch points, so two or three fingers can be down at once.
     scene.input.addPointer(2);
 
@@ -85,7 +92,7 @@ export class TouchControls {
   setEnabled(enabled: boolean): void {
     if (this.enabled === enabled) return;
     this.enabled = enabled;
-    touchInput.enabled = enabled;
+    this.input.enabled = enabled;
     this.refresh();
   }
 
@@ -118,7 +125,7 @@ export class TouchControls {
     this.scene.input.off("pointerup", this.onUp);
     this.scene.input.off("pointerupoutside", this.onUp);
     this.releaseAll();
-    touchInput.enabled = false;
+    this.input.enabled = false;
     this.base.destroy();
     this.thumb.destroy();
     this.button.destroy();
@@ -131,7 +138,7 @@ export class TouchControls {
 
   private refresh(): void {
     const visible = this.visible;
-    touchInput.visible = visible;
+    this.input.visible = visible;
     this.base.setVisible(visible);
     this.thumb.setVisible(visible);
     this.button.setVisible(visible);
@@ -156,7 +163,7 @@ export class TouchControls {
     ) {
       this.buttonPointer = pointer.id;
       this.button.setFillStyle(0xdc2626, 0.6).setScale(0.92);
-      gameEvents.emit("touch:action", undefined);
+      this.onAction();
     }
   };
 
@@ -172,10 +179,10 @@ export class TouchControls {
   private updateStick(pointer: Phaser.Input.Pointer): void {
     resolveStick(pointer.x - this.baseX, pointer.y - this.baseY, this.baseRadius, this.stick);
     stickDirections(this.stick, this.directions);
-    touchInput.left = this.directions.left;
-    touchInput.right = this.directions.right;
-    touchInput.up = this.directions.up;
-    touchInput.down = this.directions.down;
+    this.input.left = this.directions.left;
+    this.input.right = this.directions.right;
+    this.input.up = this.directions.up;
+    this.input.down = this.directions.down;
     this.thumb.setPosition(this.baseX + this.stick.x, this.baseY + this.stick.y);
     this.thumb.setAlpha(0.6 + 0.4 * this.stick.force);
   }
@@ -183,7 +190,7 @@ export class TouchControls {
   private releaseStick(): void {
     this.stickPointer = NO_POINTER;
     resolveStick(0, 0, this.baseRadius, this.stick);
-    clearTouchDirections();
+    clearTouchDirections(this.input);
     this.centreThumb();
   }
 

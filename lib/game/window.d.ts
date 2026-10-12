@@ -1,7 +1,7 @@
 interface Window {
-  /** Dev-only cheat registered by StealthScene: jump straight to the chapter ending. */
+  /** Dev-only cheat: jump straight to the chapter ending. */
   debugWinGame?: () => void;
-  /** Dev-only cheat registered by StealthScene: jump to a phase (see StealthScene.setupDebug). */
+  /** Dev-only cheat: jump to a phase / position (targets are defined by each game). */
   debugGoto?: (target: string) => void;
   /** Dev-only: listener / display-object counts, to spot leaks across restarts. */
   debugStats?: () => Record<string, unknown>;

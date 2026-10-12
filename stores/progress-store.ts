@@ -2,20 +2,16 @@ import type { ChapterId, ChapterOutcome, ChapterProgress } from "@/lib/engine";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export interface ChapterCompletion {
-  /** ISO timestamp of the (latest) completion. */
-  completedAt: string;
-  outcome: ChapterOutcome;
-}
+import {
+  emptyProgress,
+  migrateProgress,
+  PROGRESS_VERSION,
+  type ProgressData,
+} from "./progress-migrate";
 
-export interface ProgressState {
-  /** Latest letters-collected progress per chapter. */
-  chapters: Partial<Record<ChapterId, ChapterProgress>>;
-  /** Chapters the player has finished. */
-  completions: Partial<Record<ChapterId, ChapterCompletion>>;
-  /** Chapters whose historical dossier (Codex) is unlocked. */
-  codexUnlocked: ChapterId[];
+export type { ChapterCompletion, ProgressData } from "./progress-migrate";
 
+export interface ProgressState extends ProgressData {
   setProgress: (progress: ChapterProgress) => void;
   /** Mark a chapter finished and unlock its Codex entry. */
   completeChapter: (chapterId: ChapterId, outcome: ChapterOutcome) => void;
@@ -37,9 +33,7 @@ export const selectIsCompleted =
 export const useProgressStore = create<ProgressState>()(
   persist(
     (set) => ({
-      chapters: {},
-      completions: {},
-      codexUnlocked: [],
+      ...emptyProgress(),
 
       setProgress: (progress) =>
         set((state) => ({ chapters: { ...state.chapters, [progress.chapterId]: progress } })),
@@ -53,10 +47,24 @@ export const useProgressStore = create<ProgressState>()(
             ? state.codexUnlocked
             : [...state.codexUnlocked, chapterId],
         })),
-      reset: () => set({ chapters: {}, completions: {}, codexUnlocked: [] }),
+      reset: () => set(emptyProgress()),
     }),
     {
       name: "vhg-progress",
+      version: PROGRESS_VERSION,
+      // Old or damaged saves are repaired instead of crashing or being thrown away.
+      migrate: (persisted, version) => migrateProgress(persisted, version),
+      // `migrate` only runs for older versions; validate current-version saves as well.
+      merge: (persisted, current) => ({
+        ...current,
+        ...migrateProgress(persisted, PROGRESS_VERSION),
+      }),
+      // Save only the data, not the actions.
+      partialize: ({ chapters, completions, codexUnlocked }): ProgressData => ({
+        chapters,
+        completions,
+        codexUnlocked,
+      }),
       // Rehydrate on the client after mount (see StoreHydrator) to avoid SSR hydration mismatches.
       skipHydration: true,
     },
