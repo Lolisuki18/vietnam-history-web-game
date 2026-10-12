@@ -14,6 +14,7 @@
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
+    "check:assets": "node scripts/check-assets.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
