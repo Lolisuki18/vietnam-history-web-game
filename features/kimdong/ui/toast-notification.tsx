@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/components/ui";
-import { Flame, Lightbulb, Mail } from "lucide-react";
+import { Flame, Mail } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { LETTERS, TOAST_DURATION_MS } from "@/features/kimdong/data/story";
@@ -54,15 +54,12 @@ function ToastCard({ toastKey, letterIndex }: { toastKey: number; letterIndex: n
           )}
         >
           {letter.urgent ? (
-            <Flame className="size-4 animate-pulse text-red-400" aria-hidden />
+            <Flame className="size-4 text-red-400" aria-hidden />
           ) : (
             <Mail className="size-4 text-amber-400" aria-hidden />
           )}
           Mật thư {letterIndex + 1}/{LETTERS.length} · {letter.title}
         </p>
-        <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-300">
-          Thu thập thành công
-        </span>
       </div>
 
       <p className="mt-2.5 font-serif text-lg leading-relaxed text-amber-100 italic">
@@ -70,12 +67,9 @@ function ToastCard({ toastKey, letterIndex }: { toastKey: number; letterIndex: n
       </p>
 
       {letter.fact ? (
-        <div className="mt-3 flex gap-2 rounded-lg border border-amber-900/40 bg-stone-900/60 p-2.5 text-xs text-amber-100/90">
-          <Lightbulb className="mt-0.5 size-3.5 shrink-0 text-amber-300" aria-hidden />
-          <span>
-            <strong className="font-semibold text-amber-300">Bạn có biết:</strong> {letter.fact}
-          </span>
-        </div>
+        <p className="mt-3 rounded-md bg-stone-900/70 p-2.5 text-xs text-amber-100/90">
+          <strong className="font-semibold text-amber-300">Bạn có biết:</strong> {letter.fact}
+        </p>
       ) : null}
     </div>
   );

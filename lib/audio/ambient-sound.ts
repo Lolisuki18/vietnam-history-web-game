@@ -7,11 +7,39 @@
  * Requires no external audio files, works offline, and respects browser autoplay policies.
  */
 
+/** Seconds the music takes to fade out before its oscillators are released. */
+const FADE_OUT_MS = 1300;
+
 class AmbientSoundManager {
   private ctx: AudioContext | null = null;
   private isPlaying = false;
   private masterGain: GainNode | null = null;
   private activeNodes: { stop: () => void }[] = [];
+  private stopTimer: number | undefined;
+  private readonly listeners = new Set<() => void>();
+
+  /** For `useSyncExternalStore`: called whenever music starts or stops. */
+  public subscribe = (listener: () => void): (() => void) => {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  };
+
+  /** For `useSyncExternalStore`: is the music on (a fading-out track counts as off)? */
+  public getStatus = (): boolean => this.isPlaying;
+
+  private notify(): void {
+    for (const listener of this.listeners) listener();
+  }
+
+  /** Release the oscillators of the current / fading track right now. */
+  private teardown(): void {
+    window.clearTimeout(this.stopTimer);
+    this.stopTimer = undefined;
+    this.activeNodes.forEach((node) => node.stop());
+    this.activeNodes = [];
+    this.masterGain?.disconnect();
+    this.masterGain = null;
+  }
 
   private initContext(): AudioContext | null {
     if (typeof window === "undefined") return null;
@@ -39,16 +67,15 @@ class AmbientSoundManager {
     }
   }
 
-  public getStatus(): boolean {
-    return this.isPlaying;
-  }
-
   public play(): void {
     const ctx = this.initContext();
     if (!ctx) return;
     if (this.isPlaying) return;
 
+    // Started again while the previous track was still fading out: drop it first.
+    this.teardown();
     this.isPlaying = true;
+    this.notify();
 
     // Master Gain with gentle fade-in
     const masterGain = ctx.createGain();
@@ -99,20 +126,15 @@ class AmbientSoundManager {
   }
 
   public stop(): void {
-    if (!this.isPlaying || !this.ctx || !this.masterGain) {
-      this.isPlaying = false;
-      return;
-    }
+    if (!this.isPlaying) return;
+    this.isPlaying = false;
+    this.notify();
+    if (!this.ctx || !this.masterGain) return;
 
     const now = this.ctx.currentTime;
     this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, now);
     this.masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
-
-    window.setTimeout(() => {
-      this.activeNodes.forEach((node) => node.stop());
-      this.activeNodes = [];
-      this.isPlaying = false;
-    }, 1300);
+    this.stopTimer = window.setTimeout(() => this.teardown(), FADE_OUT_MS);
   }
 
   /** Soft bronze chime sound played when picking up a secret letter */

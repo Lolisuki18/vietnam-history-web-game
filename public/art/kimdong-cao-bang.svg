@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice">
+  <!-- Cao Bằng mountains at dusk with a red neckerchief. Drawn for this project (no archive-photo copyright); replace with a real photo later. -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f6b26b" />
+      <stop offset="0.55" stop-color="#c0504d" />
+      <stop offset="1" stop-color="#3b2a4a" />
+    </linearGradient>
+  </defs>
+  <rect width="320" height="200" fill="url(#sky)" />
+  <circle cx="236" cy="62" r="26" fill="#ffe8a3" opacity="0.9" />
+  <path d="M0 140 L48 82 L86 122 L132 64 L190 128 L238 92 L320 150 V200 H0 Z" fill="#2b3a55" />
+  <path d="M0 160 L60 114 L110 150 L170 104 L230 152 L290 120 L320 140 V200 H0 Z" fill="#1d2a3d" />
+  <path d="M0 200 V176 Q80 156 160 174 T320 168 V200 Z" fill="#14231a" />
+  <path d="M118 200 Q150 176 176 158 Q192 148 206 138" fill="none" stroke="#4aa3df" stroke-width="9" opacity="0.8" />
+  <g transform="translate(160 92)">
+    <path d="M-46 -22 L46 -22 L0 56 Z" fill="#d62828" stroke="#7a0f0f" stroke-width="2" />
+    <path d="M-46 -22 Q0 -10 46 -22" fill="none" stroke="#7a0f0f" stroke-width="2" />
+    <circle cx="0" cy="-16" r="7" fill="#b21f1f" stroke="#7a0f0f" stroke-width="2" />
+  </g>
+</svg>

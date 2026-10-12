@@ -47,6 +47,41 @@ export function setKeyboardEnabled(game: Phaser.Game, enabled: boolean): void {
   if (game.input.keyboard) game.input.keyboard.enabled = enabled;
 }
 
+export interface PauseController {
+  /** Freeze the whole game (updates, physics, tweens, timers, rendering). */
+  pause: () => void;
+  /** Continue; returns how long the game was frozen (ms), 0 if it was not paused. */
+  resume: () => number;
+  readonly paused: boolean;
+}
+
+/**
+ * Pause / resume a game on demand (a pause menu). Scene clocks keep running in real time while the
+ * game is frozen, so code that compares against `scene.time.now` must be moved forward by the
+ * returned duration on resume.
+ */
+export function createPauseController(game: Phaser.Game): PauseController {
+  let pausedAt = 0;
+  return {
+    pause: () => {
+      if (game.isPaused) return;
+      pausedAt = performance.now();
+      game.pause();
+    },
+    resume: () => {
+      if (!game.isPaused) return 0;
+      const frozenMs = performance.now() - pausedAt;
+      // Without this the first frame after resuming would see the whole pause as one delta.
+      game.loop.resetDelta();
+      game.resume();
+      return frozenMs;
+    },
+    get paused() {
+      return game.isPaused;
+    },
+  };
+}
+
 /**
  * Tear a game down. Scenes release their own listeners / audio in their SHUTDOWN handlers, which
  * Phaser only emits when a scene is stopped (destroying the game skips it), so stop them first.

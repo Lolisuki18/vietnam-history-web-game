@@ -1,7 +1,6 @@
 "use client";
 
 import { cn } from "@/components/ui";
-import { BookOpen, Calendar, Compass, Flame, Info, Mail, MapPin, Sparkles } from "lucide-react";
 import { useState } from "react";
 
 import { CODEX, LETTERS } from "@/features/kimdong/data/story";
@@ -30,14 +29,13 @@ export function CodexText({ className }: { className?: string }) {
           aria-selected={activeTab === "biography"}
           onClick={() => setActiveTab("biography")}
           className={cn(
-            "flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold tracking-wide transition-all",
+            "rounded-md px-4 py-2 text-sm font-semibold transition-colors",
             activeTab === "biography"
-              ? "border border-amber-500 bg-amber-500/20 text-amber-300 shadow-md shadow-amber-900/30"
-              : "border border-transparent bg-stone-900/60 text-stone-400 hover:border-amber-900/50 hover:text-stone-200",
+              ? "border border-amber-600 text-amber-300"
+              : "border border-transparent text-stone-400 hover:text-stone-200",
           )}
         >
-          <BookOpen className="size-4 text-amber-400" />
-          Tiểu sử & Cuộc đời
+          Tiểu sử
         </button>
 
         <button
@@ -46,14 +44,13 @@ export function CodexText({ className }: { className?: string }) {
           aria-selected={activeTab === "letters"}
           onClick={() => setActiveTab("letters")}
           className={cn(
-            "flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold tracking-wide transition-all",
+            "rounded-md px-4 py-2 text-sm font-semibold transition-colors",
             activeTab === "letters"
-              ? "border border-amber-500 bg-amber-500/20 text-amber-300 shadow-md shadow-amber-900/30"
-              : "border border-transparent bg-stone-900/60 text-stone-400 hover:border-amber-900/50 hover:text-stone-200",
+              ? "border border-amber-600 text-amber-300"
+              : "border border-transparent text-stone-400 hover:text-stone-200",
           )}
         >
-          <Mail className="size-4 text-amber-400" />
-          Kho Mật Thư (5/5)
+          Mật thư (5/5)
         </button>
 
         <button
@@ -62,14 +59,13 @@ export function CodexText({ className }: { className?: string }) {
           aria-selected={activeTab === "monument"}
           onClick={() => setActiveTab("monument")}
           className={cn(
-            "flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold tracking-wide transition-all",
+            "rounded-md px-4 py-2 text-sm font-semibold transition-colors",
             activeTab === "monument"
-              ? "border border-amber-500 bg-amber-500/20 text-amber-300 shadow-md shadow-amber-900/30"
-              : "border border-transparent bg-stone-900/60 text-stone-400 hover:border-amber-900/50 hover:text-stone-200",
+              ? "border border-amber-600 text-amber-300"
+              : "border border-transparent text-stone-400 hover:text-stone-200",
           )}
         >
-          <MapPin className="size-4 text-amber-400" />
-          Di tích Cao Bằng
+          Di tích
         </button>
       </div>
 
@@ -81,14 +77,10 @@ export function CodexText({ className }: { className?: string }) {
             {CODEX.stats.map((stat) => (
               <div
                 key={stat.label}
-                className="rounded-xl border border-amber-700/50 bg-stone-950/70 p-4 text-center shadow-lg shadow-black/40"
+                className="rounded-lg border border-stone-800 bg-stone-900 p-4 text-center"
               >
-                <dd className="font-serif text-3xl font-black text-amber-400 text-glow">
-                  {stat.value}
-                </dd>
-                <dt className="mt-1 text-xs font-bold tracking-wider text-stone-400 uppercase">
-                  {stat.label}
-                </dt>
+                <dd className="font-serif text-3xl font-bold text-amber-400">{stat.value}</dd>
+                <dt className="mt-1 text-sm text-stone-400">{stat.label}</dt>
               </div>
             ))}
           </dl>
@@ -110,9 +102,8 @@ export function CodexText({ className }: { className?: string }) {
 
           {/* Timeline */}
           <section className="flex flex-col gap-5">
-            <h2 className="flex items-center gap-2.5 border-b border-amber-800/40 pb-2.5 font-serif text-2xl font-bold text-amber-400">
-              <Calendar className="size-5 text-red-500" />
-              Dòng Thời Gian Lịch Sử
+            <h2 className="border-b border-amber-800/40 pb-2.5 font-serif text-2xl font-bold text-amber-400">
+              Dòng thời gian
             </h2>
             <ol className="relative flex flex-col gap-6 border-l-2 border-amber-600/50 pl-6 sm:pl-8">
               {CODEX.timeline.map((entry) => (
@@ -140,9 +131,7 @@ export function CodexText({ className }: { className?: string }) {
       {activeTab === "letters" && (
         <div className="flex animate-rise-in flex-col gap-6">
           <header className="rounded-xl border border-amber-800/40 bg-stone-950/70 p-4">
-            <h2 className="font-serif text-xl font-bold text-amber-400">
-              Tài Liệu Mật Thư Kháng Chiến (5 Mảnh Mật Thư)
-            </h2>
+            <h2 className="font-serif text-xl font-bold text-amber-400">Năm mảnh mật thư</h2>
             <p className="mt-1 text-sm text-stone-400">
               Các bức thư mật người chơi đã thu thập và bảo vệ an toàn trong màn chơi Kim Đồng.
             </p>
@@ -153,7 +142,7 @@ export function CodexText({ className }: { className?: string }) {
               <div
                 key={letter.title}
                 className={cn(
-                  "relative flex flex-col gap-3 rounded-xl border p-5 shadow-lg",
+                  "relative flex flex-col gap-3 rounded-lg border p-5",
                   letter.urgent
                     ? "border-red-600/70 bg-red-950/40"
                     : "border-amber-700/50 bg-stone-950/80",
@@ -162,15 +151,15 @@ export function CodexText({ className }: { className?: string }) {
                 <div className="flex items-center justify-between">
                   <span
                     className={cn(
-                      "font-serif text-sm font-bold tracking-wider uppercase",
+                      "font-serif text-sm font-bold",
                       letter.urgent ? "text-red-400" : "text-amber-400",
                     )}
                   >
-                    Mật thư số 0{idx + 1} · {letter.title}
+                    Mật thư {idx + 1} · {letter.title}
                   </span>
                   {letter.urgent && (
-                    <span className="flex items-center gap-1 rounded bg-red-700/80 px-2 py-0.5 text-[11px] font-bold text-white">
-                      <Flame className="size-3" /> KHẨN CẤP
+                    <span className="rounded bg-red-700/80 px-2 py-0.5 text-xs font-semibold text-white">
+                      Khẩn cấp
                     </span>
                   )}
                 </div>
@@ -180,12 +169,9 @@ export function CodexText({ className }: { className?: string }) {
                 </p>
 
                 {letter.fact && (
-                  <div className="flex items-start gap-2.5 rounded-lg border border-amber-900/40 bg-stone-900/60 p-3 text-sm text-stone-300">
-                    <Info className="mt-0.5 size-4 shrink-0 text-amber-400" />
-                    <span>
-                      <strong className="text-amber-400">Tư liệu lịch sử:</strong> {letter.fact}
-                    </span>
-                  </div>
+                  <p className="rounded-md bg-stone-900 p-3 text-sm text-stone-300">
+                    <strong className="text-amber-400">Bạn có biết:</strong> {letter.fact}
+                  </p>
                 )}
               </div>
             ))}
@@ -197,9 +183,8 @@ export function CodexText({ className }: { className?: string }) {
       {activeTab === "monument" && (
         <div className="flex animate-rise-in flex-col gap-6">
           <header className="rounded-xl border border-amber-800/40 bg-stone-950/70 p-4">
-            <h2 className="flex items-center gap-2 font-serif text-xl font-bold text-amber-400">
-              <Compass className="size-5 text-red-500" />
-              Khu Di Tích Lịch Sử Kim Đồng (Cao Bằng)
+            <h2 className="font-serif text-xl font-bold text-amber-400">
+              Khu di tích Kim Đồng (Cao Bằng)
             </h2>
             <p className="mt-1 text-sm text-stone-400">
               Thôn Nà Mạ, xã Trường Hà, huyện Hà Quảng, tỉnh Cao Bằng – nơi sinh ra và yên nghỉ của
@@ -227,13 +212,10 @@ export function CodexText({ className }: { className?: string }) {
               </p>
             </div>
 
-            <div className="flex items-center gap-3 rounded-lg border border-red-800/50 bg-red-950/30 p-4 text-amber-200">
-              <Sparkles className="size-5 shrink-0 text-amber-400" />
-              <span>
-                Năm 1997, Kim Đồng được Nhà nước truy tặng danh hiệu cao quý{" "}
-                <strong>Anh hùng Lực lượng Vũ trang Nhân dân</strong>.
-              </span>
-            </div>
+            <p className="rounded-md border-l-4 border-red-800 bg-stone-900 p-4 text-stone-200">
+              Năm 1997, Kim Đồng được Nhà nước truy tặng danh hiệu{" "}
+              <strong>Anh hùng Lực lượng Vũ trang Nhân dân</strong>.
+            </p>
           </div>
         </div>
       )}

@@ -45,7 +45,12 @@ export function ChapterShell() {
     hostEvents.emit("keyboard", screen === "playing" && !dialogueOpen && !isPaused);
   }, [screen, dialogueOpen, isPaused]);
 
-  // Listen for ESC key to trigger pause while playing
+  // The pause menu really freezes the game (physics, guards, timers), not just the keyboard.
+  useEffect(() => {
+    hostEvents.emit("pause", isPaused);
+  }, [isPaused]);
+
+  // ESC opens / closes the pause menu while playing. This is the only ESC handler.
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && screen === "playing" && !dialogueOpen) {
