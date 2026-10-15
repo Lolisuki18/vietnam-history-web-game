@@ -7,9 +7,15 @@ export const PIXEL_ART = false;
 /** Gameplay tuning constants (distances in world px, times in ms unless noted). */
 
 export const PLAYER = {
-  speed: 230,
+  /**
+   * Matched to the walk animation so the feet do not slide: one walk cycle (4 frames, 2 steps of
+   * ~21 world px) at `WALK_FPS` covers about this many px per second (see animations.ts).
+   */
+  speed: 140,
   /** Speed multiplier while swimming. */
   waterSpeedFactor: 0.7,
+  /** Speed multiplier while crawling through a bush (the crawl cycle covers less ground). */
+  bushSpeedFactor: 0.7,
   /** Alpha while hiding in a bush / diving in the stream. */
   bushAlpha: 0.5,
   waterAlpha: 0.35,

@@ -4,15 +4,15 @@ import { cn } from "./cn";
 
 /**
  * Icons that lucide-react does not have. Each one is a separate single-colour `.svg` file in
- * `public/icons/` (never inline `<svg>` in TSX: ESLint forbids it). Add the file, then register it
+ * `public/assets/shared/icons/` (never inline `<svg>` in TSX: ESLint forbids it). Add the file, then register it
  * here.
  */
 export const SVG_ICONS = {
-  "dong-son-drum": "/icons/dong-son-drum.svg",
+  "dong-son-drum": "/assets/shared/icons/dong-son-drum.svg",
   /** A drawing pin, seen from above. */
-  pin: "/icons/pin.svg",
+  pin: "/assets/shared/icons/pin.svg",
   /** Faint old pattern for the top-left corner of a card; rotate it for the other corners. */
-  "corner-ornament": "/icons/corner-ornament.svg",
+  "corner-ornament": "/assets/shared/icons/corner-ornament.svg",
 } as const;
 
 export type SvgIconName = keyof typeof SVG_ICONS;
@@ -26,7 +26,7 @@ interface SvgIconProps {
 }
 
 /**
- * Draws an `.svg` file from `public/icons/` in the current text colour: the file is used as a CSS
+ * Draws an `.svg` file from `public/assets/shared/icons/` in the current text colour: the file is used as a CSS
  * mask over a `currentColor` background, so `className="text-amber-500"` recolours it.
  */
 export function SvgIcon({ name, size = 24, className, label }: SvgIconProps) {

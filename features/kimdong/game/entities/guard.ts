@@ -169,6 +169,8 @@ export class Guard {
     if (this.investigatePhase === "moving") {
       if (this.moveToward(this.target.x, this.target.y, GUARD.investigateSpeed, dt)) {
         this.investigatePhase = "inspecting";
+        // "..." while looking around the spot, "?" while hurrying there.
+        this.emote?.setFrame(EMOTE_SHEET.frames.dots);
         this.timer = GUARD.investigateMs;
         this.inspectClock = 0;
         this.inspectBaseAngle = this.facing;
@@ -275,6 +277,9 @@ export class Guard {
     const key: SoldierAnimKey = soldierAnim(this.texture, this.lookingLeft ? "left" : "right");
 
     if (this.moving) {
+      // Keep the feet in step with the ground: faster while hurrying to check a noise.
+      this.sprite.anims.timeScale =
+        this.state === "investigate" ? GUARD.investigateSpeed / GUARD.speed : 1;
       if (key !== this.animKey || !this.sprite.anims.isPlaying) {
         this.animKey = key;
         this.sprite.anims.play(key, true);
