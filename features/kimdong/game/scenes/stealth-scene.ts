@@ -2,6 +2,7 @@ import Phaser from "phaser";
 
 import { createChapterProgress, segmentIntersectsRect } from "@/lib/engine";
 
+import { SOLDIER_TEXTURES } from "../assets/manifest";
 import { GameAudio } from "../audio";
 import { ALERT, CLIMAX, PEBBLE, PLAYER } from "../config";
 import { plugDebugHandlers } from "../debug";
@@ -15,7 +16,7 @@ import { touchInput } from "../input-state";
 import { AlertMeter } from "../systems/alert-meter";
 import { OxygenMeter } from "../systems/oxygen-meter";
 import { PebbleThrower } from "../systems/pebble";
-import { createBushes, createWorld } from "../systems/world-renderer";
+import { createBushes, createProps, createWorld } from "../systems/world-renderer";
 import { isInBush, isInWater } from "../systems/zones";
 import { KIMDONG_ID, type DialogueId } from "../../types";
 import {
@@ -59,6 +60,12 @@ export class StealthScene extends Phaser.Scene {
   private solids: Phaser.GameObjects.Rectangle[] = [];
   private gate!: Phaser.GameObjects.Rectangle;
   private audio!: GameAudio;
+  /** Stop functions of the looping music: the calm forest theme and the tense one. */
+  private stopMusic?: () => void;
+  private stopTension?: () => void;
+  /** Seconds until the next footstep / splash sound. */
+  private stepTimer = 0;
+  private wasSwimming = false;
   private squad!: Squad;
   /** Pulsing ring + label that tell the player where the old tree is, until it has been used. */
   private treeHint: Phaser.GameObjects.GameObject[] = [];
@@ -101,6 +108,7 @@ export class StealthScene extends Phaser.Scene {
   create(): void {
     createWorld(this);
     createBushes(this);
+    createProps(this);
     this.createSolids();
     this.createTreeHint();
     this.audio = new GameAudio(this);
@@ -110,7 +118,10 @@ export class StealthScene extends Phaser.Scene {
     this.physics.add.collider(this.player.sprite, this.solids);
     this.oxygen = new OxygenMeter(this);
     this.thrower = new PebbleThrower(this, (x, y) => this.onNoise(x, y));
-    this.guards = GUARD_ROUTES.map((route) => new Guard(this, route));
+    // Patrols mix French soldiers and "lính khố xanh" (colonial native guards).
+    this.guards = GUARD_ROUTES.map(
+      (route, index) => new Guard(this, route, SOLDIER_TEXTURES[index % SOLDIER_TEXTURES.length]),
+    );
     this.letters = LETTER_SPOTS.map((spot) => new LetterPickup(this, spot.x, spot.y));
     this.alert = new AlertMeter();
     this.alert.reset();
@@ -152,6 +163,7 @@ export class StealthScene extends Phaser.Scene {
       this.moveInput.y = 0;
     }
     this.player.animate(this.moveInput.x, this.moveInput.y, inWater);
+    if (playing) this.updateSounds(dt, inWater);
 
     let seen = false;
     for (const guard of this.guards) {
@@ -177,6 +189,31 @@ export class StealthScene extends Phaser.Scene {
     this.oxygen.syncVisuals(px, py);
   }
 
+  /** Footsteps on land, splashes in the stream, and the tense music while the alert is high. */
+  private updateSounds(dt: number, inWater: boolean): void {
+    const moving = this.moveInput.x !== 0 || this.moveInput.y !== 0;
+    if (inWater && !this.wasSwimming) this.audio.splash();
+    this.wasSwimming = inWater;
+    if (moving) {
+      this.stepTimer -= dt;
+      if (this.stepTimer <= 0) {
+        if (inWater) this.audio.splash(0.25);
+        else this.audio.footstep(0.28);
+        this.stepTimer = inWater ? 0.9 : 0.95;
+      }
+    } else {
+      this.stepTimer = 0;
+    }
+
+    // Hysteresis: the tense theme starts at 45 % and only stops once the alert is nearly gone.
+    const level = this.alert.value;
+    if (!this.stopTension && level >= 45) this.stopTension = this.audio.playTensionBGM();
+    else if (this.stopTension && level < 15) {
+      this.stopTension();
+      this.stopTension = undefined;
+    }
+  }
+
   /** Walls (and the gate while it is closed) block a guard's view of the player. */
   private hasLineOfSight(guard: Guard, px: number, py: number): boolean {
     for (const wall of OUTPOST_WALLS) {
@@ -200,6 +237,8 @@ export class StealthScene extends Phaser.Scene {
   private onDialogueClosed(id: DialogueId): void {
     if (id === "intro" && this.state === "intro") {
       this.state = "explore";
+      this.stopMusic?.();
+      this.stopMusic = this.audio.startAmbience();
       sendToHost({ type: "chapter:phase", phase: "explore" });
     }
   }
@@ -386,6 +425,7 @@ export class StealthScene extends Phaser.Scene {
     if (this.state !== "explore") return;
     const pointer = this.input.activePointer;
     this.cameras.main.getWorldPoint(pointer.x, pointer.y, this.pointerWorld);
+    this.player.playThrow(this.pointerWorld.x);
     this.thrower.throw(this.player, this.pointerWorld);
   }
 
@@ -393,6 +433,7 @@ export class StealthScene extends Phaser.Scene {
   private throwForward(): void {
     if (this.state !== "explore") return;
     const reach = PEBBLE.range * 0.75;
+    this.player.playThrow(this.player.x + this.facing.x);
     this.thrower.throw(this.player, {
       x: this.player.x + this.facing.x * reach,
       y: this.player.y + this.facing.y * reach,
@@ -565,6 +606,10 @@ export class StealthScene extends Phaser.Scene {
     for (const cleanup of this.cleanups.splice(0)) cleanup();
     // The next scene decides whether the controls come back (the runner turns them on again).
     gameEvents.emit("controls:active", false);
+    this.stopMusic?.();
+    this.stopMusic = undefined;
+    this.stopTension?.();
+    this.stopTension = undefined;
     this.thrower.destroy();
     this.oxygen.destroy();
     for (const guard of this.guards) guard.destroy();

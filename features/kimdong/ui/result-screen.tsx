@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, buttonStyles, cn } from "@/components/ui";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 
@@ -59,7 +60,22 @@ export function ResultScreen({ onReplay }: { onReplay: () => void }) {
             </div>
           ) : null}
 
-          <p className="text-sm text-stone-300">Hồ sơ lịch sử về anh Kim Đồng đã được mở khóa.</p>
+          {/* The chapter is "stamped" as done, next to the news of the unlocked file. */}
+          <div className="flex items-center gap-4">
+            <Image
+              src="/art/stamp-viet-minh.png"
+              alt=""
+              width={640}
+              height={640}
+              unoptimized
+              className="pointer-events-none w-20 shrink-0 -rotate-12 opacity-90"
+            />
+            <p className="text-left text-sm text-stone-300">
+              Hồ sơ lịch sử về anh Kim Đồng
+              <br />
+              đã được mở khóa.
+            </p>
+          </div>
 
           <Link
             ref={codexLinkRef}

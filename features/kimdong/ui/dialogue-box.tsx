@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui";
 import { ChevronRight, FastForward, Lightbulb } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useRef } from "react";
 
 import type { DialogueId } from "../types";
@@ -63,21 +64,28 @@ export function DialogueBox({ onClose }: { onClose: (id: DialogueId) => void }) 
             role="dialog"
             aria-modal="true"
             aria-label="Hội thoại"
-            className="relative max-h-[88svh] w-full max-w-2xl overflow-y-auto rounded-xl border-[3px] border-red-950 bg-[#ecd9a8] p-1.5"
+            className="relative max-h-[88svh] w-full max-w-2xl overflow-y-auto rounded-sm border-[3px] border-red-950 bg-[#ecd9a8] bg-[url('/textures/paper-aged.webp')] bg-cover bg-center p-1.5"
           >
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent_0_3px,rgba(120,80,20,0.06)_3px_4px)]"
-            />
             <div className="relative rounded-lg border border-dashed border-red-900/60 p-5 text-stone-900 sm:p-7">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3.5">
-                  <div
-                    aria-hidden
-                    className="flex size-14 shrink-0 items-center justify-center rounded-full border-2 border-red-950 bg-red-800 font-serif text-xl font-black text-amber-100"
-                  >
-                    {initials(line.speaker)}
-                  </div>
+                  {line.portrait ? (
+                    <Image
+                      src={line.portrait}
+                      alt=""
+                      width={64}
+                      height={64}
+                      unoptimized
+                      className="size-16 shrink-0 rounded-sm border-2 border-red-950 object-cover"
+                    />
+                  ) : (
+                    <div
+                      aria-hidden
+                      className="flex size-14 shrink-0 items-center justify-center rounded-full border-2 border-red-950 bg-red-800 font-serif text-xl font-black text-amber-100"
+                    >
+                      {initials(line.speaker)}
+                    </div>
+                  )}
                   <div>
                     <p className="font-serif text-lg font-bold text-red-950 sm:text-xl">
                       {line.speaker}

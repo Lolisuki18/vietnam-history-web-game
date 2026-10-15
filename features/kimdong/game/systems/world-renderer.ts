@@ -1,7 +1,13 @@
 import { distanceToPolyline, sampleCatmullRom, type Point } from "@/lib/engine";
 import Phaser from "phaser";
 
-import { ASSET_KEYS, BUSH_DISPLAY_FACTOR } from "../assets/manifest";
+import {
+  ASSET_KEYS,
+  BUSH_DISPLAY_FACTOR,
+  BUSH_KEYS,
+  ROCK_KEYS,
+  STUMP_KEYS,
+} from "../assets/manifest";
 import {
   BUSHES,
   GUARD_ROUTES,
@@ -103,8 +109,8 @@ function drawTree(g: Phaser.GameObjects.Graphics): void {
   g.strokeCircle(TREE.x, TREE.y, TREE.r);
 }
 
-/** Decorative trees: scattered everywhere except near gameplay-relevant spots. */
-function drawScenery(g: Phaser.GameObjects.Graphics, rng: Phaser.Math.RandomDataGenerator): void {
+/** Spots the scenery must stay away from: gameplay-relevant places, paths and the river. */
+function buildPlacement(): (x: number, y: number, radius: number) => boolean {
   const keepClear: { x: number; y: number; r: number }[] = [
     { x: PLAYER_START.x, y: PLAYER_START.y, r: 220 },
     { x: TREE.x, y: TREE.y, r: TREE.r + 120 },
@@ -114,15 +120,22 @@ function drawScenery(g: Phaser.GameObjects.Graphics, rng: Phaser.Math.RandomData
     ...GUARD_ROUTES.flatMap((route) => route.path.map((p) => ({ ...p, r: 90 }))),
   ];
   const trailPoints = TRAILS.flatMap((trail) => sampleCatmullRom(trail, 4));
+  return (x, y, radius) =>
+    distanceToPolyline(x, y, RIVER_POLYLINE) >= RIVER_WIDTH / 2 + radius + 30 &&
+    !keepClear.some((c) => Math.hypot(x - c.x, y - c.y) < c.r + radius) &&
+    !trailPoints.some((p) => Math.hypot(x - p.x, y - p.y) < 55 + radius);
+}
+
+/** Decorative trees: scattered everywhere except near gameplay-relevant spots. */
+function drawScenery(g: Phaser.GameObjects.Graphics, rng: Phaser.Math.RandomDataGenerator): void {
+  const isFree = buildPlacement();
 
   let placed = 0;
   for (let attempt = 0; attempt < 600 && placed < 130; attempt++) {
     const x = rng.between(0, WORLD.width);
     const y = rng.between(0, WORLD.height);
     const radius = rng.between(26, 52);
-    if (distanceToPolyline(x, y, RIVER_POLYLINE) < RIVER_WIDTH / 2 + radius + 30) continue;
-    if (keepClear.some((c) => Math.hypot(x - c.x, y - c.y) < c.r + radius)) continue;
-    if (trailPoints.some((p) => Math.hypot(x - p.x, y - p.y) < 55 + radius)) continue;
+    if (!isFree(x, y, radius)) continue;
 
     g.fillStyle(COLORS.treeShadow, 0.45);
     g.fillCircle(x + 8, y + 10, radius + 3);
@@ -148,7 +161,8 @@ function createBakedWorld(scene: Phaser.Scene): Phaser.GameObjects.Image {
     drawRiver(g);
     drawOutpost(g);
     drawScenery(g, rng);
-    drawTree(g);
+    // The old tree is a picture when the artwork loaded (see createProps); else it is drawn here.
+    if (!scene.textures.exists(ASSET_KEYS.tree)) drawTree(g);
     g.generateTexture(WORLD_TEXTURE_KEY, WORLD.width, WORLD.height);
     g.destroy();
   }
@@ -203,8 +217,58 @@ export function createWorld(scene: Phaser.Scene): void {
 
 /** The hiding bushes. Their hiding radius (world-data.ts) is what counts, not the image. */
 export function createBushes(scene: Phaser.Scene): void {
-  for (const bush of BUSHES) {
-    const image = scene.add.image(bush.x, bush.y, ASSET_KEYS.bush).setDepth(3);
+  BUSHES.forEach((bush, index) => {
+    const key = BUSH_KEYS[index % BUSH_KEYS.length]!;
+    const image = scene.add.image(bush.x, bush.y, key).setDepth(3);
     image.setScale((bush.r * BUSH_DISPLAY_FACTOR) / Math.max(image.width, image.height));
+    // Mirror every other bush so the same three pictures do not look copied.
+    image.setFlipX(index % 2 === 1);
+  });
+}
+
+/** Wide trees need to stand at their trunk: where the picture's feet are, as a share of height. */
+const PROP_FEET = 0.92;
+
+/**
+ * The picture props: the old tree (the rhythm game's spot), the watchtower of the guard post and
+ * rocks and stumps scattered over the forest floor. They are scenery only: collisions and
+ * gameplay areas come from world-data.ts. Props whose artwork did not load are skipped.
+ */
+export function createProps(scene: Phaser.Scene): void {
+  const has = (key: string): boolean => scene.textures.exists(key);
+
+  if (has(ASSET_KEYS.tree)) {
+    const tree = scene.add.image(TREE.x, TREE.y + TREE.r * 0.9, ASSET_KEYS.tree);
+    tree.setOrigin(0.5, PROP_FEET).setDepth(4);
+    tree.setScale((TREE.r * 3.4) / tree.width);
   }
+
+  if (has(ASSET_KEYS.tower)) {
+    // The watchtower stands in the north-east corner of the guard post.
+    const tower = scene.add.image(OUTPOST.x + OUTPOST.w - 86, OUTPOST.y + 150, ASSET_KEYS.tower);
+    tower.setOrigin(0.5, PROP_FEET).setDepth(4);
+    tower.setScale(230 / tower.height);
+  }
+
+  const isFree = buildPlacement();
+  const rng = new Phaser.Math.RandomDataGenerator(["kim-dong-props"]);
+  const scatter = (keys: readonly string[], count: number, size: [number, number]): void => {
+    const available = keys.filter(has);
+    if (available.length === 0) return;
+    let placed = 0;
+    for (let attempt = 0; attempt < 400 && placed < count; attempt++) {
+      const x = rng.between(40, WORLD.width - 40);
+      const y = rng.between(60, WORLD.height - 40);
+      const width = rng.between(size[0], size[1]);
+      if (!isFree(x, y, width * 0.6)) continue;
+      const image = scene.add
+        .image(x, y, rng.pick(available))
+        .setOrigin(0.5, PROP_FEET)
+        .setDepth(3);
+      image.setScale(width / image.width).setFlipX(rng.frac() < 0.5);
+      placed++;
+    }
+  };
+  scatter(ROCK_KEYS, 34, [46, 96]);
+  scatter(STUMP_KEYS, 9, [90, 130]);
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { Footer } from "@/components/layout/footer";
-import { buttonStyles, CodexCard } from "@/components/ui";
+import { buttonStyles, SvgIcon } from "@/components/ui";
 import { ChevronRight, Lock } from "lucide-react";
 import Link from "next/link";
 
@@ -11,7 +11,7 @@ import { selectIsCodexUnlocked, useProgressStore } from "@/stores/progress-store
 import { useProgressHydrated } from "@/stores/use-progress-hydrated";
 
 import { CodexText } from "./codex-content";
-import { KimDongArt } from "./codex-illustration";
+import { KimDongCodexArt } from "./codex-illustration";
 
 /** The Codex page of Kim Đồng: his card on the left, the historical text on the right. */
 export function CodexPageView() {
@@ -41,17 +41,18 @@ export function CodexPageView() {
           {!hydrated ? null : isCodexUnlocked ? (
             <div className="mt-10 flex animate-rise-in flex-col gap-8 lg:flex-row lg:items-start lg:gap-12">
               <aside className="mx-auto w-full max-w-sm lg:sticky lg:top-24 lg:mx-0 lg:w-[22rem] lg:shrink-0">
-                <CodexCard
-                  unlocked
-                  name="Anh hùng Kim Đồng"
-                  years={CODEX.years}
-                  role="Người liên lạc nhỏ"
-                  summary={CODEX.cardSummary}
-                  art={<KimDongArt />}
-                />
-                <p className="mt-3 text-center text-xs text-stone-500">
-                  Tranh minh họa núi rừng Cao Bằng và khăn quàng đỏ.
-                </p>
+                {/* The portrait card is a finished picture (name, years and role are in it). */}
+                <figure className="relative -rotate-1 overflow-hidden rounded-sm border-2 border-amber-700/70 bg-stone-900">
+                  <KimDongCodexArt />
+                  <SvgIcon
+                    name="pin"
+                    size={22}
+                    className="absolute top-2 left-1/2 -translate-x-1/2 text-red-700"
+                  />
+                </figure>
+                <figcaption className="mt-3 text-center text-xs text-stone-500">
+                  Tranh minh họa. {CODEX.years}.
+                </figcaption>
               </aside>
 
               <CodexText className="min-w-0 flex-1" />

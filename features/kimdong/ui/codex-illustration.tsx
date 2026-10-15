@@ -3,19 +3,43 @@ import Image from "next/image";
 import { cn } from "@/components/ui";
 
 /**
- * Cover / card art: Cao Bằng mountains at dusk with a red neckerchief. The drawing is a separate
- * file (`public/art/kimdong-cao-bang.svg`); swap it for a real photo later. It fills its container.
+ * Cover of the Kim Đồng chapter: the boy on a mountain trail in the morning mist
+ * (`public/art/kimdong-cover.webp`, built from assets-src by tools/kimdong-art). It fills its
+ * container.
  */
 export function KimDongArt({ className }: { className?: string }) {
   return (
     <Image
-      src="/art/kimdong-cao-bang.svg"
-      alt="Minh họa: núi rừng Cao Bằng lúc chiều tối và chiếc khăn quàng đỏ"
-      width={320}
-      height={200}
-      // SVG needs no resizing, and the optimizer refuses SVG by default.
+      src="/art/kimdong-cover.webp"
+      alt="Minh họa: Kim Đồng băng qua núi rừng Cao Bằng trong sương sớm"
+      width={1100}
+      height={614}
+      // Already compressed at build time: no need for the image optimizer.
       unoptimized
       className={cn("size-full object-cover", className)}
+    />
+  );
+}
+
+/**
+ * The portrait card of Kim Đồng (name, years and role are part of the picture). `crop` shows only
+ * the face, for the small card on the home page; otherwise the whole card.
+ */
+export function KimDongCodexArt({
+  className,
+  crop = false,
+}: {
+  className?: string;
+  crop?: boolean;
+}) {
+  return (
+    <Image
+      src="/art/kimdong-codex.webp"
+      alt="Chân dung Kim Đồng (Nông Văn Dền), 1929–1943, đội trưởng Đội Thiếu niên Tiền phong"
+      width={896}
+      height={1200}
+      unoptimized
+      className={cn(crop ? "size-full object-cover object-top" : "h-auto w-full", className)}
     />
   );
 }
