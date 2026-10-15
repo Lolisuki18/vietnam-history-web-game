@@ -69,7 +69,7 @@ export function CodexCard({
       {/* A worn blot in the bottom corner, behind the text. */}
       <span
         aria-hidden
-        className="pointer-events-none absolute right-0 bottom-0 size-24 bg-[url('/textures/card-wear.svg')] bg-contain bg-no-repeat opacity-70"
+        className="pointer-events-none absolute right-0 bottom-0 size-24 bg-[url('/assets/shared/textures/card-wear.svg')] bg-contain bg-no-repeat opacity-70"
       />
 
       <div className="relative flex h-full flex-col gap-4 p-5">

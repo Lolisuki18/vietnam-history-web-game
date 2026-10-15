@@ -29,7 +29,8 @@ const ICON_LIBRARY_BAN = {
     "@mui/icons-material/**",
     "@iconify/**",
   ],
-  message: "Use lucide-react for icons; icons it lacks go in public/icons/*.svg via <SvgIcon>.",
+  message:
+    "Use lucide-react for icons; icons it lacks go in public/assets/shared/icons/*.svg via <SvgIcon>.",
 };
 
 const games = readdirSync("features", { withFileTypes: true })
@@ -106,7 +107,7 @@ export default defineConfig(
         {
           selector: "JSXOpeningElement[name.name='svg']",
           message:
-            "No inline <svg>: use a lucide-react icon, or put the drawing in public/icons/*.svg (single colour, <SvgIcon>) or public/art/*.svg (illustration).",
+            "No inline <svg>: use a lucide-react icon, or put the drawing in public/assets/shared/icons/*.svg (single colour, <SvgIcon>) or public/assets/<game>/web/*.svg (illustration).",
         },
       ],
     },

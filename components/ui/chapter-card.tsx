@@ -167,7 +167,7 @@ export function ChapterCard({
       <span
         aria-hidden
         className={cn(
-          "pointer-events-none absolute size-28 bg-[url('/textures/card-wear.svg')] bg-contain bg-no-repeat opacity-80",
+          "pointer-events-none absolute size-28 bg-[url('/assets/shared/textures/card-wear.svg')] bg-contain bg-no-repeat opacity-80",
           WEAR_PLACEMENT[wear % WEAR_PLACEMENT.length],
         )}
       />

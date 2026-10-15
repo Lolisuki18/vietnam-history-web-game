@@ -19,24 +19,24 @@
 
 /*
  * Page background: a tileable aged-paper texture. The picture is a separate file
- * (public/textures/paper-dark.svg); the colour is what shows before it loads.
+ * (public/assets/shared/textures/paper-dark.svg); the colour is what shows before it loads.
  */
 @utility bg-paper {
   background-color: #2a2013;
-  background-image: url("/textures/paper-dark.svg");
+  background-image: url("/assets/shared/textures/paper-dark.svg");
   background-size: 600px 600px;
 }
 
 /*
  * Hand-made marks. They are flat on purpose (no shadow, no glow): the "worn" look comes from
- * masks that are separate files in public/textures/. A mask also clips outlines, so interactive
+ * masks that are separate files in public/assets/shared/textures/. A mask also clips outlines, so interactive
  * elements show focus with a colour change instead (see components/ui/button.tsx).
  */
 
 /* A strip of paper stuck on: cut by hand, a little crooked. */
 @utility label-tape {
   background-color: #d8c79a;
-  background-image: url("/textures/paper-aged.webp");
+  background-image: url("/assets/shared/textures/paper-aged.webp");
   background-size: 160px auto;
   color: #2a2013;
   rotate: -2deg;
@@ -64,20 +64,20 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   text-align: center;
-  mask-image: url("/textures/ink-worn.svg");
+  mask-image: url("/assets/shared/textures/ink-worn.svg");
   mask-size: 100% 100%;
   mask-repeat: no-repeat;
-  -webkit-mask-image: url("/textures/ink-worn.svg");
+  -webkit-mask-image: url("/assets/shared/textures/ink-worn.svg");
   -webkit-mask-size: 100% 100%;
   -webkit-mask-repeat: no-repeat;
 }
 
 /* A hand-cut edge instead of a perfect rounded rectangle (used by buttons). */
 @utility rough-edge {
-  mask-image: url("/textures/rough-edge.svg");
+  mask-image: url("/assets/shared/textures/rough-edge.svg");
   mask-size: 100% 100%;
   mask-repeat: no-repeat;
-  -webkit-mask-image: url("/textures/rough-edge.svg");
+  -webkit-mask-image: url("/assets/shared/textures/rough-edge.svg");
   -webkit-mask-size: 100% 100%;
   -webkit-mask-repeat: no-repeat;
 }

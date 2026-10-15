@@ -26,3 +26,5 @@ Thumbs.db
 # local planning docs (not published to GitHub)
 docs/
 AGENTS.md
+# raw originals restored from git history to rebuild the art (tools/kimdong-art/README.md)
+raw-art/

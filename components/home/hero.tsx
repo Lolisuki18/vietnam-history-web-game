@@ -17,7 +17,7 @@ export function Hero() {
         className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden select-none"
       >
         <Image
-          src="/art/stamp-viet-minh.png"
+          src="/assets/shared/textures/stamp-viet-minh.png"
           alt=""
           width={640}
           height={640}
