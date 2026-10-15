@@ -7,8 +7,11 @@ import { extname, join, relative } from "node:path";
 const ROOT = "public/assets";
 const MAX_FILE_BYTES = 2 * 1024 * 1024; // 2 MB per file
 const MAX_GAME_BYTES = 12 * 1024 * 1024; // 12 MB per game
-/** Uncompressed / editing formats: export to png, webp, jpg, ogg, mp3 or m4a instead. */
-const FORBIDDEN = new Set([".wav", ".bmp", ".tif", ".tiff", ".psd", ".ai", ".xcf", ".aseprite"]);
+/**
+ * Editing / very heavy formats: export to png, webp, jpg, ogg, mp3 or m4a instead.
+ * (.wav is allowed: the short loops and effects are small, and the per-file limit still applies.)
+ */
+const FORBIDDEN = new Set([".bmp", ".tif", ".tiff", ".psd", ".ai", ".xcf", ".aseprite"]);
 
 function walk(dir) {
   const files = [];
