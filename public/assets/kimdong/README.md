@@ -1,33 +1,43 @@
 # Artwork for the Kim Đồng chapter
 
-**Do not edit the files in this folder by hand.** They are generated from the raw images in
-`assets-src/kimdong/` by `tools/kimdong-art/build.py` (see `tools/kimdong-art/README.md`): the raw
-images have a checkerboard painted in place of transparency and are far too big to ship. The
-layout contract with the game lives in `features/kimdong/game/assets/manifest.ts`; if a file is
-missing the game draws a generated stand-in (the browser console lists them:
-`[kimdong] Using stand-in art for: ...`).
+**This is the one place art lives** (`public/assets/kimdong/` for this game, `public/assets/shared/`
+for textures and icons used by every page). Do not edit the generated files by hand: they come from
+the raw AI-generated images by `tools/kimdong-art/build.py` (see `tools/kimdong-art/README.md`; the
+raw originals are not in the repo but in git history). The layout contract with the game lives in
+`features/kimdong/game/assets/manifest.ts`; if a file is missing the game draws a generated stand-in
+(the browser console lists them: `[kimdong] Using stand-in art for: ...`).
 
-| File                                         | What                               | Layout                                                                                                                                       |
-| -------------------------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sprites/kimdong.png`                        | Kim Đồng                           | Frames **80 × 96**, 6 columns × 8 rows. Rows: walk down / left / right / up (4 frames), swim (4), run (6, facing right), jump (3), throw (3) |
-| `sprites/french_soldier.png`                 | French soldier                     | Frames 80 × 96, 5 columns × 2 rows: row 0 walking left, row 1 walking right                                                                  |
-| `sprites/linh_kho_xanh.png`                  | "Lính khố xanh" (colonial guard)   | Same layout as the French soldier                                                                                                            |
-| `images/letter.png`                          | The secret letter                  | 14 frames of 80 × 71 (5 × 3), a shimmer that fills with light and fades back                                                                 |
-| `images/emotes.png`                          | Speech bubbles over a guard's head | 2 frames of 64 × 64: `?` (suspicious), `!` (spotted)                                                                                         |
-| `images/bush_a/b/c.png`                      | Hiding bushes                      | Three pictures; the game picks one per bush and mirrors every other one. Hiding depends on the circles in `world-data.ts`, not on the image  |
-| `images/prop_tree.png`, `prop_tower.png`     | The old tree, the watchtower       | Placed at `TREE` / the guard post (`OUTPOST`) by `createProps` in `world-renderer.ts`                                                        |
-| `images/prop_rock_*.png`, `prop_stump_*.png` | Scenery                            | Scattered over the forest floor with a fixed seed, away from paths, the river and the gameplay spots                                         |
-| `images/portrait_*.png`                      | Speaker portraits (dialogue box)   | 256 × 256; referenced from `features/kimdong/data/story.ts`                                                                                  |
-| `audio/*.wav`                                | Sound effects and music loops      | Loaded by `PreloaderScene`, played by `GameAudio` (`features/kimdong/game/audio.ts`)                                                         |
+| File                                                          | What                               | Layout                                                                                                                                                                                                                |
+| ------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sprites/kimdong.png`                                         | Kim Đồng                           | Frames **80 × 96**, 6 columns × 11 rows. Rows: walk down / left / right / up (4 frames), swim (4), run (6, facing right), jump (3), throw (3), swim idle (2), hide / crouch (2), crawl (4); all side poses face right |
+| `sprites/duc_thanh.png`                                       | Anh Đức Thanh (cadre)              | Frames 80 × 96, 4 columns × 5 rows: walk down / left / right / up, then idle + talking                                                                                                                                |
+| `sprites/french_soldier.png`                                  | French soldier                     | Frames 80 × 96, 5 columns × 2 rows: row 0 walking left, row 1 walking right                                                                                                                                           |
+| `sprites/linh_kho_xanh.png`                                   | "Lính khố xanh" (colonial guard)   | Same layout as the French soldier                                                                                                                                                                                     |
+| `images/letter.png`                                           | The secret letter                  | 14 frames of 80 × 71 (5 × 3), a shimmer that fills with light and fades back                                                                                                                                          |
+| `images/emotes.png`                                           | Speech bubbles over a guard's head | 5 frames of 64 × 64: `?` (going to check), `!` (spotted), `...` (looking around), eye, `zzz`                                                                                                                          |
+| `images/sfx.png`                                              | Pebble and sound-wave pictures     | 8 frames of 192 × 192 (4 × 2): 0 pebble, 1 impact spark, 2–7 a ring that grows and fades                                                                                                                              |
+| `images/ground_grass/dirt/water.png`                          | Seamless ground textures           | Tiled over the world by `createTextureWorld` (grass everywhere, dirt in trails and the guard post, water in the stream)                                                                                               |
+| `images/bush_a/b/c/d.png`                                     | Hiding bushes                      | The game picks one per bush and mirrors every other one. Hiding depends on the circles in `world-data.ts`, not on the image                                                                                           |
+| `images/prop_tree.png`, `prop_tower.png`                      | The old tree, the watchtower       | The old tree stands at `TREE`, the tower inside the guard post; the tree also forms the forest                                                                                                                        |
+| `images/prop_fence.png`, `prop_fence_post.png`                | Bamboo-stake fence                 | Walls of the guard post (`createOutpostFence`); the post is one stake cut from the fence                                                                                                                              |
+| `images/prop_rock_*`, `prop_stump_*`, `deco_*`, `pebbles.png` | Scenery                            | Scattered with a fixed seed, away from paths, the river and the gameplay spots. Trees, rocks and stumps are **solid** (invisible bodies from `createProps`); ferns, tufts and pebbles can be walked over              |
+| `images/portrait_*.png`                                       | Speaker portraits (dialogue box)   | 256 × 256; referenced from `features/kimdong/data/story.ts`                                                                                                                                                           |
+| `web/kimdong-cover.webp`, `web/kimdong-codex.webp`            | Chapter card cover, Codex portrait | Used by `features/kimdong/ui/codex-illustration.tsx`                                                                                                                                                                  |
+| `audio/*.wav`                                                 | Sound effects and music loops      | Loaded by `PreloaderScene`, played by `GameAudio` (`features/kimdong/game/audio.ts`)                                                                                                                                  |
 
-The web pages use `public/art/` (cover, Codex portrait, the red seal) and `public/textures/`
-(`paper-aged.webp`: yellowed paper for the dialogue box and the paper labels), built by the same tool.
+Shared by every page: `public/assets/shared/textures/` (`paper-aged.webp`, the red `stamp-viet-minh.png`,
+SVG masks and paper textures) and `public/assets/shared/icons/` (SVG icons, see `components/ui/svg-icon.tsx`).
 
 ## Things to keep in mind
 
 - **Characters:** the sheets are drawn at 80 × 96 and shown at `SPRITE_SCALE` (0.65) of that. The feet
   are at 75 % of the frame height (`SPRITE_ORIGIN`) and the hitbox is a 24 × 24 square at the feet.
-- **The ground is drawn in code** (`world-renderer.ts`). `forest_tiles.png` from the raw set has a
-  grid drawn into it and is not a usable tileset, so there is no `level1.json`.
-- **Budget:** `pnpm check:assets` limits files to 2 MB and the whole game to 12 MB.
+- **Walking speed and animation speed go together** (`PLAYER.speed` in `config.ts`, `WALK_FPS` in
+  `animations.ts`): a walk cycle covers ~42 world px, so a faster walker must animate faster or the
+  feet slide like a glide.
+- **The world** is baked once into a canvas from the ground textures and the shapes in
+  `world-data.ts` (trails, stream, guard post); nothing about gameplay depends on the pictures.
+- **Cache:** after rebuilding art, bump `ASSET_VERSION` in `manifest.ts`.
+- **Budget:** `pnpm check:assets` limits files to 2 MB and each folder under `public/assets/` to 12 MB.
 - Add new animations in `features/kimdong/game/assets/animations.ts`.
+- Assets the game still needs are listed in `docs/kimdong/03-Asset-con-thieu.md`.

@@ -1,4 +1,5 @@
 """Quick look: clean one source image and save a preview over a magenta background."""
+import os
 import sys
 import time
 from pathlib import Path
@@ -7,7 +8,7 @@ from PIL import Image
 
 import artlib
 
-SRC = Path(__file__).resolve().parents[2] / "assets-src" / "kimdong"
+SRC = Path(os.environ.get("KIMDONG_RAW", Path(__file__).resolve().parents[2] / "raw-art" / "kimdong"))
 OUT = Path(sys.argv[3]) if len(sys.argv) > 3 else Path(".")
 
 name, mode = sys.argv[1], sys.argv[2]

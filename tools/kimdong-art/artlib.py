@@ -1,6 +1,6 @@
 """Helpers to turn the AI-generated sprite sheets into clean game sprites.
 
-The source images (assets-src/kimdong) have no real transparency: the "transparent" background is
+The source images (the raw originals, see README.md) have no real transparency: the "transparent" background is
 a grey checkerboard (or plain black / white) painted into the pixels, plus a small AI sparkle in the
 bottom-right corner. Everything here is plain Pillow so it runs without numpy.
 """

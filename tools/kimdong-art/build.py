@@ -1,15 +1,18 @@
-"""Build the game-ready Kim Đồng art from the raw AI-generated images in assets-src/kimdong.
+"""Build the game-ready Kim Đồng art from the raw AI-generated images (see README.md for where
+they are: set KIMDONG_RAW to the folder that holds them).
 
     python tools/kimdong-art/build.py            # everything
-    python tools/kimdong-art/build.py sprites    # only one group: sprites | props | ui | web
+    python tools/kimdong-art/build.py sprites    # only one group: sprites | props | terrain | web
 
 Needs Pillow only. The layout of every output file is the contract in
 features/kimdong/game/assets/manifest.ts (frame sizes, rows, columns): change both together.
-Outputs go to public/assets/kimdong/ (game) and public/art, public/textures (web).
+Outputs go to public/assets/kimdong/ (game + web images) and public/assets/shared/textures/.
+After rebuilding, bump ASSET_VERSION in manifest.ts so browsers drop their cached copies.
 """
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -18,10 +21,12 @@ from PIL import Image, ImageChops
 import artlib
 
 ROOT = Path(__file__).resolve().parents[2]
-SRC = ROOT / "assets-src" / "kimdong"
+# The raw originals (~90 MB) are NOT kept in the repo: all art lives in public/assets/. To rebuild,
+# restore them from git history into a folder and point KIMDONG_RAW at it (see README.md).
+SRC = Path(os.environ.get("KIMDONG_RAW", ROOT / "raw-art" / "kimdong"))
 GAME = ROOT / "public" / "assets" / "kimdong"
-WEB_ART = ROOT / "public" / "art"
-WEB_TEX = ROOT / "public" / "textures"
+WEB_ART = GAME / "web"
+WEB_TEX = ROOT / "public" / "assets" / "shared" / "textures"
 
 # One character frame: the feet stand on FEET_Y (75% of the height, like the old placeholder art),
 # the body is centred on ANCHOR_X. The game shows a frame at half this size (SPRITE_SCALE).
@@ -117,10 +122,52 @@ def build_kimdong() -> None:
         ],
         s_act,
     )
-    sheet = Image.new("RGBA", (6 * FRAME[0], 8 * FRAME[1]), (0, 0, 0, 0))
+    # rows 8-10: floating in the water, crouching, crawling (all drawn facing right)
+    swim_idle = rows(walk, 8, 4, [(3, [0, 1])], s_walk)
+    hide_crawl = rows(
+        acts,
+        8,
+        4,
+        [
+            (3, [0, 1]),  # hide: crouching
+            (3, [2, 3, 4, 5]),  # crawl
+        ],
+        s_act,
+    )
+    sheet = Image.new("RGBA", (6 * FRAME[0], 11 * FRAME[1]), (0, 0, 0, 0))
     sheet.paste(walk_rows, (0, 0))
     sheet.paste(act_rows, (0, 5 * FRAME[1]))
+    sheet.paste(swim_idle, (0, 8 * FRAME[1]))
+    sheet.paste(hide_crawl, (0, 9 * FRAME[1]))
     save_png(sheet, GAME / "sprites" / "kimdong.png")
+
+
+def build_ducthanh() -> None:
+    """Anh Đức Thanh: 4 columns; rows down, left, right, up, then idle + talking."""
+    img = clean_checker("duc_thanh.png")
+    bands = artlib.row_bands(img)
+    assert len(bands) == 4, f"duc_thanh.png: expected 4 rows, found {bands}"
+
+    def frames(row: int, wanted: list[int]):
+        return [artlib.cut_frame(img, 8, 4, row, c, bands) for c in wanted]
+
+    ref = artlib.cut_frame(img, 8, 4, 0, 0, bands)
+    assert ref
+    scale = KID_HEIGHT / ref.image.height
+    sheet = artlib.build_sheet(
+        [
+            frames(0, [0, 1, 2, 3]),  # down
+            frames(2, [4, 5, 6, 7]),  # left
+            frames(2, [0, 1, 2, 3]),  # right
+            frames(1, [0, 1, 2, 3]),  # up
+            frames(3, [0, 4]),  # idle, talking
+        ],
+        scale,
+        FRAME,
+        FEET_Y,
+        ANCHOR_X,
+    )
+    save_png(sheet, GAME / "sprites" / "duc_thanh.png")
 
 
 def build_soldiers() -> None:
@@ -183,15 +230,56 @@ def build_bushes() -> None:
 def build_emotes() -> None:
     img = artlib.remove_black(load("emotes.png"), limit=12, fringe=1)
     img = artlib.drop_corner_specks(img)
-    question = artlib.cut_frame(img, 4, 2, 0, 0)
-    alert = artlib.cut_frame(img, 4, 2, 0, 1)
-    assert question and alert
+    # 0 question, 1 alert, 2 "...", 3 eye, 4 zzz (see EMOTE_SHEET in manifest.ts)
+    frames = [artlib.cut_frame(img, 4, 2, 0, c) for c in range(4)]
+    zzz = img.crop((1899, 1101, 2284, 1472))
+    zzz = zzz.crop(zzz.getchannel("A").point(lambda v: 255 if v > 24 else 0).getbbox())
+    images = [f.image for f in frames if f] + [zzz]
+    assert len(images) == 5
     size = 64
-    sheet = Image.new("RGBA", (size * 2, size), (0, 0, 0, 0))
-    for i, frame in enumerate((question, alert)):
-        small = fit_within(frame.image, (size - 2, size - 2))
+    sheet = Image.new("RGBA", (size * len(images), size), (0, 0, 0, 0))
+    for i, image in enumerate(images):
+        small = fit_within(image, (size - 2, size - 2))
         sheet.paste(small, (i * size + (size - small.width) // 2, (size - small.height) // 2), small)
     save_png(sheet, GAME / "images" / "emotes.png")
+
+
+def build_sfx() -> None:
+    """Pebble and sound-wave pictures from sfx_visuals.png (white / blue rings on a dark checkerboard).
+
+    The checkerboard is dark grey; the rings are brighter or bluish, so the alpha comes from how
+    much a pixel rises above the checkerboard instead of a flood fill.
+    """
+    img = load("sfx_visuals.png")
+    r, g, b = img.convert("RGB").split()
+    light = img.convert("L").point(lambda v: max(0, min(255, (v - 95) * 255 // 85)))
+    blueish = ImageChops.subtract(b, r).point(lambda v: max(0, min(255, (v - 16) * 255 // 40)))
+    alpha = ImageChops.lighter(light, blueish)
+    out = img.copy()
+    out.putalpha(alpha)
+    out = artlib.drop_corner_specks(out)
+    factor = out.width / 1000
+    # centres in the 1000 px wide preview: pebble streak, impact spark, then rings small -> faint
+    centres = [
+        (95, 95), (420, 150),
+        (580, 152), (740, 130), (905, 120), (95, 275), (255, 275), (420, 275),
+    ]
+    cell, window = 192, round(82 * factor)
+    scale = 170 / (2 * 72 * factor)  # one scale for every frame, so the rings keep their relative size
+    sheet = Image.new("RGBA", (4 * cell, 2 * cell), (0, 0, 0, 0))
+    for i, (cx, cy) in enumerate(centres):
+        x, y = round(cx * factor), round(cy * factor)
+        crop = out.crop((x - window, y - window, x + window, y + window))
+        box = crop.getchannel("A").point(lambda v: 255 if v > 30 else 0).getbbox()
+        if not box:
+            continue
+        mx, my = (box[0] + box[2]) // 2, (box[1] + box[3]) // 2
+        size = round(2 * window * scale)
+        small = artlib.premultiplied_resize(crop, (size, size))
+        cell_img = Image.new("RGBA", (cell, cell), (0, 0, 0, 0))
+        cell_img.paste(small, (cell // 2 - round(mx * scale), cell // 2 - round(my * scale)), small)
+        sheet.paste(cell_img, ((i % 4) * cell, (i // 4) * cell))
+    save_png(sheet, GAME / "images" / "sfx.png")
 
 
 # -------------------------------------------------------------------------------------- props
@@ -226,6 +314,70 @@ def build_props() -> None:
         scale = side / max(tight.size)
         out = artlib.premultiplied_resize(tight, (round(tight.width * scale), round(tight.height * scale)))
         save_png(out, GAME / "images" / f"{name}.png")
+        if name == "prop_fence":
+            # One bamboo stake, to build the side walls of the guard post (the fence is a front view).
+            stake = out.crop((83, 0, 94, 94))
+            stake = stake.crop(stake.getchannel("A").point(lambda v: 255 if v > 24 else 0).getbbox())
+            save_png(stake, GAME / "images" / "prop_fence_post.png")
+
+
+# ----------------------------------------------------------------------------------------- terrain
+
+TEX_SCALE = 0.75  # file px -> world px of the ground textures
+# Clean interior areas of forest_tiles.png (px of the 2752 x 1536 original, after the grid is removed).
+GRASS_BOXES = [
+    (30, 25, 235, 225),
+    (300, 25, 510, 225),
+    (30, 300, 235, 500),
+    (300, 300, 510, 500),
+    (10, 580, 235, 980),
+    (600, 650, 770, 980),
+]
+DIRT_BOXES = [(840, 100, 1090, 160), (1215, 190, 1275, 740)]
+WATER_BOXES = [(2400, 665, 2745, 915)]
+# Scenery cut from the bottom rows of the sheet: name -> (box, longest side px)
+TERRAIN_PROPS = {
+    "bush_d": ((1748, 1213, 1886, 1338), 200),
+    "deco_fern_a": ((1968, 1206, 2108, 1340), 130),
+    "deco_palm_a": ((2206, 1206, 2346, 1346), 130),
+    "deco_fern_b": ((2588, 1208, 2721, 1343), 120),
+    "deco_tuft_a": ((2406, 1380, 2536, 1508), 110),
+    "deco_tuft_b": ((2591, 1388, 2716, 1503), 100),
+    "prop_stump_c": ((2206, 1373, 2348, 1510), 150),
+    "prop_rock_g": ((1971, 1398, 2104, 1510), 130),
+    "pebbles": ((1748, 1393, 1881, 1508), 96),
+}
+GREEN_PROPS = {"bush_d", "deco_fern_a", "deco_palm_a", "deco_fern_b", "deco_tuft_a", "deco_tuft_b"}
+
+
+def build_terrain() -> None:
+    import terrain
+
+    clean = terrain.remove_grid(Image.open(SRC / "forest_tiles.png"))
+
+    def sources(boxes, scale=TEX_SCALE):
+        out = []
+        for box in boxes:
+            piece = clean.crop(box)
+            out.append(piece.resize((round(piece.width * scale), round(piece.height * scale)), Image.LANCZOS))
+        return out
+
+    save_png(terrain.quilt(sources(GRASS_BOXES), 512, 48, "grass", density=2.6), GAME / "images" / "ground_grass.png")
+    save_png(terrain.quilt(sources(DIRT_BOXES), 128, 30, "dirt", density=3.5, feather=8), GAME / "images" / "ground_dirt.png")
+    save_png(terrain.quilt(sources(WATER_BOXES), 256, 40, "water", density=3.0), GAME / "images" / "ground_water.png")
+
+    for name, (box, side) in TERRAIN_PROPS.items():
+        crop = clean.crop(box)
+        if name in GREEN_PROPS:
+            crop = terrain.clean_specks(crop)
+        cut = terrain.remove_white(crop)
+        bbox = cut.getchannel("A").point(lambda v: 255 if v > 24 else 0).getbbox()
+        tight = cut.crop(bbox)
+        scale = side / max(tight.size)
+        save_png(
+            artlib.premultiplied_resize(tight, (round(tight.width * scale), round(tight.height * scale))),
+            GAME / "images" / f"{name}.png",
+        )
 
 
 # ----------------------------------------------------------------------------------------- web
@@ -254,12 +406,21 @@ def build_web() -> None:
     ink = Image.merge("RGBA", (r.point(lambda v: min(v, 190)), g.point(lambda v: min(v, 40)), b.point(lambda v: min(v, 40)), alpha))
     ink = ink.crop(ink.getchannel("A").point(lambda v: 255 if v > 40 else 0).getbbox())
     scale = 640 / max(ink.size)
-    save_png(artlib.premultiplied_resize(ink, (round(ink.width * scale), round(ink.height * scale))), WEB_ART / "stamp-viet-minh.png")
+    save_png(artlib.premultiplied_resize(ink, (round(ink.width * scale), round(ink.height * scale))), WEB_TEX / "stamp-viet-minh.png")
 
 
 GROUPS = {
-    "sprites": [build_kimdong, build_soldiers, build_letter, build_bushes, build_emotes],
+    "sprites": [
+        build_kimdong,
+        build_ducthanh,
+        build_soldiers,
+        build_letter,
+        build_bushes,
+        build_emotes,
+        build_sfx,
+    ],
     "props": [build_props],
+    "terrain": [build_terrain],
     "web": [build_web],
 }
 
