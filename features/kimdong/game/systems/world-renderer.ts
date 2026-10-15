@@ -3,20 +3,27 @@ import Phaser from "phaser";
 
 import {
   ASSET_KEYS,
+  BARBED_WIRE_FRAME,
   BUSH_DISPLAY_FACTOR,
   BUSH_KEYS,
   DECOR_KEYS,
   GROUND_KEYS,
+  ROCK_COVER_KEYS,
   ROCK_KEYS,
   STUMP_KEYS,
 } from "../assets/manifest";
 import {
+  BRIDGES,
   BUSHES,
   GUARD_ROUTES,
   LETTER_SPOTS,
   OUTPOST,
+  OUTPOST_GATE,
   OUTPOST_WALLS,
+  PEBBLE_SPOTS,
   PLAYER_START,
+  ROCK_COVERS,
+  SLEEPING_GUARDS,
   RIVER_POLYLINE,
   RIVER_WIDTH,
   TRAILS,
@@ -135,6 +142,11 @@ function buildPlacement(): (x: number, y: number, radius: number) => boolean {
     { x: OUTPOST.x + OUTPOST.w / 2, y: OUTPOST.y + OUTPOST.h / 2, r: 330 },
     ...LETTER_SPOTS.map((p) => ({ ...p, r: 120 })),
     ...BUSHES.map((b) => ({ x: b.x, y: b.y, r: b.r + 70 })),
+    ...ROCK_COVERS.map((r) => ({ x: r.x, y: r.y, r: r.r + 70 })),
+    // A pebble must stay reachable: nothing solid grows on its spot.
+    ...PEBBLE_SPOTS.map((p) => ({ ...p, r: 45 })),
+    ...SLEEPING_GUARDS.map((g) => ({ x: g.x, y: g.y, r: 90 })),
+    ...BRIDGES.map((b) => ({ x: b.x + b.w / 2, y: b.y + b.h / 2, r: Math.max(b.w, b.h) / 2 + 40 })),
     ...GUARD_ROUTES.flatMap((route) => routePoints(route.path, route.loop)),
   ];
   const trailPoints = TRAILS.flatMap((trail) => sampleCatmullRom(trail, 4));
@@ -310,6 +322,35 @@ export function createProps(scene: Phaser.Scene): Phaser.GameObjects.Rectangle[]
     block(tower.x, tower.y, tower.displayWidth * 0.5, 34);
   }
 
+  // Lengths of barbed wire run along the outside of the wall, either side of the gate (the
+  // vertical piece of the sheet, so the strands follow the wall), leaving the way in itself open.
+  if (has(ASSET_KEYS.barbedWire)) {
+    for (const y of [OUTPOST.gateY - 6, OUTPOST.gateY + OUTPOST.gateH + 92]) {
+      const wire = scene.add
+        .image(OUTPOST.x - 16, y, ASSET_KEYS.barbedWire, BARBED_WIRE_FRAME.vertical)
+        .setOrigin(0.5, 1)
+        .setDepth(3 + y / 100_000);
+      wire.setScale(1.45);
+      block(wire.x, wire.y, 34, 16);
+    }
+  }
+  // Rocks to hide behind: drawn on their hiding circle (you stand "behind" them, like in a bush).
+  ROCK_COVERS.forEach((cover, index) => {
+    const key = ROCK_COVER_KEYS[index % ROCK_COVER_KEYS.length]!;
+    if (!has(key)) return;
+    const image = scene.add.image(cover.x, cover.y + 8, key).setDepth(3.5);
+    image.setScale((cover.r * 2.7) / image.width).setFlipX(index % 2 === 1);
+  });
+  // The ways across the stream (bridge, stepping stones), drawn over the water.
+  for (const crossing of BRIDGES) {
+    const key = crossing.kind === "bridge" ? "prop_bamboo_bridge" : "prop_stepping_stones";
+    if (!has(key)) continue;
+    const image = scene.add
+      .image(crossing.x + crossing.w / 2, crossing.y + crossing.h / 2, key)
+      .setDepth(5);
+    image.setScale(crossing.w / image.width);
+  }
+
   const isFree = buildPlacement();
   const rng = new Phaser.Math.RandomDataGenerator(["kim-dong-props"]);
   /** Place one picture standing on (x, y); lower pictures are drawn over higher ones. */
@@ -358,6 +399,18 @@ export function createProps(scene: Phaser.Scene): Phaser.GameObjects.Rectangle[]
   const banks = RIVER_POLYLINE.filter((_, index) => index % 3 === 0);
   banks.forEach((point, index) => {
     if (index % 4 === 0) return;
+    // Keep the ends of the bridge and the stepping stones clear.
+    if (
+      BRIDGES.some(
+        (c) =>
+          point.x > c.x - 60 &&
+          point.x < c.x + c.w + 60 &&
+          point.y > c.y - 50 &&
+          point.y < c.y + c.h + 50,
+      )
+    ) {
+      return;
+    }
     for (const side of [-1, 1]) {
       if (rng.frac() < 0.35) continue;
       place(
@@ -422,4 +475,72 @@ export function createOutpostFence(scene: Phaser.Scene): boolean {
     }
   }
   return true;
+}
+
+/** What the gate of the guard post is made of, so the scene can open it. */
+export interface GateArt {
+  /** Take the leaves away (a fade, bottom to top) and leave the posts standing. */
+  open: () => void;
+  destroy: () => void;
+}
+
+/**
+ * The gate of the guard post, in the style of its wall (a row of upright stakes seen from the
+ * side): two thick gate posts cut from the artist's gate picture, and between them the leaves,
+ * stakes in a lighter bamboo green. The picture's own front-view panel does not fit a wall that
+ * runs up and down the screen. Returns undefined when the artwork is missing.
+ */
+export function createGateArt(scene: Phaser.Scene): GateArt | undefined {
+  if (
+    !scene.textures.exists(ASSET_KEYS.outpostGate) ||
+    !scene.textures.exists(ASSET_KEYS.fencePost)
+  ) {
+    return undefined;
+  }
+  const texture = scene.textures.get(ASSET_KEYS.outpostGate);
+  if (!texture.has("gate_post")) texture.add("gate_post", 0, 2, 8, 10, 86);
+  const x = OUTPOST_GATE.x + OUTPOST_GATE.w / 2;
+  const top = OUTPOST_GATE.y;
+  const bottom = OUTPOST_GATE.y + OUTPOST_GATE.h;
+
+  const posts: Phaser.GameObjects.Image[] = [];
+  for (const y of [top + 6, bottom + 6]) {
+    const post = scene.add
+      .image(x, y, ASSET_KEYS.outpostGate, "gate_post")
+      .setOrigin(0.5, 1)
+      .setDepth(11 + y / 100_000);
+    post.setScale(0.8);
+    posts.push(post);
+  }
+  const leaves: Phaser.GameObjects.Image[] = [];
+  for (let y = top + 12; y <= bottom + 6; y += 9) {
+    const stake = scene.add
+      .image(x, y, ASSET_KEYS.fencePost)
+      .setOrigin(0.5, 1)
+      .setDepth(10 + y / 100_000)
+      .setTint(0xf2b63a);
+    stake.setScale(62 / stake.height);
+    leaves.push(stake);
+  }
+  return {
+    open: () => {
+      leaves.forEach((stake, index) => {
+        scene.tweens.add({
+          targets: stake,
+          alpha: 0,
+          scaleY: stake.scaleY * 0.2,
+          delay: (leaves.length - 1 - index) * 45,
+          duration: 280,
+          onComplete: () => stake.destroy(),
+        });
+      });
+    },
+    destroy: () => {
+      for (const stake of leaves) {
+        scene.tweens.killTweensOf(stake);
+        stake.destroy();
+      }
+      for (const post of posts) post.destroy();
+    },
+  };
 }

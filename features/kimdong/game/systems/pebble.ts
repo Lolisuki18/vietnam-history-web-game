@@ -72,6 +72,11 @@ export class PebbleThrower {
     }
   }
 
+  /** True when a pebble can be thrown now (none in the air, cooldown over). */
+  get isReady(): boolean {
+    return !this.flying && this.scene.time.now >= this.readyAt;
+  }
+
   /**
    * Throw from `from` toward `to`; the landing spot is clamped to `PEBBLE.range`.
    * Returns false while on cooldown or when a pebble is already in the air.

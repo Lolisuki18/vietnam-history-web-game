@@ -70,6 +70,8 @@ export class Guard {
     private readonly route: GuardRoute,
     /** Which soldier sheet this guard uses (French soldier or "lính khố xanh"). */
     private readonly texture: SoldierTexture = ASSET_KEYS.soldier,
+    /** Told when the guard spots the player ("alert") or goes to check a noise ("question"). */
+    private readonly onEvent?: (event: "alert" | "question") => void,
   ) {
     const start = route.path[0]!;
     this.x = start.x;
@@ -234,7 +236,12 @@ export class Guard {
   }
 
   private enterState(state: GuardState): void {
+    const previous = this.state;
     this.state = state;
+    if (state !== previous) {
+      if (state === "watching") this.onEvent?.("alert");
+      else if (state === "investigate") this.onEvent?.("question");
+    }
     this.drawCone(CONE_STYLES[state]);
     this.icon.setText(state === "watching" ? "!" : state === "investigate" ? "?" : "");
     this.icon.setColor(state === "watching" ? "#ff5252" : "#ffd54f");

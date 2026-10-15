@@ -8,12 +8,20 @@ import {
   ASSET_URLS,
   AUDIO_KEYS,
   AUDIO_URLS,
+  BARBED_WIRE_FRAME,
+  BIRD_FRAME,
   EMOTE_SHEET,
+  FLASH_FRAME,
+  GATE_FRAME,
   imageUrl,
   LETTER_SHEET,
   LOOSE_IMAGE_KEYS,
+  PEBBLE_ITEM_FRAME,
+  ROOT_FRAME,
   SFX_SHEET,
+  SPACE_PROMPT_FRAME,
   SPRITE_FRAME,
+  TRACER_FRAME,
 } from "../assets/manifest";
 import { createPlaceholderTextures } from "../assets/placeholder-art";
 
@@ -57,6 +65,40 @@ export class PreloaderScene extends Phaser.Scene {
       frameWidth: EMOTE_SHEET.frameSize,
       frameHeight: EMOTE_SHEET.frameSize,
     });
+    this.load.spritesheet(ASSET_KEYS.outpostGate, ASSET_URLS.outpostGate, {
+      frameWidth: GATE_FRAME.width,
+      frameHeight: GATE_FRAME.height,
+    });
+    this.load.spritesheet(ASSET_KEYS.rootObstacle, ASSET_URLS.rootObstacle, {
+      frameWidth: ROOT_FRAME.width,
+      frameHeight: ROOT_FRAME.height,
+    });
+    this.load.spritesheet(ASSET_KEYS.muzzleFlash, ASSET_URLS.muzzleFlash, {
+      frameWidth: FLASH_FRAME.size,
+      frameHeight: FLASH_FRAME.size,
+    });
+    this.load.spritesheet(ASSET_KEYS.tuHuBird, ASSET_URLS.tuHuBird, {
+      frameWidth: BIRD_FRAME.size,
+      frameHeight: BIRD_FRAME.size,
+    });
+    this.load.spritesheet(ASSET_KEYS.bulletTracer, ASSET_URLS.bulletTracer, {
+      frameWidth: TRACER_FRAME.width,
+      frameHeight: TRACER_FRAME.height,
+    });
+    this.load.spritesheet(ASSET_KEYS.spacePrompt, ASSET_URLS.spacePrompt, {
+      frameWidth: SPACE_PROMPT_FRAME.width,
+      frameHeight: SPACE_PROMPT_FRAME.height,
+    });
+    this.load.spritesheet(ASSET_KEYS.pebbleItem, ASSET_URLS.pebbleItem, {
+      frameWidth: PEBBLE_ITEM_FRAME.size,
+      frameHeight: PEBBLE_ITEM_FRAME.size,
+    });
+    this.load.spritesheet(ASSET_KEYS.barbedWire, ASSET_URLS.barbedWire, {
+      frameWidth: BARBED_WIRE_FRAME.size,
+      frameHeight: BARBED_WIRE_FRAME.size,
+    });
+    this.load.image(ASSET_KEYS.fogA, ASSET_URLS.fogA);
+    this.load.image(ASSET_KEYS.fogB, ASSET_URLS.fogB);
     this.load.spritesheet(ASSET_KEYS.soldierSleeping, ASSET_URLS.soldierSleeping, frame);
     this.load.spritesheet(ASSET_KEYS.soldierShooting, ASSET_URLS.soldierShooting, frame);
     this.load.spritesheet(ASSET_KEYS.soldierRunning, ASSET_URLS.soldierRunning, frame);

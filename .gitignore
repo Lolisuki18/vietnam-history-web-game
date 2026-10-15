@@ -33,6 +33,7 @@ raw-art/
 .claude/skills/
 .agents/skills/
 
-# Python bytecode
+# Python bytecode & local art generator scripts
 __pycache__/
 scratch/
+scripts/art-generators/

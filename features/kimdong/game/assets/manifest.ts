@@ -3,7 +3,7 @@
  * The art is produced from the raw images (kept in git history, see tools/kimdong-art/README.md) by
  * `tools/kimdong-art/build.py`:
  * change a frame size or a sheet layout there and here (and in `public/assets/kimdong/README.md`)
- * and everything else â€” animations, hitboxes, the fallback art â€” follows.
+ * and everything else — animations, hitboxes, the fallback art — follows.
  */
 
 const BASE = "/assets/kimdong/";
@@ -30,7 +30,50 @@ export const ASSET_KEYS = {
   kimdongShoot: "kimdong_shoot",
   kimdongFall: "kimdong_fall",
   kimdongHideRock: "kimdong_hide_rock",
+  // Pictures that hold several frames in a row (loaded as spritesheets)
+  outpostGate: "prop_outpost_gate",
+  rootObstacle: "prop_root_obstacle",
+  muzzleFlash: "muzzle_flash",
+  tuHuBird: "tu_hu_bird",
+  bulletTracer: "bullet_tracer",
+  spacePrompt: "ui_space_prompt",
+  pebbleItem: "item_pebble",
+  barbedWire: "prop_barbed_wire",
+  fogA: "fog_layer_a",
+  fogB: "fog_layer_b",
 } as const;
+
+/**
+ * `ui_cuckoo_rhythm.png` holds the mini-game's pieces side by side (px rectangles in the file):
+ * the bar (with its lit zone, 51 px wide, in the middle), the diamond cursor and the two labels.
+ */
+export const RHYTHM_UI = {
+  key: "ui_cuckoo_rhythm",
+  spark: "ui_rhythm_hit_spark",
+  parts: {
+    track: { x: 10, y: 8, w: 301, h: 31 },
+    cursor: { x: 20, y: 48, w: 25, h: 37 },
+    hit: { x: 80, y: 50, w: 81, h: 35 },
+    miss: { x: 180, y: 50, w: 81, h: 35 },
+  },
+} as const;
+
+/** `ui_space_prompt.png`: 2 frames of 160 x 64 (dark / lit "[ SPACE ] BẮN SÚNG ĐÁNH ĐỘNG") that blink. */
+export const SPACE_PROMPT_FRAME = { width: 160, height: 64 } as const;
+
+/** `item_pebble.png`: 3 kinds of pebble to pick up, 32 x 32 each. */
+export const PEBBLE_ITEM_FRAME = { size: 32, kinds: 3 } as const;
+
+/** `prop_barbed_wire.png`: 6 pieces of 64 x 64: wire on a post, vertical, two corners, a coil (4), a post. */
+export const BARBED_WIRE_FRAME = { size: 64, fence: 0, vertical: 1, coil: 4 } as const;
+
+/** Frame sizes of the sheets above, in file px. */
+export const GATE_FRAME = { width: 64, height: 96 } as const; // 4 frames: closed ... open
+export const ROOT_FRAME = { width: 120, height: 80 } as const; // 2 kinds of root
+export const FLASH_FRAME = { size: 64 } as const; // 4 x 2: row 0 faces right, row 1 faces left
+export const BIRD_FRAME = { size: 48 } as const; // 4 wing-beat frames
+/** `bullet_tracer.png`: 2 frames of 64 x 32: 0 the tracer (head to the right, about 52 px long), 1 a hit spark. */
+export const TRACER_FRAME = { width: 64, height: 32, length: 52 } as const;
 
 /** Seamless ground textures (cut from `forest_tiles.png`) the world is painted with. */
 export const GROUND_KEYS = {
@@ -63,22 +106,12 @@ export const DECOR_KEYS = [
 
 /** New environment, prop, VFX and UI image keys. */
 export const NEW_PROP_KEYS = [
-  "fog_layer_a",
-  "fog_layer_b",
-  "prop_barbed_wire",
-  "prop_outpost_gate",
-  "prop_root_obstacle",
-  "item_pebble",
   "prop_rock_cover_a",
   "prop_rock_cover_b",
   "prop_stepping_stones",
   "prop_bamboo_bridge",
-  "muzzle_flash",
-  "bullet_tracer",
-  "ui_space_prompt",
   "ui_cuckoo_rhythm",
   "ui_oxygen_hud",
-  "tu_hu_bird",
   "ui_rhythm_hit_spark",
   "portrait_kimdong_worried",
   "portrait_kimdong_determined",
@@ -101,7 +134,7 @@ export const LOOSE_IMAGE_KEYS = [
  * Added to every image URL so a browser that cached an older sheet fetches the rebuilt one. Bump it
  * whenever `tools/kimdong-art/build.py` changes a file in `public/assets/kimdong`.
  */
-export const ASSET_VERSION = "20261015e";
+export const ASSET_VERSION = "20261016a";
 
 const images = (name: string): string => `${BASE}images/${name}.png?v=${ASSET_VERSION}`;
 const sprites = (name: string): string => `${BASE}sprites/${name}.png?v=${ASSET_VERSION}`;
@@ -124,7 +157,20 @@ export const ASSET_URLS = {
   kimdongShoot: sprites("kimdong_shoot"),
   kimdongFall: sprites("kimdong_fall"),
   kimdongHideRock: sprites("kimdong_hide_rock"),
+  outpostGate: images("prop_outpost_gate"),
+  rootObstacle: images("prop_root_obstacle"),
+  muzzleFlash: images("muzzle_flash"),
+  tuHuBird: images("tu_hu_bird"),
+  bulletTracer: images("bullet_tracer"),
+  spacePrompt: images("ui_space_prompt"),
+  pebbleItem: images("item_pebble"),
+  barbedWire: images("prop_barbed_wire"),
+  fogA: images("fog_layer_a"),
+  fogB: images("fog_layer_b"),
 } as const;
+
+/** Rock hiding spots (see `ROCK_COVERS` in world-data.ts) and how they are drawn. */
+export const ROCK_COVER_KEYS = ["prop_rock_cover_a", "prop_rock_cover_b"] as const;
 
 /** Audio asset keys. */
 export const AUDIO_KEYS = {
@@ -146,6 +192,8 @@ export const AUDIO_KEYS = {
   heartbeatCountdown: "sfx_heartbeat_countdown",
   cuckooSignal: "sfx_cuckoo_signal",
   cuckooWarning: "sfx_cuckoo_warning",
+  /** Optional: a short click for picking a pebble up (a synthesized click plays without it). */
+  pebblePickup: "sfx_pebble_pickup",
 } as const;
 
 export const AUDIO_URLS = {
@@ -166,6 +214,7 @@ export const AUDIO_URLS = {
   heartbeatCountdown: `${BASE}audio/sfx_heartbeat_countdown.wav`,
   cuckooSignal: `${BASE}audio/sfx_cuckoo_signal.wav`,
   cuckooWarning: `${BASE}audio/sfx_cuckoo_warning.wav`,
+  pebblePickup: `${BASE}audio/sfx_pebble_pickup.wav`,
 } as const;
 
 /** `images(name)` for the props and bushes (they are loaded in a loop by the preloader). */

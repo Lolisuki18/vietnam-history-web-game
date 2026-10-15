@@ -1,6 +1,6 @@
 import type Phaser from "phaser";
 
-import type { PlayerAnimKey } from "../assets/animations";
+import { SHOOT_LEFT_ANIM, SHOOT_RIGHT_ANIM, type PlayerAnimKey } from "../assets/animations";
 import { ASSET_KEYS, SPRITE_ORIGIN } from "../assets/manifest";
 import { setFeetBody } from "../assets/sprite-utils";
 
@@ -46,19 +46,29 @@ export class Player {
    * Pick the animation from the movement direction (`dx`, `dy` are the input axes, 0 when
    * standing still). Swimming wins over everything else. Cheap enough to call every frame.
    */
-  animate(dx: number, dy: number, swimming: boolean, hiding = false): void {
+  animate(
+    dx: number,
+    dy: number,
+    swimming: boolean,
+    hiding: false | "bush" | "rock" = false,
+  ): void {
     if (this.throwing) return;
     const moving = dx !== 0 || dy !== 0;
     if (dx !== 0) this.facingLeft = dx < 0;
     let key: PlayerAnimKey;
     if (swimming) key = moving ? "swim" : "swim_idle";
-    else if (hiding) key = moving ? "crawl" : "hide";
+    else if (hiding) key = moving ? "crawl" : hiding === "rock" ? "hide_rock" : "hide";
     else if (!moving) key = "idle";
     else if (Math.abs(dx) > Math.abs(dy)) key = dx < 0 ? "walk_left" : "walk_right";
     else key = dy < 0 ? "walk_up" : "walk_down";
 
-    // The water and bush poses are drawn facing right: mirror them for the other way.
-    const sideways = key === "swim" || key === "swim_idle" || key === "hide" || key === "crawl";
+    // The water and hiding poses are drawn facing right: mirror them for the other way.
+    const sideways =
+      key === "swim" ||
+      key === "swim_idle" ||
+      key === "hide" ||
+      key === "hide_rock" ||
+      key === "crawl";
     this.sprite.setFlipX(sideways && this.facingLeft);
 
     if (key === this.currentAnim) return;
@@ -79,6 +89,21 @@ export class Player {
       this.currentAnim = null;
       this.sprite.setFlipX(false);
     });
+  }
+
+  /**
+   * Raise the rifle and fire (aim, shot, recoil), toward the right or the left. The last frame is
+   * held: this is the ambush, and the scene moves on to the chase afterwards. Returns false when
+   * the shooting artwork is missing, so the caller can use another way.
+   */
+  playShoot(towardRight: boolean): boolean {
+    const key = towardRight ? SHOOT_RIGHT_ANIM : SHOOT_LEFT_ANIM;
+    if (!this.sprite.scene.anims.exists(key)) return false;
+    this.throwing = true;
+    this.currentAnim = "shoot";
+    this.sprite.setFlipX(false);
+    this.sprite.anims.play(key, true);
+    return true;
   }
 
   setAlpha(alpha: number): void {

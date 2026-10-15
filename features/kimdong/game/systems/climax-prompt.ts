@@ -1,5 +1,6 @@
 import type Phaser from "phaser";
 
+import { ASSET_KEYS } from "../assets/manifest";
 import { CLIMAX } from "../config";
 import { gameEvents } from "../events";
 import { touchInput } from "../input-state";
@@ -9,16 +10,23 @@ interface ClimaxCallbacks {
   onResult: (acted: boolean) => void;
 }
 
+/** The blinking [SPACE] picture is drawn this many times larger than its 160 x 64 frame. */
+const PROMPT_SCALE = 1.9;
+const BLINK_MS = 340;
+
 /**
  * The 5 second decision of the ambush: a red alarm with a countdown. Pressing Space answers
- * "throw a stone"; running out of time answers "too late". Owns its display objects and the
- * keyboard listener.
+ * "fire a shot to draw their fire"; running out of time answers "too late". The key hint is the
+ * artist's blinking [SPACE] picture (text on touch screens, or when the picture did not load).
+ * Owns its display objects, the blink timer and the keyboard listener.
  */
 export class ClimaxPrompt {
   private readonly tint: Phaser.GameObjects.Rectangle;
   private readonly title: Phaser.GameObjects.Text;
-  private readonly hint: Phaser.GameObjects.Text;
+  private readonly subtitle: Phaser.GameObjects.Text;
+  private readonly hint: Phaser.GameObjects.Text | Phaser.GameObjects.Sprite;
   private readonly countdown: Phaser.GameObjects.Text;
+  private blink?: Phaser.Time.TimerEvent;
   private deadline = 0;
   private shownSeconds = -1;
   private finished = false;
@@ -33,32 +41,67 @@ export class ClimaxPrompt {
 
     const style = { fontFamily: "sans-serif", fontStyle: "bold", align: "center" } as const;
     this.title = scene.add
-      .text(0, 0, "Phát hiện địch phục kích cán bộ!\nCần làm gì?!", {
+      .text(0, 0, "PHÁT HIỆN Ổ PHỤC KÍCH!", {
         ...style,
-        fontSize: "34px",
+        fontSize: "36px",
         color: "#ffe4e0",
         stroke: "#450a0a",
         strokeThickness: 6,
       })
       .setOrigin(0.5)
       .setDepth(52);
-    this.hint = scene.add
+    this.subtitle = scene.add
       .text(
         0,
         0,
-        touchInput.enabled
-          ? "Chạm nút HÀNH ĐỘNG – ném đá đánh lạc hướng!"
-          : "Nhấn SPACE – ném đá đánh lạc hướng!",
+        "Không kịp rồi! Các anh cán bộ đang đến ngay phía sau…\nMình phải thu hút hỏa lực!",
         {
           ...style,
-          fontSize: "26px",
+          fontStyle: "italic",
+          fontSize: "22px",
           color: "#fff7d6",
-          backgroundColor: "#000000b0",
-          padding: { x: 18, y: 10 },
+          stroke: "#450a0a",
+          strokeThickness: 4,
         },
       )
       .setOrigin(0.5)
       .setDepth(52);
+
+    if (!touchInput.enabled && scene.textures.exists(ASSET_KEYS.spacePrompt)) {
+      const prompt = scene.add
+        .sprite(0, 0, ASSET_KEYS.spacePrompt, 0)
+        .setScale(PROMPT_SCALE)
+        .setDepth(52);
+      this.hint = prompt;
+      // Dark and lit frames take turns so the key is impossible to miss.
+      let lit = false;
+      this.blink = scene.time.addEvent({
+        delay: BLINK_MS,
+        loop: true,
+        callback: () => {
+          lit = !lit;
+          prompt.setFrame(lit ? 1 : 0);
+        },
+      });
+    } else {
+      this.hint = scene.add
+        .text(
+          0,
+          0,
+          touchInput.enabled
+            ? "Chạm nút HÀNH ĐỘNG – bắn súng đánh động!"
+            : "Nhấn SPACE – bắn súng đánh động!",
+          {
+            ...style,
+            fontSize: "26px",
+            color: "#fff7d6",
+            backgroundColor: "#000000b0",
+            padding: { x: 18, y: 10 },
+          },
+        )
+        .setOrigin(0.5)
+        .setDepth(52);
+    }
     this.countdown = scene.add
       .text(0, 0, "", {
         ...style,
@@ -84,9 +127,11 @@ export class ClimaxPrompt {
 
   layout(width: number, height: number): void {
     this.tint.setPosition(width / 2, height / 2).setSize(width, height);
-    this.title.setPosition(width / 2, height * 0.26);
-    this.countdown.setPosition(width / 2, height * 0.46);
-    this.hint.setPosition(width / 2, height * 0.64);
+    this.title.setPosition(width / 2, height * 0.2);
+    this.subtitle.setPosition(width / 2, height * 0.29);
+    this.subtitle.setWordWrapWidth(Math.max(260, width * 0.86));
+    this.countdown.setPosition(width / 2, height * 0.47);
+    this.hint.setPosition(width / 2, height * 0.66);
   }
 
   update(now: number): void {
@@ -116,9 +161,11 @@ export class ClimaxPrompt {
   destroy(): void {
     this.scene.input.keyboard?.off("keydown", this.onKeyDown);
     this.offTouchAction?.();
+    this.blink?.remove();
     this.scene.tweens.killTweensOf(this.tint);
     this.tint.destroy();
     this.title.destroy();
+    this.subtitle.destroy();
     this.hint.destroy();
     this.countdown.destroy();
   }

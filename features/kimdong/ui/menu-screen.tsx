@@ -45,11 +45,11 @@ export function MenuScreen({ onStart }: { onStart: () => void }) {
           </summary>
           <p className="mt-2">
             <strong>Máy tính:</strong> WASD hoặc phím mũi tên để di chuyển. Bấm chuột trái hoặc phím
-            G để ném sỏi. Phím Space để ném đá hoặc nhảy.
+            G để ném sỏi. Phím Space để hú tiếng chim, bắn súng đánh động hoặc nhảy.
           </p>
           <p className="mt-1.5">
             <strong>Điện thoại:</strong> cần gạt bên trái để di chuyển, nút Hành động bên phải để
-            ném sỏi.
+            ném sỏi, hú tiếng chim, bắn súng và nhảy.
           </p>
         </details>
 

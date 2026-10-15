@@ -31,6 +31,8 @@ export const gameEvents = new TypedEmitter<{
   "touch:action": undefined;
   /** The game continued after a pause; payload = how long it was frozen (ms). */
   resumed: number;
+  /** How many pebbles Kim Đồng carries now (UiScene shows the counter). */
+  pebbles: { count: number; max: number };
   /** Gameplay scenes tell UiScene whether the virtual controls should be shown right now. */
   "controls:active": boolean;
 }>();

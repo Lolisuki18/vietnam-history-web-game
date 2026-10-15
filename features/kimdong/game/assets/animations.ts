@@ -21,14 +21,26 @@ export type PlayerAnimKey =
   | "swim"
   | "swim_idle"
   | "hide"
+  | "hide_rock"
   | "crawl"
   | "run"
   | "jump"
-  | "throw";
+  | "throw"
+  | "shoot";
 
 /** Animation keys of Anh Đức Thanh. */
 export type DucThanhAnimKey =
   "duc_thanh_down" | "duc_thanh_left" | "duc_thanh_right" | "duc_thanh_up";
+
+/** Animation keys of the later-stage sheets (see `createAnimations`). */
+export const sleepAnim = (row: number): string => `soldier_sleep_${row}`;
+export const runAnim = (row: number): string => `soldier_run_${row}`;
+export const SHOOT_ANIM_LEFT = "soldier_shoot_left";
+export const CLIMB_ANIM = "kimdong_climb_anim";
+export const SHOOT_LEFT_ANIM = "kimdong_shoot_left";
+export const SHOOT_RIGHT_ANIM = "kimdong_shoot_right";
+export const FALL_ANIM = "kimdong_fall_anim";
+export const BIRD_ANIM = "tu_hu_flap";
 
 /** The expanding sound ring that follows a pebble landing. */
 export const RIPPLE_ANIM = "sfx_ripple";
@@ -124,6 +136,35 @@ export function createAnimations(
     frameRate: 12,
     repeat: 0,
   });
+
+  // Sheets made for the later stages. Rows: 0 French, 1 "lính khố xanh" (sleeping, running);
+  // shooting: row 0 faces left, row 1 faces right.
+  const defineRow = (
+    texture: string,
+    key: string,
+    row: number,
+    count: number,
+    columns: number,
+    config: Partial<Phaser.Types.Animations.Animation>,
+  ): void => {
+    if (!textures.exists(texture)) return;
+    define({ key, frames: rowFrames(texture, row, count, columns), ...config });
+  };
+  for (const row of [0, 1]) {
+    defineRow(ASSET_KEYS.soldierSleeping, sleepAnim(row), row, 4, 4, {
+      frameRate: 2.5,
+      repeat: -1,
+    });
+    defineRow(ASSET_KEYS.soldierRunning, runAnim(row), row, 6, 6, { frameRate: 14, repeat: -1 });
+  }
+  defineRow(ASSET_KEYS.soldierShooting, SHOOT_ANIM_LEFT, 0, 4, 4, { frameRate: 9, repeat: -1 });
+  // Kim Đồng's shot: aim, fire (flash and smoke), recoil; 200 ms a frame, row 0 faces left, row 1 right.
+  defineRow(ASSET_KEYS.kimdongShoot, SHOOT_LEFT_ANIM, 0, 3, 3, { frameRate: 5, repeat: 0 });
+  defineRow(ASSET_KEYS.kimdongShoot, SHOOT_RIGHT_ANIM, 1, 3, 3, { frameRate: 5, repeat: 0 });
+  defineRow(ASSET_KEYS.kimdongClimb, CLIMB_ANIM, 0, 4, 4, { frameRate: 6, repeat: -1 });
+  defineRow(ASSET_KEYS.kimdongFall, FALL_ANIM, 0, 4, 4, { frameRate: 5, repeat: 0 });
+  defineRow(ASSET_KEYS.kimdongHideRock, "hide_rock", 0, 3, 3, { frameRate: 2, repeat: -1 });
+  defineRow(ASSET_KEYS.tuHuBird, BIRD_ANIM, 0, 4, 4, { frameRate: 9, repeat: -1 });
 
   if (textures.exists(ASSET_KEYS.ducThanh)) {
     const { columns: ducColumns, rows: ducRows } = DUC_THANH_SHEET;

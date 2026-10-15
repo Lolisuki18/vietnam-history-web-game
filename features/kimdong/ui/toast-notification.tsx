@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 
 import { LETTERS, TOAST_DURATION_MS } from "@/features/kimdong/data/story";
 import { useKimDongUiStore } from "@/features/kimdong/store/ui-store";
-import { ambientSound } from "@/lib/audio/ambient-sound";
 
 const ENTER_DELAY_MS = 30;
 const FADE_MS = 500;
@@ -17,10 +16,8 @@ function ToastCard({ toastKey, letterIndex }: { toastKey: number; letterIndex: n
   const [phase, setPhase] = useState<ToastPhase>("entering");
   const letter = LETTERS[letterIndex];
 
-  // Play a soft chime and start timeline
+  // The game plays the paper-rustle sound when the letter is picked up; this only runs the timeline.
   useEffect(() => {
-    ambientSound.playChime();
-
     const timers = [
       window.setTimeout(() => setPhase("shown"), ENTER_DELAY_MS),
       window.setTimeout(() => setPhase("leaving"), TOAST_DURATION_MS - FADE_MS),

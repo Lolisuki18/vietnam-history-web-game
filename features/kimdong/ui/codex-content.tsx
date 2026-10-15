@@ -1,11 +1,12 @@
 "use client";
 
 import { cn } from "@/components/ui";
+import Image from "next/image";
 import { useState } from "react";
 
-import { CODEX, LETTERS } from "@/features/kimdong/data/story";
+import { AREA_MAP, ARTIFACTS, CODEX, LETTERS } from "@/features/kimdong/data/story";
 
-type TabId = "biography" | "letters" | "monument";
+type TabId = "biography" | "letters" | "artifacts" | "monument";
 
 /**
  * Enhanced historical dossier reader with tabs:
@@ -51,6 +52,21 @@ export function CodexText({ className }: { className?: string }) {
           )}
         >
           Mật thư (5/5)
+        </button>
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "artifacts"}
+          onClick={() => setActiveTab("artifacts")}
+          className={cn(
+            "rounded-md px-4 py-2 text-sm font-semibold transition-colors",
+            activeTab === "artifacts"
+              ? "border border-amber-600 text-amber-300"
+              : "border border-transparent text-stone-400 hover:text-stone-200",
+          )}
+        >
+          Hiện vật
         </button>
 
         <button
@@ -179,7 +195,42 @@ export function CodexText({ className }: { className?: string }) {
         </div>
       )}
 
-      {/* Tab 3: Historical Monument */}
+      {/* Tab 3: Keepsakes (illustrations tied to the story of the game) */}
+      {activeTab === "artifacts" && (
+        <div className="flex animate-rise-in flex-col gap-6">
+          <header className="rounded-xl border border-amber-800/40 bg-stone-950/70 p-4">
+            <h2 className="font-serif text-xl font-bold text-amber-400">Hiện vật</h2>
+            <p className="mt-1 text-sm text-stone-400">
+              Ba vật gắn với nhiệm vụ giao liên trong trò chơi. Tranh minh họa, không phải ảnh hiện
+              vật thật.
+            </p>
+          </header>
+
+          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {ARTIFACTS.map((item) => (
+              <li
+                key={item.id}
+                className="flex flex-col overflow-hidden rounded-lg border border-amber-700/50 bg-stone-950/80"
+              >
+                <Image
+                  src={item.image}
+                  alt={item.title}
+                  width={800}
+                  height={800}
+                  sizes="(min-width: 640px) 220px, 90vw"
+                  className="aspect-square w-full object-cover"
+                />
+                <div className="flex flex-col gap-1.5 p-3.5">
+                  <h3 className="font-serif text-base font-bold text-amber-400">{item.title}</h3>
+                  <p className="text-sm leading-relaxed text-stone-300">{item.note}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Tab 4: Historical Monument */}
       {activeTab === "monument" && (
         <div className="flex animate-rise-in flex-col gap-6">
           <header className="rounded-xl border border-amber-800/40 bg-stone-950/70 p-4">
@@ -191,6 +242,21 @@ export function CodexText({ className }: { className?: string }) {
               người anh hùng nhỏ tuổi.
             </p>
           </header>
+
+          <figure className="overflow-hidden rounded-lg border border-amber-700/50">
+            <Image
+              src={AREA_MAP.image}
+              alt={AREA_MAP.caption}
+              width={2048}
+              height={1530}
+              sizes="(min-width: 1024px) 560px, 90vw"
+              unoptimized
+              className="h-auto w-full"
+            />
+            <figcaption className="bg-stone-950/80 px-3 py-2 text-xs text-stone-400">
+              {AREA_MAP.caption}
+            </figcaption>
+          </figure>
 
           <div className="flex flex-col gap-4 text-base leading-relaxed text-stone-200">
             <p>
