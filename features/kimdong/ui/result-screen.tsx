@@ -1,31 +1,26 @@
 "use client";
 
 import { Button, buttonStyles, cn } from "@/components/ui";
-import { BookOpen, House, RotateCcw } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 
-import { useStagedReveal } from "@/lib/use-staged-reveal";
 import { useKimDongUiStore } from "@/features/kimdong/store/ui-store";
+import { useStagedReveal } from "@/lib/use-staged-reveal";
 
 /** ms after the screen appears: the closing line fades in, then the actions appear. */
-const REVEAL_DELAYS = [400, 3000] as const;
-
-const CODEX_HREF = "/kimdong/codex";
+const REVEAL_DELAYS = [400, 2400] as const;
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md border-2 border-amber-800/60 bg-stone-950/70 px-3 py-2 text-center">
-      <p className="font-serif text-2xl font-bold text-amber-500">{value}</p>
-      <p className="text-xs font-medium text-stone-400">{label}</p>
+    <div className="rounded-lg border border-stone-800 bg-stone-900 p-3 text-center">
+      <p className="font-serif text-2xl font-bold text-amber-400">{value}</p>
+      <p className="mt-0.5 text-xs text-stone-400">{label}</p>
     </div>
   );
 }
 
-/**
- * Shown over the black canvas once the ending has faded out: one line of text fades in, then,
- * after a few seconds, the way to the historical dossier.
- */
+/** End of the chapter: the closing line first, then the numbers and what to do next. */
 export function ResultScreen({ onReplay }: { onReplay: () => void }) {
   const visible = useKimDongUiStore((state) => state.screen === "result");
   const outcome = useKimDongUiStore((state) => state.outcome);
@@ -39,46 +34,65 @@ export function ResultScreen({ onReplay }: { onReplay: () => void }) {
   }, [stage]);
 
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center gap-10 overflow-y-auto bg-black px-5 py-10 text-center">
-      <p
-        className={cn(
-          "max-w-3xl font-serif text-3xl leading-snug text-balance text-amber-100 transition-opacity duration-[2000ms] text-glow sm:text-5xl",
-          stage >= 1 ? "opacity-100" : "opacity-0",
-        )}
-      >
-        Nhiệm vụ hoàn tất... nhưng cái giá phải trả là quá đắt.
-      </p>
-
-      <div
-        inert={stage < 2}
-        className={cn(
-          "flex w-full max-w-xl flex-col items-center gap-6 transition-opacity duration-1000",
-          stage >= 2 ? "opacity-100" : "invisible opacity-0",
-        )}
-      >
-        {outcome ? (
-          <div className="grid w-full grid-cols-3 gap-2 sm:gap-3">
-            <Stat label="Mật thư" value={`${outcome.lettersCollected}/${total}`} />
-            <Stat label="Giây kéo chân địch" value={outcome.survivedSeconds.toFixed(1)} />
-            <Stat label="Lần trúng đạn" value={String(outcome.hits)} />
-          </div>
-        ) : null}
-
-        <Link
-          ref={codexLinkRef}
-          href={CODEX_HREF}
-          className={buttonStyles({ size: "lg", className: "w-full sm:w-auto" })}
+    <div className="absolute inset-0 flex flex-col items-center justify-center overflow-y-auto bg-black/95 px-5 py-8 text-center">
+      <div className="flex w-full max-w-xl flex-col items-center gap-8">
+        <h2
+          className={cn(
+            "font-serif text-3xl leading-snug font-bold text-balance text-amber-300 transition-opacity duration-[1500ms] sm:text-4xl",
+            stage >= 1 ? "opacity-100" : "opacity-0",
+          )}
         >
-          <BookOpen className="size-5" aria-hidden /> Xem Hồ sơ Lịch sử
-        </Link>
+          Nhiệm vụ hoàn tất... nhưng cái giá phải trả là quá đắt.
+        </h2>
 
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          <Button variant="secondary" size="sm" onClick={onReplay}>
-            <RotateCcw className="size-4" aria-hidden /> Chơi lại
-          </Button>
-          <Link href="/" className={buttonStyles({ variant: "ghost", size: "sm" })}>
-            <House className="size-4" aria-hidden /> Về trang chủ
+        <div
+          inert={stage < 2}
+          className={cn(
+            "flex w-full flex-col items-center gap-5 transition-all duration-1000",
+            stage >= 2 ? "translate-y-0 opacity-100" : "invisible translate-y-4 opacity-0",
+          )}
+        >
+          {outcome ? (
+            <div className="grid w-full grid-cols-3 gap-3">
+              <Stat label="Mật thư" value={`${outcome.lettersCollected}/${total}`} />
+              <Stat label="Giây cầm chân địch" value={outcome.survivedSeconds.toFixed(1)} />
+              <Stat label="Lần trúng đạn" value={String(outcome.hits)} />
+            </div>
+          ) : null}
+
+          {/* The chapter is "stamped" as done, next to the news of the unlocked file. */}
+          <div className="flex items-center gap-4">
+            <Image
+              src="/assets/shared/textures/stamp-viet-minh.png"
+              alt=""
+              width={640}
+              height={640}
+              unoptimized
+              className="pointer-events-none w-20 shrink-0 -rotate-12 opacity-90"
+            />
+            <p className="text-left text-sm text-stone-300">
+              Hồ sơ lịch sử về anh Kim Đồng
+              <br />
+              đã được mở khóa.
+            </p>
+          </div>
+
+          <Link
+            ref={codexLinkRef}
+            href="/kimdong/codex"
+            className={buttonStyles({ size: "lg", className: "w-full justify-center sm:w-auto" })}
+          >
+            Xem hồ sơ lịch sử
           </Link>
+
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Button variant="secondary" size="sm" onClick={onReplay}>
+              Chơi lại
+            </Button>
+            <Link href="/" className={buttonStyles({ variant: "ghost", size: "sm" })}>
+              Về trang chủ
+            </Link>
+          </div>
         </div>
       </div>
     </div>

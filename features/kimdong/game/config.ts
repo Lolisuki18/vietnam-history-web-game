@@ -7,9 +7,15 @@ export const PIXEL_ART = false;
 /** Gameplay tuning constants (distances in world px, times in ms unless noted). */
 
 export const PLAYER = {
-  speed: 230,
+  /**
+   * Matched to the walk animation so the feet do not slide: one walk cycle (4 frames, 2 steps of
+   * ~21 world px) at `WALK_FPS` covers about this many px per second (see animations.ts).
+   */
+  speed: 140,
   /** Speed multiplier while swimming. */
   waterSpeedFactor: 0.7,
+  /** Speed multiplier while crawling through a bush (the crawl cycle covers less ground). */
+  bushSpeedFactor: 0.7,
   /** Alpha while hiding in a bush / diving in the stream. */
   bushAlpha: 0.5,
   waterAlpha: 0.35,
@@ -50,28 +56,31 @@ export const OXYGEN = {
   recoverPerSecond: 0.5,
 } as const;
 
-export type RhythmKey = "SPACE" | "LEFT" | "UP" | "RIGHT";
-
+/**
+ * The cuckoo mini-game: a cursor sweeps across a bar, back and forth, and the player presses
+ * SPACE while it is over the lit zone in the middle ("three long calls" = three rounds).
+ */
 export const RHYTHM = {
-  /** Keys of the falling notes, in order. */
-  keys: ["SPACE", "LEFT", "UP", "RIGHT", "SPACE"] as readonly RhythmKey[],
-  /** Time from the start until the first note reaches the hit line. */
-  firstNoteMs: 2200,
-  /** Time between two notes reaching the hit line. */
-  intervalMs: 900,
-  /** Time a note takes to fall from the top of the lane to the hit line. */
-  fallMs: 1500,
-  /** A press within this distance of a note's time counts. */
-  hitWindowMs: 170,
-  /** Pause after the last note before the mini-game closes. */
+  rounds: 3,
+  /** Time the cursor takes to cross the bar in each round (it gets faster). */
+  sweepMs: [1900, 1650, 1400] as readonly number[],
+  /** Pause before the first sweep, and between a judged round and the next sweep. */
+  startDelayMs: 1500,
+  gapMs: 900,
+  /** A press counts when the cursor is within this share of half the bar from the centre. */
+  zoneHalf: 0.2,
+  /** Pause after the last round before the mini-game closes. */
   finishDelayMs: 1200,
 } as const;
-
 export const CLIMAX = {
   /** Time the player has to react to the ambush. */
   decisionMs: 5000,
   squadSize: 6,
-  /** How long the squad fires at the player after the stone lands. */
+  /** Time from pressing SPACE to the shot (the "fire" frame of Kim Đồng's shooting pose). */
+  shotMs: 220,
+  /** Time from the shot until the squad answers with its volley. */
+  squadReactMs: 200,
+  /** How long the squad fires at the player after Kim Đồng's shot. */
   fireMs: 1400,
   /** Pause before the ambush prompt is shown again after the player was too late. */
   retryDelayMs: 1800,
@@ -97,6 +106,16 @@ export const RUNNER = {
   bulletEveryMs: [1400, 2200] as readonly [number, number],
   /** No bullets in the first moments, so the player can get used to the controls. */
   bulletGraceMs: 2200,
+} as const;
+
+/** Pebbles to throw are a supply: picked up along the way, one is used per throw. */
+export const PEBBLE_SUPPLY = {
+  /** How many Kim Đồng carries at the start. */
+  start: 3,
+  /** The most he can carry. */
+  max: 6,
+  /** How close he has to get to pick one up (px). */
+  pickupRadius: 30,
 } as const;
 
 export const PEBBLE = {

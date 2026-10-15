@@ -1,6 +1,14 @@
 import Phaser from "phaser";
 
-import { ASSET_KEYS, SPRITE_ORIGIN } from "../assets/manifest";
+import { BIRD_ANIM, FALL_ANIM, runAnim, soldierAnim } from "../assets/animations";
+import {
+  ASSET_KEYS,
+  ROCK_KEYS,
+  SOLDIER_TEXTURES,
+  SPRITE_ORIGIN,
+  TRACER_FRAME,
+} from "../assets/manifest";
+import { fitToWorld } from "../assets/sprite-utils";
 import { GameAudio } from "../audio";
 import { RUNNER } from "../config";
 import { plugDebugHandlers } from "../debug";
@@ -16,8 +24,9 @@ interface SceneData {
 
 interface Obstacle {
   view: Phaser.GameObjects.Container;
-  rock: Phaser.GameObjects.Arc;
-  root: Phaser.GameObjects.Rectangle;
+  /** The artist's rock / root pictures, or plain shapes when they did not load. */
+  rock: Phaser.GameObjects.Arc | Phaser.GameObjects.Image;
+  root: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Sprite;
   active: boolean;
   lane: number;
   /** Collision width. */
@@ -26,7 +35,7 @@ interface Obstacle {
 
 interface Bullet {
   warning: Phaser.GameObjects.Rectangle;
-  shot: Phaser.GameObjects.Rectangle;
+  shot: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Image;
   state: "idle" | "warning" | "flying";
   lane: number;
   /** ms left in the warning phase. */
@@ -43,6 +52,15 @@ interface BackgroundTree {
   parallax: number;
 }
 
+/** Ranks of chasers behind each other, their size, spacing (px) and how much they close in per hit. */
+const CHASER_COLUMNS = 3;
+const CHASER_SCALE = 1.3;
+const CHASER_SPACING = 66;
+const CHASER_CLOSE_PER_HIT = 40;
+/** Each rank is a little higher or lower in its lane, so the pack is not a grid. */
+const CHASER_ROW_SHIFT = [-8, 8, 0] as const;
+/** Which direction each row of `soldier_running.png` is drawn: true = faces right, false = left. */
+const RUNNING_SHEET_FACES_RIGHT: readonly boolean[] = [true, false];
 const OBSTACLE_POOL = 8;
 const BULLET_POOL = 4;
 const TREE_COUNT = 16;
@@ -98,7 +116,11 @@ export class RunnerScene extends Phaser.Scene {
   private readonly obstacles: Obstacle[] = [];
   private readonly bullets: Bullet[] = [];
   private readonly chasers: Phaser.GameObjects.Sprite[] = [];
+  private readonly chaserSpecs: { lane: number; col: number; phase: number }[] = [];
+  /** How far (px) the squad has closed in on Kim Đồng, eased toward `hits x CHASER_CLOSE_PER_HIT`. */
+  private closing = 0;
   private stopAmbience?: () => void;
+  private stopRunnerMusic?: () => void;
   private readonly cleanups: Array<() => void> = [];
 
   constructor() {
@@ -124,6 +146,8 @@ export class RunnerScene extends Phaser.Scene {
     this.obstacles.length = 0;
     this.bullets.length = 0;
     this.chasers.length = 0;
+    this.chaserSpecs.length = 0;
+    this.closing = 0;
     this.cleanups.length = 0;
   }
 
@@ -144,8 +168,11 @@ export class RunnerScene extends Phaser.Scene {
       () => this.input.keyboard?.off("keydown", this.onKeyDown),
       gameEvents.on("touch:action", () => this.jump()),
       () => this.stopAmbience?.(),
+      () => this.stopRunnerMusic?.(),
       () => gameEvents.emit("controls:active", false),
     );
+    // The chase has its own driving music, until the gunshot of the ending.
+    this.stopRunnerMusic = this.audio.playRunnerBGM();
     if (process.env.NODE_ENV !== "production") {
       this.cleanups.push(
         plugDebugHandlers({
@@ -197,6 +224,9 @@ export class RunnerScene extends Phaser.Scene {
     this.spawn(dtMs);
     this.updateObstacles(dt, speed);
     this.updateBullets(dt, dtMs);
+    // The squad closes in a little with every hit Kim Đồng takes.
+    this.closing += (this.hits * CHASER_CLOSE_PER_HIT - this.closing) * Math.min(1, dt * 4);
+    this.placeChasers();
     this.progressFill.setSize(
       Math.max(1, this.progressBack.width * progress),
       this.progressBack.height,
@@ -231,9 +261,7 @@ export class RunnerScene extends Phaser.Scene {
     }
 
     this.player.x = width * PLAYER_X_FRACTION;
-    this.chasers.forEach((chaser, index) =>
-      chaser.setPosition(width - 34, this.laneCenterY(index)),
-    );
+    this.placeChasers();
 
     // Below the React HUD (counter, objective, alert meter) that covers the top of the screen.
     this.progressBack.setPosition(width / 2, 84).setSize(Math.min(420, width * 0.5), 10);
@@ -262,42 +290,106 @@ export class RunnerScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * The squad chasing from the right: `CHASER_COLUMNS` ranks of one soldier per lane, staggered, so
+   * it looks like a pack and not three men. The running sheet (rows: 0 and 1, two coats) is drawn
+   * facing right and mirrored; the old walking sheets are the fallback.
+   */
   private createChasers(): void {
-    for (let i = 0; i < RUNNER.lanes; i++) {
-      // They chase from the right, so they face left like the runner.
-      const chaser = this.add
-        .sprite(0, 0, ASSET_KEYS.soldier, 0)
-        .setOrigin(SPRITE_ORIGIN.x, SPRITE_ORIGIN.y)
-        .setDepth(6);
-      chaser.anims.play("patrol_left");
+    const running = this.textures.exists(ASSET_KEYS.soldierRunning);
+    for (let i = 0; i < RUNNER.lanes * CHASER_COLUMNS; i++) {
+      const lane = i % RUNNER.lanes;
+      const col = Math.floor(i / RUNNER.lanes);
+      const row = (lane + col) % 2;
+      let chaser: Phaser.GameObjects.Sprite;
+      if (running) {
+        // Row 0 of the sheet runs to the right (mirror it); row 1 already runs to the left.
+        chaser = this.add
+          .sprite(0, 0, ASSET_KEYS.soldierRunning, row * 6)
+          .setFlipX(RUNNING_SHEET_FACES_RIGHT[row] === true);
+        // Each starts at another point of the stride so they do not run in step.
+        chaser.anims.play({ key: runAnim(row), startFrame: Math.floor(Math.random() * 6) });
+      } else {
+        const texture = SOLDIER_TEXTURES[row % SOLDIER_TEXTURES.length]!;
+        chaser = this.add.sprite(0, 0, texture, 0);
+        chaser.anims.play(soldierAnim(texture, "left"));
+      }
+      chaser.setOrigin(SPRITE_ORIGIN.x, SPRITE_ORIGIN.y).setDepth(6 - col * 0.1);
+      fitToWorld(chaser);
+      chaser.setScale(chaser.scaleX * CHASER_SCALE, chaser.scaleY * CHASER_SCALE);
       this.chasers.push(chaser);
+      this.chaserSpecs.push({ lane, col, phase: Math.random() * Math.PI * 2 });
     }
   }
 
+  /** Where chaser `index` runs now: its rank behind the front, a little sway, and closer after hits. */
+  private placeChasers(): void {
+    const { width } = this.scale;
+    this.chasers.forEach((chaser, index) => {
+      const spec = this.chaserSpecs[index]!;
+      const sway = Math.sin(this.elapsedMs / 230 + spec.phase) * 7;
+      const baseX = width - 30 - spec.col * CHASER_SPACING - (spec.lane % 2) * 16;
+      chaser.x = baseX + sway - this.closing;
+      chaser.y =
+        this.laneCenterY(spec.lane) + CHASER_ROW_SHIFT[spec.col % CHASER_ROW_SHIFT.length]!;
+    });
+  }
   private createPools(): void {
+    const rockKey = ROCK_KEYS.find((key) => this.textures.exists(key));
+    const hasRoots = this.textures.exists(ASSET_KEYS.rootObstacle);
     for (let i = 0; i < OBSTACLE_POOL; i++) {
-      const rock = this.add.circle(0, 0, 22, 0x78716c).setStrokeStyle(3, 0x292524);
-      const root = this.add.rectangle(0, 0, 84, 18, 0x5b3a1e).setStrokeStyle(3, 0x2a1a0c);
+      let rock: Obstacle["rock"];
+      if (rockKey) {
+        const picture = this.add.image(0, 4, rockKey);
+        picture.setScale(62 / picture.width);
+        rock = picture;
+      } else {
+        rock = this.add.circle(0, 0, 22, 0x78716c).setStrokeStyle(3, 0x292524);
+      }
+      const root = hasRoots
+        ? this.add.sprite(0, 0, ASSET_KEYS.rootObstacle, 0).setDisplaySize(100, 67)
+        : this.add.rectangle(0, 0, 84, 18, 0x5b3a1e).setStrokeStyle(3, 0x2a1a0c);
       const view = this.add.container(0, 0, [rock, root]).setDepth(5).setVisible(false);
       this.obstacles.push({ view, rock, root, active: false, lane: 0, width: 44 });
     }
     for (let i = 0; i < BULLET_POOL; i++) {
       const warning = this.add.rectangle(0, 0, 10, 6, 0xff3b3b, 0.5).setDepth(4).setVisible(false);
-      const shot = this.add
-        .rectangle(0, 0, BULLET_LENGTH, 6, 0xff5252)
-        .setDepth(7)
-        .setVisible(false);
+      // The artist's tracer picture (head to the right) flies to the left: mirrored.
+      let shot: Bullet["shot"];
+      if (this.textures.exists(ASSET_KEYS.bulletTracer)) {
+        // Frame 0 of the sheet is the tracer (frame 1 is a hit spark); it is drawn in a 64 px
+        // frame but is only TRACER_FRAME.length long, so scale by that.
+        const scale = BULLET_LENGTH / TRACER_FRAME.length;
+        shot = this.add
+          .image(0, 0, ASSET_KEYS.bulletTracer, 0)
+          .setScale(scale)
+          .setFlipX(true)
+          .setDepth(7)
+          .setVisible(false);
+      } else {
+        shot = this.add.rectangle(0, 0, BULLET_LENGTH, 6, 0xff5252).setDepth(7).setVisible(false);
+      }
       this.bullets.push({ warning, shot, state: "idle", lane: 0, timer: 0 });
     }
   }
 
   private createPlayer(): void {
     // Same sprite and origin as in the exploration scene: x / y are the feet.
-    this.player = this.add
-      .sprite(0, 0, ASSET_KEYS.kimdong, 0)
-      .setOrigin(SPRITE_ORIGIN.x, SPRITE_ORIGIN.y)
-      .setDepth(10);
-    this.player.anims.play("walk_left");
+    this.player = fitToWorld(
+      this.add
+        .sprite(0, 0, ASSET_KEYS.kimdong, 0)
+        .setOrigin(SPRITE_ORIGIN.x, SPRITE_ORIGIN.y)
+        .setDepth(10),
+    );
+    // The run cycle is drawn facing right; the runner flees to the left.
+    this.player.setFlipX(true);
+    this.player.anims.play("run");
+  }
+
+  /** Run on the ground, play the jump pose while in the air. */
+  private updatePlayerAnimation(airborne: boolean): void {
+    const key = airborne ? "jump" : "run";
+    if (this.player.anims.currentAnim?.key !== key) this.player.anims.play(key, true);
   }
 
   private createHud(): void {
@@ -392,6 +484,7 @@ export class RunnerScene extends Phaser.Scene {
     this.jumpOffset = jumpOffset;
 
     this.player.setPosition(this.player.x, this.laneY - jumpOffset);
+    this.updatePlayerAnimation(jumpOffset > 1);
     // Blink while invulnerable.
     this.player.setAlpha(
       this.invulnerableMs > 0 && Math.floor(this.invulnerableMs / 90) % 2 === 0 ? 0.35 : 1,
@@ -420,6 +513,7 @@ export class RunnerScene extends Phaser.Scene {
     obstacle.width = isRock ? 44 : 84;
     obstacle.rock.setVisible(isRock);
     obstacle.root.setVisible(!isRock);
+    if ("setFrame" in obstacle.root) obstacle.root.setFrame(Math.random() < 0.5 ? 0 : 1);
     obstacle.view.setPosition(-60, this.laneCenterY(obstacle.lane)).setVisible(true);
   }
 
@@ -521,7 +615,12 @@ export class RunnerScene extends Phaser.Scene {
     }
     this.progressBack.setVisible(false);
     this.progressFill.setVisible(false);
-    this.player.anims.stop();
+    // Kim Đồng goes down (the artist's fall frames), else he just stops running.
+    if (this.anims.exists(FALL_ANIM)) this.player.anims.play(FALL_ANIM);
+    else this.player.anims.stop();
+    this.time.delayedCall(1200, () => this.flyBirdAcross());
+    this.stopRunnerMusic?.();
+    this.stopRunnerMusic = undefined;
 
     this.audio.gunshot();
     this.cameras.main.flash(200, 255, 255, 255);
@@ -543,6 +642,25 @@ export class RunnerScene extends Phaser.Scene {
       this.time.delayedCall(atMs, () => this.showCaption(text));
     }
     this.time.delayedCall(ENDING_TOTAL_MS, () => this.finish());
+  }
+
+  /** A cuckoo (chim tu hú) flies across the sky while its call drifts in. */
+  private flyBirdAcross(): void {
+    if (!this.textures.exists(ASSET_KEYS.tuHuBird)) return;
+    const { width, height } = this.scale;
+    const bird = this.add
+      .sprite(-50, height * 0.24, ASSET_KEYS.tuHuBird, 0)
+      .setDisplaySize(64, 64)
+      .setDepth(96);
+    if (this.anims.exists(BIRD_ANIM)) bird.anims.play(BIRD_ANIM);
+    this.tweens.add({
+      targets: bird,
+      x: width + 60,
+      y: height * 0.3,
+      duration: 4200,
+      ease: "Sine.easeInOut",
+      onComplete: () => bird.destroy(),
+    });
   }
 
   private showCaption(text: string): void {

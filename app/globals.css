@@ -1,15 +1,85 @@
 @import "tailwindcss";
 
-/* Theme: "Lịch sử Việt Nam hào hùng" – dark stone, amber and lacquer red, serif headings. */
-@theme inline {
-  --font-serif: ui-serif, "Palatino Linotype", Georgia, Cambria, "Times New Roman", serif;
+/*
+ * Theme: dark, aged yellow paper. Slab-serif lettering, no glow and no drop shadows anywhere.
+ * The stone shades are redefined as warm brown-blacks so cards and frames sit on the paper
+ * instead of looking like grey boxes.
+ */
+@theme {
+  --color-stone-700: #5a4a30;
+  --color-stone-800: #3d3220;
+  --color-stone-900: #2a2013;
+  --color-stone-950: #1a140a;
 }
 
-/* Gold lettering with a dark drop shadow and a soft glow. */
-@utility text-glow {
-  text-shadow:
-    0 2px 0 rgb(0 0 0 / 0.65),
-    0 0 28px rgb(245 158 11 / 0.35);
+@theme inline {
+  --font-serif: var(--font-slab), "Rockwell", "Roboto Slab", ui-serif, Georgia, serif;
+  --font-sans: var(--font-slab), "Rockwell", "Roboto Slab", ui-serif, Georgia, serif;
+}
+
+/*
+ * Page background: a tileable aged-paper texture. The picture is a separate file
+ * (public/assets/shared/textures/paper-dark.svg); the colour is what shows before it loads.
+ */
+@utility bg-paper {
+  background-color: #2a2013;
+  background-image: url("/assets/shared/textures/paper-dark.svg");
+  background-size: 600px 600px;
+}
+
+/*
+ * Hand-made marks. They are flat on purpose (no shadow, no glow): the "worn" look comes from
+ * masks that are separate files in public/assets/shared/textures/. A mask also clips outlines, so interactive
+ * elements show focus with a colour change instead (see components/ui/button.tsx).
+ */
+
+/* A strip of paper stuck on: cut by hand, a little crooked. */
+@utility label-tape {
+  background-color: #d8c79a;
+  background-image: url("/assets/shared/textures/paper-aged.webp");
+  background-size: 160px auto;
+  color: #2a2013;
+  rotate: -2deg;
+  clip-path: polygon(
+    0 10%,
+    6% 0,
+    38% 7%,
+    72% 0,
+    100% 6%,
+    98% 52%,
+    100% 94%,
+    64% 100%,
+    30% 93%,
+    4% 100%,
+    1% 50%
+  );
+}
+
+/* A rubber stamp: ink-coloured lettering in a double frame, worn away by a mask. The colour
+   is the text colour; rotate and size it where it is used. */
+@utility stamp {
+  display: inline-block;
+  border: 2px double currentColor;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: center;
+  mask-image: url("/assets/shared/textures/ink-worn.svg");
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  -webkit-mask-image: url("/assets/shared/textures/ink-worn.svg");
+  -webkit-mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+}
+
+/* A hand-cut edge instead of a perfect rounded rectangle (used by buttons). */
+@utility rough-edge {
+  mask-image: url("/assets/shared/textures/rough-edge.svg");
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  -webkit-mask-image: url("/assets/shared/textures/rough-edge.svg");
+  -webkit-mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
 }
 
 /* Fade a whole page in. Opacity only: a transform on an ancestor would break `position: fixed`. */
@@ -40,19 +110,6 @@
 
 @utility animate-rise-in {
   animation: rise-in 0.8s ease-out both;
-}
-
-/* Hero backdrop: lacquer red glow on top, amber glow below, concentric rings like a bronze drum. */
-@utility bg-hero {
-  background-color: #0c0a09;
-  background-image:
-    radial-gradient(ellipse 70% 55% at 50% 0%, rgb(153 27 27 / 0.45), transparent 70%),
-    radial-gradient(ellipse 60% 45% at 50% 100%, rgb(217 119 6 / 0.25), transparent 70%),
-    repeating-radial-gradient(
-      circle at 50% 108%,
-      transparent 0 34px,
-      rgb(245 158 11 / 0.07) 34px 36px
-    );
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,7 +1,7 @@
 "use client";
 
-import { Button, buttonStyles } from "@/components/ui";
-import { ArrowLeft, BookOpen, Loader2, Play } from "lucide-react";
+import { Button } from "@/components/ui";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
 
 import { useKimDongUiStore } from "@/features/kimdong/store/ui-store";
@@ -13,44 +13,74 @@ export function MenuScreen({ onStart }: { onStart: () => void }) {
   const codexUnlocked = useProgressStore((state) => state.codexUnlocked.includes(KIMDONG_ID));
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center bg-black/60 p-6 backdrop-blur-sm">
-      <div className="flex w-full max-w-xl flex-col items-center gap-6 text-center">
-        <span className="font-serif text-sm font-semibold tracking-[0.25em] text-red-500 uppercase">
-          Chương 1 · Cao Bằng, 1943
-        </span>
-        <h1 className="font-serif text-4xl font-black tracking-tight text-amber-500 text-glow sm:text-5xl">
-          Kim Đồng – Người liên lạc nhỏ
-        </h1>
-        <p className="max-w-md text-base text-amber-100/80">
-          Nhập vai Dền, băng qua rừng núi Cao Bằng, nhặt mật thư và tránh tầm mắt của lính tuần.
-        </p>
-        <div className="flex flex-wrap items-center justify-center gap-3">
-          <Button className="px-8 py-3 text-base" onClick={onStart} disabled={!ready} autoFocus>
+    <div className="absolute inset-0 flex items-center justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm">
+      <div className="flex w-full max-w-lg animate-rise-in flex-col gap-6 rounded-xl border border-amber-800/60 bg-stone-950/95 p-6 sm:p-8">
+        <header>
+          <p className="text-sm text-red-400">Chương 1 · Cao Bằng, 1943</p>
+          <h1 className="mt-1 font-serif text-3xl font-bold text-balance text-amber-400 sm:text-4xl">
+            Kim Đồng – Người liên lạc nhỏ
+          </h1>
+          <p className="mt-2 text-stone-300">
+            Bạn vào vai Nông Văn Dền, đội trưởng đầu tiên của Đội Nhi đồng Cứu quốc.
+          </p>
+        </header>
+
+        <section>
+          <h2 className="font-serif text-lg font-bold text-amber-300">Nhiệm vụ</h2>
+          <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-stone-300 marker:text-amber-600">
+            <li>
+              Đi qua rừng và nhặt đủ <strong>5 mảnh mật thư</strong> bị thất lạc.
+            </li>
+            <li>
+              Nấp trong <strong>bụi rậm</strong> hoặc <strong>lặn dưới suối</strong> để lính tuần
+              không nhìn thấy.
+            </li>
+            <li>Bảo vệ cán bộ, và đánh lạc hướng quân địch khi cần.</li>
+          </ul>
+        </section>
+
+        <details className="text-sm text-stone-300">
+          <summary className="cursor-pointer font-semibold text-amber-400 hover:text-amber-300">
+            Cách điều khiển
+          </summary>
+          <p className="mt-2">
+            <strong>Máy tính:</strong> WASD hoặc phím mũi tên để di chuyển. Bấm chuột trái hoặc phím
+            G để ném sỏi. Phím Space để hú tiếng chim, bắn súng đánh động hoặc nhảy.
+          </p>
+          <p className="mt-1.5">
+            <strong>Điện thoại:</strong> cần gạt bên trái để di chuyển, nút Hành động bên phải để
+            ném sỏi, hú tiếng chim, bắn súng và nhảy.
+          </p>
+        </details>
+
+        <div className="flex flex-col gap-3">
+          <Button
+            size="lg"
+            className="w-full justify-center py-3 text-base"
+            onClick={onStart}
+            disabled={!ready}
+            autoFocus
+          >
             {ready ? (
-              <>
-                <Play className="size-5" aria-hidden /> Bắt đầu
-              </>
+              "Bắt đầu"
             ) : (
               <>
-                <Loader2 className="size-5 animate-spin" aria-hidden /> Đang tải game…
+                <Loader2 className="size-5 animate-spin" aria-hidden /> Đang tải trò chơi…
               </>
             )}
           </Button>
-          {codexUnlocked ? (
-            <Link
-              href="/kimdong/codex"
-              className={buttonStyles({ variant: "secondary", size: "lg" })}
-            >
-              <BookOpen className="size-5" aria-hidden /> Hồ sơ lịch sử
+
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-sm">
+            {codexUnlocked && (
+              <Link href="/kimdong/codex" className="text-amber-400 hover:text-amber-200">
+                Xem hồ sơ lịch sử
+              </Link>
+            )}
+            <Link href="/" className="text-stone-400 hover:text-stone-200">
+              Về trang chủ
             </Link>
-          ) : null}
+          </div>
         </div>
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-amber-100/80 hover:text-white"
-        >
-          <ArrowLeft className="size-4" aria-hidden /> Về trang chủ
-        </Link>
       </div>
     </div>
   );

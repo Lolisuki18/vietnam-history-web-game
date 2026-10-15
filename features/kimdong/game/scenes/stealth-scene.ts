@@ -2,28 +2,44 @@ import Phaser from "phaser";
 
 import { createChapterProgress, segmentIntersectsRect } from "@/lib/engine";
 
+import { CLIMB_ANIM } from "../assets/animations";
+import { ASSET_KEYS, SOLDIER_TEXTURES, SPRITE_ORIGIN } from "../assets/manifest";
+import { fitToWorld } from "../assets/sprite-utils";
 import { GameAudio } from "../audio";
-import { ALERT, CLIMAX, PEBBLE, PLAYER } from "../config";
+import { ALERT, CLIMAX, PEBBLE, PEBBLE_SUPPLY, PLAYER } from "../config";
 import { plugDebugHandlers } from "../debug";
+import { DucThanh } from "../entities/duc-thanh";
 import { Guard } from "../entities/guard";
+import { SleepingGuard } from "../entities/sleeping-guard";
 import { LetterPickup } from "../entities/letter-pickup";
+import { PebblePickup } from "../entities/pebble-pickup";
 import { Player } from "../entities/player";
 import { Squad } from "../entities/squad";
 import { gameEvents, hostEvents } from "../events";
 import { sendToHost } from "../host-bridge";
 import { touchInput } from "../input-state";
 import { AlertMeter } from "../systems/alert-meter";
+import { Fog } from "../systems/fog";
 import { OxygenMeter } from "../systems/oxygen-meter";
 import { PebbleThrower } from "../systems/pebble";
-import { createBushes, createWorld } from "../systems/world-renderer";
-import { isInBush, isInWater } from "../systems/zones";
+import {
+  createBushes,
+  createGateArt,
+  createOutpostFence,
+  createProps,
+  createWorld,
+  type GateArt,
+} from "../systems/world-renderer";
+import { isInBush, isInRockCover, isInWater } from "../systems/zones";
 import { KIMDONG_ID, type DialogueId } from "../../types";
 import {
   GUARD_ROUTES,
   LETTER_SPOTS,
   OUTPOST_GATE,
   OUTPOST_WALLS,
+  PEBBLE_SPOTS,
   PLAYER_START,
+  SLEEPING_GUARDS,
   TREE,
   VIEW,
   WORLD,
@@ -35,6 +51,8 @@ type SceneState =
 
 const MIN_ZOOM = 0.5;
 
+/** The mist rolls in once this many letters have been picked up. */
+const FOG_AFTER_LETTERS = 2;
 /** Time between the last letter and the ambush event, so its toast can be read. */
 const CLIMAX_DELAY_MS = 3000;
 /** How long the camera keeps shaking once the stone has landed. */
@@ -56,13 +74,40 @@ export class StealthScene extends Phaser.Scene {
   private alert = new AlertMeter();
   private oxygen!: OxygenMeter;
   private thrower!: PebbleThrower;
+  /** Pebbles Kim Đồng carries; one is used per throw. */
+  private pebbles: number = PEBBLE_SUPPLY.start;
+  /** Pebbles on the ground: the ones lying around and the ones he threw onto dry land. */
+  private pebblePickups: PebblePickup[] = [];
+  private lastEmptyWarning = -10_000;
   private solids: Phaser.GameObjects.Rectangle[] = [];
   private gate!: Phaser.GameObjects.Rectangle;
   private audio!: GameAudio;
+  /** Stop functions of the looping music: the calm forest theme and the tense one. */
+  private stopMusic?: () => void;
+  private stopTension?: () => void;
+  /** Seconds until the next footstep / splash sound. */
+  private stepTimer = 0;
+  private wasSwimming = false;
+  /** Scene time of the last "alert" / "question" sting. */
+  private readonly lastSting: Partial<Record<"alert" | "question", number>> = {};
+  /** Stops the heartbeat loop of the 5 second decision. */
+  private stopHeartbeat?: () => void;
   private squad!: Squad;
+  private ducThanh!: DucThanh;
+  private fog!: Fog;
+  private sleepers: SleepingGuard[] = [];
+  /** The picture of the gate (frame 0 closed ... 3 open); the invisible `gate` rectangle collides. */
+  private gateArt?: GateArt;
+  /** Kim Đồng up the old tree during the cuckoo mini-game. */
+  private climber?: Phaser.GameObjects.Sprite;
   /** Pulsing ring + label that tell the player where the old tree is, until it has been used. */
-  private treeHint: Phaser.GameObjects.GameObject[] = [];
+  private treeHint: (Phaser.GameObjects.Arc | Phaser.GameObjects.Text)[] = [];
+  /** True once every letter is collected: only then does the signal tree start the mini-game. */
+  private treeUnlocked = false;
   private rhythmDone = false;
+  /** Number and a sample of the solid props (reported by the dev-only `debugStats`). */
+  private blockerCount = 0;
+  private blockerSample: number[][] = [];
   private cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd?: MovementKeys;
   private state: SceneState = "waiting";
@@ -95,23 +140,42 @@ export class StealthScene extends Phaser.Scene {
     this.facing.x = 1;
     this.facing.y = 0;
     this.treeHint = [];
+    this.treeUnlocked = false;
     this.cleanups.length = 0;
   }
 
   create(): void {
     createWorld(this);
     createBushes(this);
+    const blockers = createProps(this);
+    this.blockerCount = blockers.length;
+    this.blockerSample = blockers.slice(0, 40).map((b) => [Math.round(b.x), Math.round(b.y)]);
     this.createSolids();
     this.createTreeHint();
     this.audio = new GameAudio(this);
     this.squad = new Squad(this);
+    this.ducThanh = new DucThanh(this, PLAYER_START.x + 70, PLAYER_START.y + 20);
+    this.fog = new Fog(this);
+    this.sleepers = SLEEPING_GUARDS.map((g) => new SleepingGuard(this, g.x, g.y, g.row));
 
     this.player = new Player(this, PLAYER_START.x, PLAYER_START.y);
     this.physics.add.collider(this.player.sprite, this.solids);
+    // Trees, rocks, stumps and the watchtower are solid too, and so are the sleeping soldiers.
+    this.physics.add.collider(this.player.sprite, blockers);
+    for (const sleeper of this.sleepers) {
+      if (sleeper.body) this.physics.add.collider(this.player.sprite, sleeper.body);
+    }
     this.oxygen = new OxygenMeter(this);
-    this.thrower = new PebbleThrower(this, (x, y) => this.onNoise(x, y));
-    this.guards = GUARD_ROUTES.map((route) => new Guard(this, route));
+    this.thrower = new PebbleThrower(this, (x, y) => this.onPebbleLanded(x, y));
+    // Patrols mix French soldiers and "lính khố xanh" (colonial native guards).
+    this.guards = GUARD_ROUTES.map(
+      (route, index) =>
+        new Guard(this, route, SOLDIER_TEXTURES[index % SOLDIER_TEXTURES.length], (event) =>
+          this.onGuardEvent(event),
+        ),
+    );
     this.letters = LETTER_SPOTS.map((spot) => new LetterPickup(this, spot.x, spot.y));
+    this.pebblePickups = PEBBLE_SPOTS.map((spot) => new PebblePickup(this, spot.x, spot.y));
     this.alert = new AlertMeter();
     this.alert.reset();
 
@@ -122,6 +186,7 @@ export class StealthScene extends Phaser.Scene {
 
     if (!this.scene.isActive("ui")) this.scene.launch("ui");
     gameEvents.emit("reset", undefined);
+    this.setPebbles(PEBBLE_SUPPLY.start);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.onShutdown, this);
 
     if (this.autostart) this.begin();
@@ -136,11 +201,13 @@ export class StealthScene extends Phaser.Scene {
     const py = this.player.y;
 
     const inWater = isInWater(px, py);
-    const hidden = inWater || isInBush(px, py);
+    const inRock = !inWater && isInRockCover(px, py);
+    const inBush = !inWater && (inRock || isInBush(px, py));
+    const hidden = inWater || inBush;
     this.player.setAlpha(inWater ? PLAYER.waterAlpha : hidden ? PLAYER.bushAlpha : 1);
 
     if (playing) {
-      this.movePlayer(inWater ? PLAYER.waterSpeedFactor : 1);
+      this.movePlayer(inWater ? PLAYER.waterSpeedFactor : inBush ? PLAYER.bushSpeedFactor : 1);
       if (!inWater) {
         this.lastDry.x = px;
         this.lastDry.y = py;
@@ -151,7 +218,13 @@ export class StealthScene extends Phaser.Scene {
       this.moveInput.x = 0;
       this.moveInput.y = 0;
     }
-    this.player.animate(this.moveInput.x, this.moveInput.y, inWater);
+    this.player.animate(
+      this.moveInput.x,
+      this.moveInput.y,
+      inWater,
+      inRock ? "rock" : inBush ? "bush" : false,
+    );
+    if (playing) this.updateSounds(dt, inWater);
 
     let seen = false;
     for (const guard of this.guards) {
@@ -167,14 +240,47 @@ export class StealthScene extends Phaser.Scene {
       else this.alert.decay(ALERT.decayRate, dt);
       if (this.alert.isFull) this.onCaught();
       this.checkLetterPickup(px, py);
-      if (!this.rhythmDone && Math.hypot(px - TREE.x, py - TREE.y) <= TREE.triggerRadius) {
+      this.checkPebblePickup(px, py);
+      // The signal tree only works once all the letters are in hand.
+      if (
+        this.treeUnlocked &&
+        !this.rhythmDone &&
+        Math.hypot(px - TREE.x, py - TREE.y) <= TREE.triggerRadius
+      ) {
         this.startRhythm();
       }
     }
     this.alert.flush(time);
+    this.fog.update(dt);
     this.syncControlsVisibility();
 
     this.oxygen.syncVisuals(px, py);
+  }
+
+  /** Footsteps on land, splashes in the stream, and the tense music while the alert is high. */
+  private updateSounds(dt: number, inWater: boolean): void {
+    const moving = this.moveInput.x !== 0 || this.moveInput.y !== 0;
+    if (inWater && !this.wasSwimming) this.audio.splash();
+    this.wasSwimming = inWater;
+    if (moving) {
+      this.stepTimer -= dt;
+      if (this.stepTimer <= 0) {
+        if (inWater) this.audio.splash(0.25);
+        else if (this.fog.isActive) this.audio.fogFootstep();
+        else this.audio.footstep(0.28);
+        this.stepTimer = inWater ? 0.9 : 0.95;
+      }
+    } else {
+      this.stepTimer = 0;
+    }
+
+    // Hysteresis: the tense theme starts at 45 % and only stops once the alert is nearly gone.
+    const level = this.alert.value;
+    if (!this.stopTension && level >= 45) this.stopTension = this.audio.playTensionBGM();
+    else if (this.stopTension && level < 15) {
+      this.stopTension();
+      this.stopTension = undefined;
+    }
   }
 
   /** Walls (and the gate while it is closed) block a guard's view of the player. */
@@ -189,6 +295,16 @@ export class StealthScene extends Phaser.Scene {
     return !segmentIntersectsRect(guard.x, guard.y, px, py, gate.x, gate.y, gate.w, gate.h);
   }
 
+  /** Sting when a guard spots the player / hears a noise; at most one per kind every 600 ms. */
+  private onGuardEvent(event: "alert" | "question"): void {
+    if (this.state !== "explore") return;
+    const now = this.time.now;
+    if (now < (this.lastSting[event] ?? 0) + 600) return;
+    this.lastSting[event] = now;
+    if (event === "alert") this.audio.alert();
+    else this.audio.question();
+  }
+
   /** The host pressed Start: show the briefing first, the player can move once it is closed. */
   private begin(): void {
     if (this.state !== "waiting") return;
@@ -200,6 +316,8 @@ export class StealthScene extends Phaser.Scene {
   private onDialogueClosed(id: DialogueId): void {
     if (id === "intro" && this.state === "intro") {
       this.state = "explore";
+      this.stopMusic?.();
+      this.stopMusic = this.audio.startAmbience();
       sendToHost({ type: "chapter:phase", phase: "explore" });
     }
   }
@@ -215,17 +333,35 @@ export class StealthScene extends Phaser.Scene {
 
   private collectLetter(): void {
     this.collected += 1;
+    this.audio.pickupLetter();
+    if (this.collected === FOG_AFTER_LETTERS) {
+      // Second stage: the mist comes down, and the footsteps are all there is to go by.
+      this.fog.fadeIn(3000);
+      gameEvents.emit("banner", {
+        text: "Sương mù buông xuống – hãy lắng nghe tiếng bước chân",
+        ms: 3200,
+      });
+    }
     sendToHost({
       type: "chapter:progress",
       progress: createChapterProgress(KIMDONG_ID, this.collected, LETTER_SPOTS.length),
     });
     sendToHost({ type: "chapter:letter", index: this.collected - 1 });
-    if (this.collected >= LETTER_SPOTS.length) {
-      this.time.delayedCall(CLIMAX_DELAY_MS, () => this.startClimax());
-    }
+    if (this.collected >= LETTER_SPOTS.length) this.unlockTree();
   }
 
-  /** Phase 3: all letters found, the squad springs the ambush and the player must react. */
+  /** All the letters are found: the old tree lights up, and warning the cadre is the next job. */
+  private unlockTree(): void {
+    if (this.treeUnlocked) return;
+    this.treeUnlocked = true;
+    for (const object of this.treeHint) object.setVisible(true);
+    gameEvents.emit("banner", {
+      text: "Đủ 5 mật thư! Ra cây cổ thụ để báo hiệu cho cán bộ",
+      ms: 3600,
+    });
+  }
+
+  /** Phase 3: the signal is given, the squad springs the ambush and the player must react. */
   private startClimax(): void {
     if (this.state !== "explore") {
       // Busy (rhythm mini-game, being caught, ...): try again shortly.
@@ -234,21 +370,43 @@ export class StealthScene extends Phaser.Scene {
     }
     this.state = "climax";
     sendToHost({ type: "chapter:phase", phase: "climax" });
-    this.squad.enter(this.cameras.main.worldView);
+    // The game is forced to a stop: the screen shakes and turns red (see ClimaxPrompt).
+    this.cameras.main.shake(700, 0.012);
+    const view = this.cameras.main.worldView;
+    this.squad.enter(view);
+    // The cadre is coming up the path from behind, right into the ambush.
+    this.ducThanh.walkTo(this.player.x - 70, this.player.y, { x: view.x - 60, y: this.player.y });
+    this.stopHeartbeat?.();
+    this.stopHeartbeat = this.audio.startHeartbeat();
     gameEvents.emit("climax:start", undefined);
   }
 
   private onClimaxResult(acted: boolean): void {
     if (this.state !== "climax") return;
+    this.stopHeartbeat?.();
+    this.stopHeartbeat = undefined;
     if (!acted) {
       gameEvents.emit("banner", { text: "Quá muộn! Cán bộ sắp rơi vào ổ phục kích…", ms: 1700 });
       this.time.delayedCall(CLIMAX.retryDelayMs, () => {
-        if (this.state === "climax") gameEvents.emit("climax:start", undefined);
+        if (this.state !== "climax") return;
+        this.stopHeartbeat?.();
+        this.stopHeartbeat = this.audio.startHeartbeat();
+        gameEvents.emit("climax:start", undefined);
       });
       return;
     }
-    // Throw a stone at the squad; when it lands the soldiers turn on the player.
+    // Kim Đồng fires his gun to draw their fire: aim, shot (flash, bang), then the squad answers.
     this.state = "ambush";
+    const towardSquad = this.squad.center.x >= this.player.x;
+    if (this.player.playShoot(towardSquad)) {
+      this.time.delayedCall(CLIMAX.shotMs, () => {
+        this.audio.gunshot();
+        this.cameras.main.shake(160, 0.01);
+      });
+      this.time.delayedCall(CLIMAX.shotMs + CLIMAX.squadReactMs, () => this.onAmbushSprung());
+      return;
+    }
+    // No shooting artwork: throw a stone at the squad instead; when it lands they turn on him.
     this.thrower.throw(this.player, this.squad.center);
     this.time.delayedCall(PEBBLE.flightMs + 80, () => this.onAmbushSprung());
   }
@@ -312,7 +470,31 @@ export class StealthScene extends Phaser.Scene {
     if (this.state !== "explore") return;
     this.state = "rhythm";
     sendToHost({ type: "chapter:phase", phase: "rhythm" });
+    gameEvents.emit("banner", {
+      text: "Ba tiếng tu hú dài là an toàn. Một tiếng ngắn, hai tiếng dài là có biến. Phải làm thật chuẩn!",
+      ms: 4200,
+    });
+    this.showClimber();
     gameEvents.emit("rhythm:start", undefined);
+  }
+
+  /** Kim Đồng climbs the old tree for the cuckoo calls (the artist's climbing frames). */
+  private showClimber(): void {
+    if (!this.textures.exists(ASSET_KEYS.kimdongClimb) || this.climber) return;
+    this.player.sprite.setVisible(false);
+    this.climber = fitToWorld(
+      this.add
+        .sprite(TREE.x - 6, TREE.y + 40, ASSET_KEYS.kimdongClimb, 0)
+        .setOrigin(SPRITE_ORIGIN.x, SPRITE_ORIGIN.y)
+        .setDepth(21),
+    );
+    if (this.anims.exists(CLIMB_ANIM)) this.climber.anims.play(CLIMB_ANIM);
+  }
+
+  private hideClimber(): void {
+    this.climber?.destroy();
+    this.climber = undefined;
+    this.player.sprite.setVisible(true);
   }
 
   private onRhythmNote(hit: boolean): void {
@@ -322,6 +504,10 @@ export class StealthScene extends Phaser.Scene {
   private onRhythmDone(misses: number): void {
     if (this.state !== "rhythm") return;
     this.rhythmDone = true;
+    this.hideClimber();
+    // Three long calls if every note was hit, the "something is wrong" call otherwise.
+    if (misses === 0) this.audio.cuckooSignal();
+    else this.audio.cuckooWarning();
     this.destroyTreeHint();
     this.openGate();
     this.state = "explore";
@@ -333,10 +519,17 @@ export class StealthScene extends Phaser.Scene {
           : "Lính đã chú ý, nhưng cổng trạm gác đã mở!",
       ms: 2400,
     });
+    // The cadre is on his way: a few seconds later the squad springs the ambush.
+    this.time.delayedCall(CLIMAX_DELAY_MS, () => this.startClimax());
   }
 
   private openGate(): void {
     (this.gate.body as Phaser.Physics.Arcade.StaticBody).enable = false;
+    if (this.gateArt) {
+      // The leaves fall away, bottom to top; the posts stay.
+      this.gateArt.open();
+      return;
+    }
     this.tweens.add({
       targets: this.gate,
       scaleY: 0.1,
@@ -371,6 +564,9 @@ export class StealthScene extends Phaser.Scene {
       })
       .setOrigin(0.5)
       .setDepth(7);
+    // Hidden until all the letters are found (see `unlockTree`).
+    ring.setVisible(false);
+    label.setVisible(false);
     this.treeHint = [ring, label];
   }
 
@@ -386,17 +582,57 @@ export class StealthScene extends Phaser.Scene {
     if (this.state !== "explore") return;
     const pointer = this.input.activePointer;
     this.cameras.main.getWorldPoint(pointer.x, pointer.y, this.pointerWorld);
-    this.thrower.throw(this.player, this.pointerWorld);
+    this.throwPebble(this.pointerWorld);
   }
 
   /** Touch action button: throw a pebble a short way in front of the player. */
   private throwForward(): void {
     if (this.state !== "explore") return;
     const reach = PEBBLE.range * 0.75;
-    this.thrower.throw(this.player, {
+    this.throwPebble({
       x: this.player.x + this.facing.x * reach,
       y: this.player.y + this.facing.y * reach,
     });
+  }
+
+  /** Throw one pebble at `target`: it costs a pebble from the supply; with none left, say so. */
+  private throwPebble(target: { x: number; y: number }): void {
+    if (!this.thrower.isReady) return;
+    if (this.pebbles <= 0) {
+      const now = this.time.now;
+      if (now > this.lastEmptyWarning + 1500) {
+        this.lastEmptyWarning = now;
+        gameEvents.emit("banner", { text: "Hết sỏi! Nhặt thêm dọc đường", ms: 1300 });
+      }
+      return;
+    }
+    this.setPebbles(this.pebbles - 1);
+    this.player.playThrow(target.x);
+    this.thrower.throw(this.player, target);
+  }
+
+  private setPebbles(count: number): void {
+    this.pebbles = Math.max(0, Math.min(PEBBLE_SUPPLY.max, count));
+    gameEvents.emit("pebbles", { count: this.pebbles, max: PEBBLE_SUPPLY.max });
+  }
+
+  /** Walk over a pebble on the ground to pick it up (unless the pockets are full). */
+  private checkPebblePickup(px: number, py: number): void {
+    for (const pebble of this.pebblePickups) {
+      if (this.pebbles >= PEBBLE_SUPPLY.max) return;
+      if (!pebble.isNear(px, py)) continue;
+      pebble.take();
+      this.audio.pebblePickup();
+      this.setPebbles(this.pebbles + 1);
+    }
+    // Drop the pickups that were taken.
+    this.pebblePickups = this.pebblePickups.filter((pebble) => !pebble.isTaken);
+  }
+
+  /** A thrown pebble landed: guards hear it, and on dry land it stays there to be picked up again. */
+  private onPebbleLanded(x: number, y: number): void {
+    this.onNoise(x, y);
+    if (!isInWater(x, y)) this.pebblePickups.push(new PebblePickup(this, x, y));
   }
 
   /** Tell the UI scene when the virtual controls should be on screen (only on change). */
@@ -412,6 +648,7 @@ export class StealthScene extends Phaser.Scene {
   }
 
   private onOutOfAir(): void {
+    this.audio.gasp();
     this.alert.add(ALERT.drownPenalty);
     this.player.teleport(this.lastDry.x, this.lastDry.y);
     gameEvents.emit("banner", { text: "Hụt hơi! Tiếng động làm lính chú ý", ms: 1600 });
@@ -446,8 +683,13 @@ export class StealthScene extends Phaser.Scene {
       return solid;
     };
     this.solids = OUTPOST_WALLS.map((wall) => makeSolid(wall, 0x3b2a1a, 0x1c130a));
+    // The bamboo fence picture replaces the plain wall rectangles; they stay as the collision.
+    if (createOutpostFence(this)) for (const solid of this.solids) solid.setVisible(false);
     this.gate = makeSolid(OUTPOST_GATE, 0x8a5a2b, 0x3d2610);
     this.solids.push(this.gate);
+    // The gate is drawn in the style of the wall (posts and stakes); the rectangle is its collision.
+    this.gateArt = createGateArt(this);
+    if (this.gateArt) this.gate.setVisible(false);
   }
 
   private setupCamera(): void {
@@ -554,6 +796,9 @@ export class StealthScene extends Phaser.Scene {
       x: Math.round(this.player.x),
       y: Math.round(this.player.y),
       collected: this.collected,
+      pebbles: this.pebbles,
+      blockers: this.blockerCount,
+      blockerSample: this.blockerSample,
       anim: this.player.animation,
       frame: this.player.sprite.frame.name,
     });
@@ -565,11 +810,27 @@ export class StealthScene extends Phaser.Scene {
     for (const cleanup of this.cleanups.splice(0)) cleanup();
     // The next scene decides whether the controls come back (the runner turns them on again).
     gameEvents.emit("controls:active", false);
+    this.stopMusic?.();
+    this.stopMusic = undefined;
+    this.stopTension?.();
+    this.stopTension = undefined;
+    this.stopHeartbeat?.();
+    this.stopHeartbeat = undefined;
     this.thrower.destroy();
+    for (const pebble of this.pebblePickups) pebble.destroy();
+    this.pebblePickups = [];
     this.oxygen.destroy();
     for (const guard of this.guards) guard.destroy();
     for (const letter of this.letters) letter.destroy();
     this.squad.destroy();
+    this.ducThanh.destroy();
+    this.fog.destroy();
+    this.climber?.destroy();
+    this.climber = undefined;
+    for (const sleeper of this.sleepers) sleeper.destroy();
+    this.sleepers = [];
+    this.gateArt?.destroy();
+    this.gateArt = undefined;
     this.destroyTreeHint();
   }
 }

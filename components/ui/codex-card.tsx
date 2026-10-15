@@ -2,6 +2,7 @@ import { Lock } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { cn } from "./cn";
+import { SvgIcon } from "./svg-icon";
 
 export interface CodexCardProps {
   /** Whether the dossier has been unlocked (the app reads this from its store). */
@@ -22,9 +23,18 @@ export interface CodexCardProps {
   className?: string;
 }
 
+/** The four corners of the card get the same ornament, turned a quarter each. */
+const CORNERS = [
+  "top-1.5 left-1.5",
+  "top-1.5 right-1.5 rotate-90",
+  "right-1.5 bottom-1.5 rotate-180",
+  "bottom-1.5 left-1.5 -rotate-90",
+] as const;
+
 /**
- * A historical "trading card". Unlocked: bright artwork in a double golden frame with the
- * biography. Locked: dark grey with a padlock and a hint, nothing of the content is shown.
+ * A card for one historical figure. Unlocked: artwork, years and a short biography in a frame
+ * with faint old corner patterns. Locked: a padlock and a "sealed" stamp, and what the player has
+ * to do to open it.
  */
 export function CodexCard({
   unlocked,
@@ -39,65 +49,63 @@ export function CodexCard({
 }: CodexCardProps) {
   return (
     <article
-      aria-label={unlocked ? `Hồ sơ lịch sử: ${name}` : "Hồ sơ lịch sử chưa mở khóa"}
+      aria-label={unlocked ? `Hồ sơ lịch sử: ${name}` : `Hồ sơ lịch sử: ${name} (Chưa mở khóa)`}
       className={cn(
-        "rounded-2xl border-2 p-2 transition-all duration-300",
-        unlocked
-          ? "border-amber-500 bg-gradient-to-b from-amber-950/60 via-stone-900 to-stone-950 shadow-[0_0_44px_-10px_rgba(245,158,11,0.55)]"
-          : "border-stone-700 bg-neutral-950",
+        "relative flex flex-col rounded-sm border-2 bg-stone-900",
+        unlocked ? "border-amber-700/70" : "border-stone-700",
         className,
       )}
     >
-      <div
-        className={cn(
-          "flex h-full flex-col gap-4 rounded-xl border p-3 sm:p-4",
-          unlocked ? "border-amber-600/60" : "border-stone-800",
-        )}
-      >
-        <div
-          className={cn(
-            "relative aspect-[4/3] overflow-hidden rounded-lg",
-            unlocked ? "bg-stone-950 ring-1 ring-amber-500/50" : "bg-stone-900",
-          )}
-        >
+      {unlocked &&
+        CORNERS.map((position) => (
+          <SvgIcon
+            key={position}
+            name="corner-ornament"
+            size={34}
+            className={cn("pointer-events-none absolute z-10 text-amber-600/45", position)}
+          />
+        ))}
+
+      {/* A worn blot in the bottom corner, behind the text. */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute right-0 bottom-0 size-24 bg-[url('/assets/shared/textures/card-wear.svg')] bg-contain bg-no-repeat opacity-70"
+      />
+
+      <div className="relative flex h-full flex-col gap-4 p-5">
+        <div className="relative aspect-[4/3] overflow-hidden rounded-sm bg-stone-950">
           {unlocked ? (
             art
           ) : (
-            <div className="flex size-full flex-col items-center justify-center gap-2 text-stone-600">
-              <Lock className="size-14" aria-hidden />
-              <span className="text-xs font-semibold tracking-widest uppercase">Chưa mở khóa</span>
+            <div className="flex size-full items-center justify-center text-stone-600">
+              <Lock className="size-10" aria-hidden />
+              <span className="absolute top-1/2 left-1/2 stamp -translate-x-1/2 -translate-y-1/2 -rotate-6 bg-stone-950/70 px-4 py-1.5 text-lg text-red-500">
+                Niêm phong
+              </span>
             </div>
           )}
         </div>
 
-        <div className="flex flex-col gap-1 text-center">
+        <div className="flex flex-col gap-1">
           <h3
             className={cn(
               "font-serif text-2xl font-bold",
-              unlocked ? "text-amber-50" : "tracking-widest text-stone-600",
+              unlocked ? "text-amber-300" : "text-stone-300",
             )}
           >
-            {unlocked ? name : "? ? ?"}
+            {name}
           </h3>
-          {unlocked && years ? (
-            <p className="font-serif text-lg font-semibold text-amber-500">{years}</p>
-          ) : null}
-          {unlocked && role ? (
-            <p className="text-xs font-semibold tracking-[0.2em] text-amber-300/80 uppercase">
-              {role}
-            </p>
-          ) : null}
+          {unlocked && years ? <p className="text-amber-400/90">{years}</p> : null}
+          {role ? <p className="text-sm text-stone-400">{role}</p> : null}
         </div>
 
         <p
-          className={cn(
-            "text-sm leading-relaxed",
-            unlocked ? "text-stone-300" : "text-center text-stone-600",
-          )}
+          className={cn("text-sm leading-relaxed", unlocked ? "text-stone-300" : "text-stone-400")}
         >
           {unlocked ? summary : lockedHint}
         </p>
-        {footer ? <div className="mt-auto">{footer}</div> : null}
+
+        {footer ? <div className="mt-auto pt-2">{footer}</div> : null}
       </div>
     </article>
   );

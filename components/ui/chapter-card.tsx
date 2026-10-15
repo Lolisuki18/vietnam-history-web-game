@@ -1,8 +1,8 @@
-import { CircleCheck, Lock, LockOpen, Play } from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
 
 import { buttonStyles } from "./button";
 import { cn } from "./cn";
+import { SvgIcon } from "./svg-icon";
 
 export type ChapterStatus = "unlocked" | "completed" | "coming-soon";
 
@@ -29,39 +29,36 @@ function DefaultLink({
   );
 }
 
-const STATUS_LABEL: Record<ChapterStatus, string> = {
-  unlocked: "Đã mở khóa",
+const STATUS_LABEL: Record<Exclude<ChapterStatus, "coming-soon">, string> = {
+  unlocked: "Chơi được",
   completed: "Đã hoàn thành",
-  "coming-soon": "Sắp ra mắt",
 };
 
-function StatusBadge({ status }: { status: ChapterStatus }) {
-  const Icon = status === "completed" ? CircleCheck : status === "unlocked" ? LockOpen : Lock;
+/** The status as an ink stamp on the cover. (A chapter that is not open gets a seal instead.) */
+function StatusStamp({ status }: { status: Exclude<ChapterStatus, "coming-soon"> }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold backdrop-blur",
-        status === "coming-soon"
-          ? "border-stone-600 bg-stone-900/80 text-stone-400"
-          : status === "completed"
-            ? "border-emerald-500/60 bg-emerald-950/80 text-emerald-300"
-            : "border-amber-500/60 bg-amber-950/80 text-amber-300",
+        "stamp rotate-3 bg-stone-950/80 px-2 py-0.5 text-xs",
+        status === "completed" ? "text-emerald-400" : "text-red-400",
       )}
     >
-      <Icon className="size-3.5" aria-hidden /> {STATUS_LABEL[status]}
+      {STATUS_LABEL[status]}
     </span>
   );
 }
 
-/** Placeholder cover: a dark red-to-amber gradient with concentric rings (like a bronze drum). */
+/** Placeholder cover for chapters without artwork yet: a flat dark panel. */
 function DefaultCover() {
-  return (
-    <div
-      aria-hidden
-      className="size-full bg-stone-900 bg-[radial-gradient(circle_at_50%_120%,rgba(245,158,11,0.35),transparent_60%),repeating-radial-gradient(circle_at_50%_120%,transparent_0_26px,rgba(245,158,11,0.12)_26px_28px)]"
-    />
-  );
+  return <div aria-hidden className="size-full bg-stone-800" />;
 }
+
+/** Where the wear marks (ink blot, scratches) sit, so neighbouring cards do not look alike. */
+const WEAR_PLACEMENT = [
+  "right-0 bottom-0",
+  "top-0 right-0 [transform:scaleY(-1)]",
+  "bottom-0 left-0 [transform:scaleX(-1)]",
+] as const;
 
 export interface ChapterCardProps {
   /** e.g. "Chương 1". */
@@ -85,10 +82,21 @@ export interface ChapterCardProps {
   LinkComponent?: LinkComponent;
   /** Extra content under the description (e.g. a link to the dossier). */
   extra?: ReactNode;
+  /** Gameplay difficulty indicator. */
+  difficulty?: string;
+  /** Estimated time to play. */
+  estimatedTime?: string;
+  /** Historical era/tag. */
+  tag?: string;
+  /** Picks where the wear marks go (0, 1, 2…), so that each card is worn differently. */
+  wear?: number;
   className?: string;
 }
 
-/** A chapter of the game: cover, figure, status and the "Chơi ngay" button. */
+/**
+ * A chapter of the game, pinned up like a file card: pin, paper label, ink stamp for the status
+ * and a seal over chapters that are not open yet.
+ */
 export function ChapterCard({
   chapterLabel,
   character,
@@ -102,6 +110,10 @@ export function ChapterCard({
   playHref,
   LinkComponent: Anchor = DefaultLink,
   extra,
+  difficulty,
+  estimatedTime,
+  tag,
+  wear = 0,
   className,
 }: ChapterCardProps) {
   const comingSoon = status === "coming-soon";
@@ -109,81 +121,105 @@ export function ChapterCard({
   return (
     <article
       className={cn(
-        "group flex flex-col overflow-hidden rounded-2xl border bg-stone-800/70 shadow-lg shadow-black/40 transition-all duration-300",
-        comingSoon
-          ? "border-stone-700/60"
-          : "border-amber-700/40 hover:-translate-y-1 hover:border-amber-500/70 hover:shadow-2xl hover:shadow-amber-900/30",
+        "group relative flex flex-col rounded-sm border-2 bg-stone-900",
+        comingSoon ? "border-stone-700" : "border-amber-800/70 hover:border-amber-600",
         className,
       )}
     >
+      {/* The pin holding the card to the wall. */}
+      <SvgIcon
+        name="pin"
+        size={22}
+        className="absolute -top-2.5 left-1/2 z-20 -translate-x-1/2 text-red-700"
+      />
+
       <div className="relative aspect-[16/10] overflow-hidden bg-stone-950">
-        <div
-          className={cn(
-            "size-full transition-transform duration-500",
-            comingSoon ? "brightness-50 grayscale" : "group-hover:scale-105",
-          )}
-        >
+        <div className={cn("size-full", comingSoon && "opacity-50 grayscale")}>
           {coverSrc ? (
-            // Cover art is an arbitrary, caller-provided URL: next/image would need its domain allow-listed.
             // eslint-disable-next-line @next/next/no-img-element
             <img src={coverSrc} alt={coverAlt} loading="lazy" className="size-full object-cover" />
           ) : (
             (cover ?? <DefaultCover />)
           )}
         </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-stone-950/85 via-stone-950/10 to-transparent" />
-        {comingSoon ? (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="flex size-14 items-center justify-center rounded-full border border-stone-600 bg-stone-900/80 text-stone-400">
-              <Lock className="size-6" aria-hidden />
-            </span>
-          </div>
-        ) : null}
-        <span className="absolute top-3 left-3 rounded-md bg-red-800 px-2.5 py-1 text-xs font-bold tracking-wider text-amber-50 uppercase shadow">
+
+        <span className="absolute top-4 left-3 label-tape px-3 py-1 text-xs font-bold">
           {chapterLabel}
         </span>
-        <span className="absolute top-3 right-3">
-          <StatusBadge status={status} />
-        </span>
+
+        {comingSoon ? (
+          // A seal stamped across the file: still closed.
+          <span
+            aria-label="Niêm phong, sắp ra mắt"
+            className="absolute top-1/2 left-1/2 stamp -translate-x-1/2 -translate-y-1/2 -rotate-12 bg-stone-950/75 px-4 py-2 text-xl leading-tight text-red-500 sm:text-2xl"
+          >
+            Niêm phong
+            <span className="block text-xs tracking-widest">Sắp ra mắt</span>
+          </span>
+        ) : (
+          <span className="absolute top-4 right-3">
+            <StatusStamp status={status} />
+          </span>
+        )}
       </div>
 
-      <div className="flex flex-1 flex-col gap-3 p-5">
-        {period ? (
-          <p className="text-xs font-semibold tracking-[0.2em] text-amber-500 uppercase">
-            {period}
+      {/* Old ink blot and scratches, in a different corner on each card. */}
+      <span
+        aria-hidden
+        className={cn(
+          "pointer-events-none absolute size-28 bg-[url('/assets/shared/textures/card-wear.svg')] bg-contain bg-no-repeat opacity-80",
+          WEAR_PLACEMENT[wear % WEAR_PLACEMENT.length],
+        )}
+      />
+
+      <div className="relative flex flex-1 flex-col gap-3 p-5">
+        {(period || tag) && (
+          <p className="text-sm text-stone-400">
+            {period ? <span className="text-amber-400">{period}</span> : null}
+            {period && tag ? " · " : null}
+            {tag}
           </p>
-        ) : null}
+        )}
+
         <div>
           <h3
             className={cn(
-              "font-serif text-2xl font-bold",
-              comingSoon ? "text-stone-500" : "text-amber-50",
+              "font-serif text-2xl font-bold sm:text-3xl",
+              comingSoon ? "text-stone-300" : "text-amber-300 group-hover:text-amber-200",
             )}
           >
             {character}
           </h3>
-          <p className={cn("text-sm", comingSoon ? "text-stone-600" : "text-stone-400")}>{title}</p>
+          <p className="mt-0.5 text-stone-400">{title}</p>
         </div>
-        <p
-          className={cn(
-            "text-sm leading-relaxed",
-            comingSoon ? "text-stone-600" : "text-stone-300",
-          )}
-        >
-          {description}
-        </p>
+
+        <p className="text-sm leading-relaxed text-stone-300/90">{description}</p>
+
+        {(difficulty || estimatedTime) && (
+          <p className="border-t border-stone-800 pt-3 text-sm text-stone-400">
+            {difficulty ? <>Độ khó: {difficulty}</> : null}
+            {difficulty && estimatedTime ? " · " : null}
+            {estimatedTime ? <>Thời lượng: {estimatedTime}</> : null}
+          </p>
+        )}
+
         {extra}
+
         <div className="mt-auto pt-2">
           {comingSoon || !playHref ? (
             <span
               aria-disabled="true"
-              className={buttonStyles({ variant: "secondary", className: "w-full" })}
+              className={buttonStyles({
+                variant: "secondary",
+                className:
+                  "w-full cursor-not-allowed border-stone-700 bg-stone-950/50 text-stone-500 hover:bg-stone-950/50 hover:text-stone-500",
+              })}
             >
-              <Lock className="size-4" aria-hidden /> Sắp ra mắt
+              Chưa mở
             </span>
           ) : (
             <Anchor href={playHref} className={buttonStyles({ className: "w-full" })}>
-              <Play className="size-4" aria-hidden /> Chơi ngay
+              Chơi ngay
             </Anchor>
           )}
         </div>

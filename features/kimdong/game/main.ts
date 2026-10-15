@@ -1,4 +1,5 @@
 import {
+  createPauseController,
   createPhaserGame,
   destroyPhaserGame,
   setKeyboardEnabled,
@@ -31,13 +32,27 @@ export function createGame(parent: HTMLElement): GameHandle {
     scenes: [PreloaderScene, StealthScene, UiScene, RunnerScene],
   });
 
+  const pauseController = createPauseController(game);
+
   const cleanups: (() => void)[] = [
     hostEvents.on("restart", () => {
+      // A restart must not wait behind a frozen game.
+      pauseController.resume();
       // Replaying: leave the auto-runner (if it is running) and start the chapter over.
       game.scene.stop("runner");
       game.scene.start("stealth", { autostart: true });
     }),
     hostEvents.on("keyboard", (enabled) => setKeyboardEnabled(game, enabled)),
+    hostEvents.on("pause", (paused) => {
+      if (paused) {
+        pauseController.pause();
+        game.sound.pauseAll();
+        return;
+      }
+      game.sound.resumeAll();
+      const frozenMs = pauseController.resume();
+      if (frozenMs > 0) gameEvents.emit("resumed", frozenMs);
+    }),
   ];
 
   if (process.env.NODE_ENV !== "production") {
@@ -50,6 +65,7 @@ export function createGame(parent: HTMLElement): GameHandle {
       gameListeners: gameEvents.listenerCount(),
       uiListeners: chapterEvents.listenerCount(),
       canvases: parent.querySelectorAll("canvas").length,
+      paused: game.isPaused,
       activeScenes: game.scene.getScenes(true).map((scene) => scene.scene.key),
       scene: debugHandlers.state?.(),
       touch: { ...touchInput },

@@ -6,3 +6,4 @@ export { ChapterCard } from "./chapter-card";
 export type { ChapterCardProps, ChapterStatus, LinkComponent } from "./chapter-card";
 export { CodexCard } from "./codex-card";
 export type { CodexCardProps } from "./codex-card";
+export { SVG_ICONS, SvgIcon, type SvgIconName } from "./svg-icon";

@@ -10,6 +10,9 @@ export interface ChapterInfo {
   description: string;
   href?: string;
   codexHref?: string;
+  difficulty?: string;
+  estimatedTime?: string;
+  tag?: string;
 }
 
 /**
@@ -25,22 +28,36 @@ export const CHAPTERS: readonly ChapterInfo[] = [
     title: "Người liên lạc nhỏ",
     period: "Cao Bằng · 1941 – 1943",
     description:
-      "Nhập vai Dền, băng qua núi rừng Cao Bằng, nhặt mật thư, tránh tầm mắt của lính tuần và bảo vệ cán bộ.",
+      "Nhập vai Dền, băng qua núi rừng Cao Bằng, nhặt mật thư, tránh tầm mắt của lính tuần và bảo vệ cán bộ cách mạng.",
     href: "/kimdong",
     codexHref: "/kimdong/codex",
+    difficulty: "Vừa phải (3/5)",
+    estimatedTime: "~5 phút",
+    tag: "Kháng chiến chống Pháp",
   },
   {
     chapterLabel: "Chương 2",
-    character: "Đang cập nhật",
-    title: "Một trang sử mới",
-    period: "Sắp ra mắt",
-    description: "Một câu chuyện lịch sử mới đang được chuẩn bị. Hãy quay lại sau nhé.",
+    character: "Trần Quốc Toản",
+    title: "Bóp nát quả cam",
+    period: "Bình Than · 1282",
+    description:
+      "Tuổi trẻ chí lớn giương cao lá cờ 'Phá cường địch, báo hoàng ân', xuất trận cùng quân dân Đại Việt chặn đứng vó ngựa Nguyên Mông.",
+    difficulty: "Thách thức (4/5)",
+    estimatedTime: "Sắp ra mắt",
+    tag: "Chống quân Nguyên Mông",
   },
   {
     chapterLabel: "Chương 3",
-    character: "Đang cập nhật",
-    title: "Một trang sử mới",
-    period: "Sắp ra mắt",
-    description: "Một câu chuyện lịch sử mới đang được chuẩn bị. Hãy quay lại sau nhé.",
+    character: "Võ Thị Sáu",
+    title: "Mùa hoa lê-ki-ma",
+    period: "Côn Đảo · 1952",
+    description:
+      "Người con gái Đất Đỏ kiên trung, bất khuất trước mũi súng kẻ thù, hóa thành đóa hoa bất tử giữa biển trời Côn Đảo.",
+    difficulty: "Kịch tính (4/5)",
+    estimatedTime: "Sắp ra mắt",
+    tag: "Kháng chiến chống Pháp",
   },
 ];
+
+/** Route of the first chapter that can be played (the "Chơi ngay" / hero buttons go there). */
+export const FIRST_PLAYABLE_HREF = CHAPTERS.find((chapter) => chapter.href)?.href ?? "/";

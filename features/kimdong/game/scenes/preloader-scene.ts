@@ -3,7 +3,26 @@ import Phaser from "phaser";
 import { LoadingBar } from "@/lib/game/loading-bar";
 
 import { createAnimations } from "../assets/animations";
-import { ASSET_KEYS, ASSET_URLS, SPRITE_FRAME } from "../assets/manifest";
+import {
+  ASSET_KEYS,
+  ASSET_URLS,
+  AUDIO_KEYS,
+  AUDIO_URLS,
+  BARBED_WIRE_FRAME,
+  BIRD_FRAME,
+  EMOTE_SHEET,
+  FLASH_FRAME,
+  GATE_FRAME,
+  imageUrl,
+  LETTER_SHEET,
+  LOOSE_IMAGE_KEYS,
+  PEBBLE_ITEM_FRAME,
+  ROOT_FRAME,
+  SFX_SHEET,
+  SPACE_PROMPT_FRAME,
+  SPRITE_FRAME,
+  TRACER_FRAME,
+} from "../assets/manifest";
 import { createPlaceholderTextures } from "../assets/placeholder-art";
 
 /**
@@ -32,10 +51,70 @@ export class PreloaderScene extends Phaser.Scene {
     const frame = { frameWidth: SPRITE_FRAME.width, frameHeight: SPRITE_FRAME.height };
     this.load.spritesheet(ASSET_KEYS.kimdong, ASSET_URLS.kimdong, frame);
     this.load.spritesheet(ASSET_KEYS.soldier, ASSET_URLS.soldier, frame);
-    this.load.image(ASSET_KEYS.letter, ASSET_URLS.letter);
-    this.load.image(ASSET_KEYS.bush, ASSET_URLS.bush);
-    this.load.image(ASSET_KEYS.tiles, ASSET_URLS.tiles);
-    this.load.tilemapTiledJSON(ASSET_KEYS.map, ASSET_URLS.map);
+    this.load.spritesheet(ASSET_KEYS.khoXanh, ASSET_URLS.khoXanh, frame);
+    this.load.spritesheet(ASSET_KEYS.ducThanh, ASSET_URLS.ducThanh, frame);
+    this.load.spritesheet(ASSET_KEYS.sfx, ASSET_URLS.sfx, {
+      frameWidth: SFX_SHEET.frameSize,
+      frameHeight: SFX_SHEET.frameSize,
+    });
+    this.load.spritesheet(ASSET_KEYS.letter, ASSET_URLS.letter, {
+      frameWidth: LETTER_SHEET.frameWidth,
+      frameHeight: LETTER_SHEET.frameHeight,
+    });
+    this.load.spritesheet(ASSET_KEYS.emotes, ASSET_URLS.emotes, {
+      frameWidth: EMOTE_SHEET.frameSize,
+      frameHeight: EMOTE_SHEET.frameSize,
+    });
+    this.load.spritesheet(ASSET_KEYS.outpostGate, ASSET_URLS.outpostGate, {
+      frameWidth: GATE_FRAME.width,
+      frameHeight: GATE_FRAME.height,
+    });
+    this.load.spritesheet(ASSET_KEYS.rootObstacle, ASSET_URLS.rootObstacle, {
+      frameWidth: ROOT_FRAME.width,
+      frameHeight: ROOT_FRAME.height,
+    });
+    this.load.spritesheet(ASSET_KEYS.muzzleFlash, ASSET_URLS.muzzleFlash, {
+      frameWidth: FLASH_FRAME.size,
+      frameHeight: FLASH_FRAME.size,
+    });
+    this.load.spritesheet(ASSET_KEYS.tuHuBird, ASSET_URLS.tuHuBird, {
+      frameWidth: BIRD_FRAME.size,
+      frameHeight: BIRD_FRAME.size,
+    });
+    this.load.spritesheet(ASSET_KEYS.bulletTracer, ASSET_URLS.bulletTracer, {
+      frameWidth: TRACER_FRAME.width,
+      frameHeight: TRACER_FRAME.height,
+    });
+    this.load.spritesheet(ASSET_KEYS.spacePrompt, ASSET_URLS.spacePrompt, {
+      frameWidth: SPACE_PROMPT_FRAME.width,
+      frameHeight: SPACE_PROMPT_FRAME.height,
+    });
+    this.load.spritesheet(ASSET_KEYS.pebbleItem, ASSET_URLS.pebbleItem, {
+      frameWidth: PEBBLE_ITEM_FRAME.size,
+      frameHeight: PEBBLE_ITEM_FRAME.size,
+    });
+    this.load.spritesheet(ASSET_KEYS.barbedWire, ASSET_URLS.barbedWire, {
+      frameWidth: BARBED_WIRE_FRAME.size,
+      frameHeight: BARBED_WIRE_FRAME.size,
+    });
+    this.load.image(ASSET_KEYS.fogA, ASSET_URLS.fogA);
+    this.load.image(ASSET_KEYS.fogB, ASSET_URLS.fogB);
+    this.load.spritesheet(ASSET_KEYS.soldierSleeping, ASSET_URLS.soldierSleeping, frame);
+    this.load.spritesheet(ASSET_KEYS.soldierShooting, ASSET_URLS.soldierShooting, frame);
+    this.load.spritesheet(ASSET_KEYS.soldierRunning, ASSET_URLS.soldierRunning, frame);
+    this.load.spritesheet(ASSET_KEYS.kimdongClimb, ASSET_URLS.kimdongClimb, frame);
+    this.load.spritesheet(ASSET_KEYS.kimdongShoot, ASSET_URLS.kimdongShoot, frame);
+    this.load.spritesheet(ASSET_KEYS.kimdongFall, ASSET_URLS.kimdongFall, frame);
+    this.load.spritesheet(ASSET_KEYS.kimdongHideRock, ASSET_URLS.kimdongHideRock, frame);
+    this.load.image(ASSET_KEYS.tree, ASSET_URLS.tree);
+    this.load.image(ASSET_KEYS.tower, ASSET_URLS.tower);
+    for (const key of LOOSE_IMAGE_KEYS) this.load.image(key, imageUrl(key));
+
+    // Audio assets: load every sound defined in AUDIO_URLS
+    for (const [name, url] of Object.entries(AUDIO_URLS)) {
+      const audioKey = AUDIO_KEYS[name as keyof typeof AUDIO_KEYS];
+      if (audioKey) this.load.audio(audioKey, url);
+    }
   }
 
   create(): void {
@@ -48,7 +127,7 @@ export class PreloaderScene extends Phaser.Scene {
       );
     }
     createPlaceholderTextures(this);
-    createAnimations(this.anims);
+    createAnimations(this.anims, this.textures);
 
     this.scene.start("stealth");
   }

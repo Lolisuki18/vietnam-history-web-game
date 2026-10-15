@@ -1,34 +1,59 @@
 import { buttonStyles } from "@/components/ui";
-import { ChevronDown, Star } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
-/** Full-screen opening section of the home page. */
+import { FIRST_PLAYABLE_HREF } from "@/data/chapters";
+
+/** Opening section: the title, one line of promise and two buttons. */
 export function Hero() {
   return (
-    <section className="relative flex min-h-svh flex-col items-center justify-center overflow-hidden bg-hero px-5 py-16 text-center">
-      <div className="flex max-w-4xl animate-rise-in flex-col items-center gap-6">
-        <Star className="size-8 fill-amber-500 text-amber-500 drop-shadow-lg" aria-hidden />
-        <h1 className="font-serif text-4xl leading-tight font-black tracking-[0.1em] text-balance text-amber-500 uppercase text-glow sm:text-6xl md:text-7xl lg:text-8xl">
+    <section
+      id="hero"
+      className="relative flex min-h-[calc(100svh-4rem)] flex-col items-center justify-center overflow-hidden px-5 py-20 text-center"
+    >
+      {/* An old round seal, faint and a little crooked, behind the title. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden select-none"
+      >
+        <Image
+          src="/assets/shared/textures/stamp-viet-minh.png"
+          alt=""
+          width={640}
+          height={640}
+          unoptimized
+          className="w-[min(80vw,560px)] -rotate-12 opacity-[0.13]"
+        />
+      </div>
+
+      <div className="relative z-10 flex max-w-3xl flex-col items-center gap-6">
+        <h1 className="font-serif text-5xl leading-tight font-bold text-balance text-amber-400 sm:text-6xl md:text-7xl">
           Hào khí Việt Nam
         </h1>
-        <div className="flex items-center gap-3 text-red-700" aria-hidden>
-          <span className="h-px w-12 bg-current sm:w-24" />
-          <span className="size-2 rotate-45 bg-current" />
-          <span className="h-px w-12 bg-current sm:w-24" />
-        </div>
-        <p className="max-w-xl font-serif text-lg text-balance text-stone-300 italic sm:text-xl md:text-2xl">
+
+        <p className="max-w-xl font-serif text-xl text-balance text-stone-300 sm:text-2xl">
           Sống lại những trang sử vàng qua từng khoảnh khắc
         </p>
-        <a href="#chapters" className={buttonStyles({ size: "lg", className: "mt-4" })}>
-          Chọn chương
-        </a>
+
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+          <Link
+            href={FIRST_PLAYABLE_HREF}
+            className={buttonStyles({ size: "lg", className: "px-7 py-3 text-base" })}
+          >
+            Bắt đầu chơi
+          </Link>
+          <a
+            href="#codex"
+            className={buttonStyles({
+              variant: "secondary",
+              size: "lg",
+              className: "px-7 py-3 text-base",
+            })}
+          >
+            Xem hồ sơ lịch sử
+          </a>
+        </div>
       </div>
-      <a
-        href="#chapters"
-        aria-label="Cuộn xuống danh sách chương"
-        className="absolute bottom-6 animate-bounce text-amber-500/70 transition-colors hover:text-amber-400"
-      >
-        <ChevronDown className="size-8" aria-hidden />
-      </a>
     </section>
   );
 }

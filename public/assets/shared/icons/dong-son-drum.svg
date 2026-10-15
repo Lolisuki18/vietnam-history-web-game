@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" stroke="#000">
+  <!-- Dong Son bronze drum (Trống đồng Đông Sơn). Single colour: shown through a CSS mask by <SvgIcon>, so it takes the text colour. -->
+  <circle cx="100" cy="100" r="96" stroke-width="1.5" opacity="0.4" />
+  <circle cx="100" cy="100" r="92" stroke-width="2.5" />
+  <circle cx="100" cy="100" r="86" stroke-width="1" stroke-dasharray="3 3" opacity="0.6" />
+  <circle cx="100" cy="100" r="82" stroke-width="1.5" />
+  <g stroke-width="1.5" stroke-linecap="round" opacity="0.85">
+    <g transform="rotate(0 100 100)">
+      <path d="M 100 20 Q 115 17 126 19 Q 120 23 108 24 Q 96 24 88 28 Q 78 30 70 35 Q 82 28 94 25 Z" fill="#000" fill-opacity="0.25" />
+      <path d="M 126 19 L 132 18" />
+      <path d="M 108 24 Q 102 32 94 36" />
+    </g>
+    <g transform="rotate(90 100 100)">
+      <path d="M 100 20 Q 115 17 126 19 Q 120 23 108 24 Q 96 24 88 28 Q 78 30 70 35 Q 82 28 94 25 Z" fill="#000" fill-opacity="0.25" />
+      <path d="M 126 19 L 132 18" />
+      <path d="M 108 24 Q 102 32 94 36" />
+    </g>
+    <g transform="rotate(180 100 100)">
+      <path d="M 100 20 Q 115 17 126 19 Q 120 23 108 24 Q 96 24 88 28 Q 78 30 70 35 Q 82 28 94 25 Z" fill="#000" fill-opacity="0.25" />
+      <path d="M 126 19 L 132 18" />
+      <path d="M 108 24 Q 102 32 94 36" />
+    </g>
+    <g transform="rotate(270 100 100)">
+      <path d="M 100 20 Q 115 17 126 19 Q 120 23 108 24 Q 96 24 88 28 Q 78 30 70 35 Q 82 28 94 25 Z" fill="#000" fill-opacity="0.25" />
+      <path d="M 126 19 L 132 18" />
+      <path d="M 108 24 Q 102 32 94 36" />
+    </g>
+  </g>
+  <circle cx="100" cy="100" r="74" stroke-width="1.5" />
+  <circle cx="100" cy="100" r="70" stroke-width="1" stroke-dasharray="2 3" opacity="0.5" />
+  <circle cx="100" cy="100" r="66" stroke-width="1.5" />
+  <g opacity="0.6">
+    <circle cx="158.0" cy="100.0" r="3.5" stroke-width="1.2" />
+    <circle cx="150.23" cy="129.0" r="3.5" stroke-width="1.2" />
+    <circle cx="129.0" cy="150.23" r="3.5" stroke-width="1.2" />
+    <circle cx="100.0" cy="158.0" r="3.5" stroke-width="1.2" />
+    <circle cx="71.0" cy="150.23" r="3.5" stroke-width="1.2" />
+    <circle cx="49.77" cy="129.0" r="3.5" stroke-width="1.2" />
+    <circle cx="42.0" cy="100.0" r="3.5" stroke-width="1.2" />
+    <circle cx="49.77" cy="71.0" r="3.5" stroke-width="1.2" />
+    <circle cx="71.0" cy="49.77" r="3.5" stroke-width="1.2" />
+    <circle cx="100.0" cy="42.0" r="3.5" stroke-width="1.2" />
+    <circle cx="129.0" cy="49.77" r="3.5" stroke-width="1.2" />
+    <circle cx="150.23" cy="71.0" r="3.5" stroke-width="1.2" />
+  </g>
+  <circle cx="100" cy="100" r="50" stroke-width="1.5" />
+  <circle cx="100" cy="100" r="45" stroke-width="1" stroke-dasharray="2 2" opacity="0.5" />
+  <circle cx="100" cy="100" r="41" stroke-width="1.5" />
+  <polygon fill="#000" fill-opacity="0.85" stroke="none" points="100,61 103,72 114,64 112,75 125,71 119,81 133,81 123,89 137,93 124,98 137,104 123,108 133,116 119,116 125,126 112,122 114,133 103,125 100,136 97,125 86,133 88,122 75,126 81,116 67,116 77,108 63,104 76,98 63,93 77,89 67,81 81,81 75,71 88,75 86,64 97,72" />
+  <circle cx="100" cy="100" r="9" fill="#000" fill-opacity="0.4" stroke-width="1.5" />
+  <circle cx="100" cy="100" r="3.5" fill="#000" stroke="none" />
+</svg>
