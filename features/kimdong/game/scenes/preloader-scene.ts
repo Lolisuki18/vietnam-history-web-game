@@ -3,7 +3,19 @@ import Phaser from "phaser";
 import { LoadingBar } from "@/lib/game/loading-bar";
 
 import { createAnimations } from "../assets/animations";
-import { ASSET_KEYS, ASSET_URLS, AUDIO_KEYS, AUDIO_URLS, SPRITE_FRAME } from "../assets/manifest";
+import {
+  ASSET_KEYS,
+  ASSET_URLS,
+  AUDIO_KEYS,
+  AUDIO_URLS,
+  BUSH_KEYS,
+  EMOTE_SHEET,
+  imageUrl,
+  LETTER_SHEET,
+  ROCK_KEYS,
+  SPRITE_FRAME,
+  STUMP_KEYS,
+} from "../assets/manifest";
 import { createPlaceholderTextures } from "../assets/placeholder-art";
 
 /**
@@ -32,10 +44,22 @@ export class PreloaderScene extends Phaser.Scene {
     const frame = { frameWidth: SPRITE_FRAME.width, frameHeight: SPRITE_FRAME.height };
     this.load.spritesheet(ASSET_KEYS.kimdong, ASSET_URLS.kimdong, frame);
     this.load.spritesheet(ASSET_KEYS.soldier, ASSET_URLS.soldier, frame);
-    this.load.image(ASSET_KEYS.letter, ASSET_URLS.letter);
-    this.load.image(ASSET_KEYS.bush, ASSET_URLS.bush);
-    this.load.image(ASSET_KEYS.tiles, ASSET_URLS.tiles);
-    this.load.tilemapTiledJSON(ASSET_KEYS.map, ASSET_URLS.map);
+    this.load.spritesheet(ASSET_KEYS.khoXanh, ASSET_URLS.khoXanh, frame);
+    this.load.spritesheet(ASSET_KEYS.letter, ASSET_URLS.letter, {
+      frameWidth: LETTER_SHEET.frameWidth,
+      frameHeight: LETTER_SHEET.frameHeight,
+    });
+    this.load.spritesheet(ASSET_KEYS.emotes, ASSET_URLS.emotes, {
+      frameWidth: EMOTE_SHEET.frameSize,
+      frameHeight: EMOTE_SHEET.frameSize,
+    });
+    this.load.image(ASSET_KEYS.tree, ASSET_URLS.tree);
+    this.load.image(ASSET_KEYS.tower, ASSET_URLS.tower);
+    for (const key of [...BUSH_KEYS, ...ROCK_KEYS, ...STUMP_KEYS]) {
+      this.load.image(key, imageUrl(key));
+    }
+    // The ground is drawn in code (world-renderer.ts): the raw forest tile sheet is not a usable
+    // tileset, so ASSET_KEYS.tiles / map are not loaded.
 
     // Audio assets
     this.load.audio(AUDIO_KEYS.cuckoo, AUDIO_URLS.cuckoo);
@@ -58,7 +82,7 @@ export class PreloaderScene extends Phaser.Scene {
       );
     }
     createPlaceholderTextures(this);
-    createAnimations(this.anims);
+    createAnimations(this.anims, this.textures);
 
     this.scene.start("stealth");
   }

@@ -1,7 +1,8 @@
 import type Phaser from "phaser";
 
 import type { PlayerAnimKey } from "../assets/animations";
-import { ASSET_KEYS, HITBOX_OFFSET, HITBOX_SIZE, SPRITE_ORIGIN } from "../assets/manifest";
+import { ASSET_KEYS, SPRITE_ORIGIN } from "../assets/manifest";
+import { setFeetBody } from "../assets/sprite-utils";
 
 /**
  * Kim Đồng (Dền) as an animated physics sprite. The sprite's origin sits at the feet and the
@@ -11,14 +12,14 @@ import { ASSET_KEYS, HITBOX_OFFSET, HITBOX_SIZE, SPRITE_ORIGIN } from "../assets
 export class Player {
   readonly sprite: Phaser.Physics.Arcade.Sprite;
   private currentAnim: PlayerAnimKey | null = null;
+  private throwing = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     this.sprite = scene.physics.add
       .sprite(x, y, ASSET_KEYS.kimdong, 0)
       .setOrigin(SPRITE_ORIGIN.x, SPRITE_ORIGIN.y)
       .setDepth(20);
-    this.body.setSize(HITBOX_SIZE, HITBOX_SIZE);
-    this.body.setOffset(HITBOX_OFFSET.x, HITBOX_OFFSET.y);
+    setFeetBody(this.sprite);
     this.body.setCollideWorldBounds(true);
     this.animate(0, 0, false);
   }
@@ -45,6 +46,7 @@ export class Player {
    * standing still). Swimming wins over everything else. Cheap enough to call every frame.
    */
   animate(dx: number, dy: number, swimming: boolean): void {
+    if (this.throwing) return;
     let key: PlayerAnimKey;
     if (swimming) key = "swim";
     else if (dx === 0 && dy === 0) key = "idle";
@@ -54,6 +56,21 @@ export class Player {
     if (key === this.currentAnim) return;
     this.currentAnim = key;
     this.sprite.anims.play(key, true);
+  }
+
+  /** Play the pebble-throwing pose once; walking resumes when it has finished. */
+  playThrow(towardX: number): void {
+    if (this.throwing || this.currentAnim === "swim") return;
+    this.throwing = true;
+    this.currentAnim = "throw";
+    // The pose is drawn facing right: mirror it when throwing to the left.
+    this.sprite.setFlipX(towardX < this.sprite.x);
+    this.sprite.anims.play("throw", true);
+    this.sprite.once("animationcomplete", () => {
+      this.throwing = false;
+      this.currentAnim = null;
+      this.sprite.setFlipX(false);
+    });
   }
 
   setAlpha(alpha: number): void {

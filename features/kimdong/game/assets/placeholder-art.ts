@@ -1,6 +1,13 @@
 import type Phaser from "phaser";
 
-import { ASSET_KEYS, KIMDONG_SHEET, SOLDIER_SHEET, SPRITE_FRAME } from "./manifest";
+import {
+  ASSET_KEYS,
+  BUSH_KEYS,
+  KIMDONG_SHEET,
+  LOGICAL_FRAME,
+  SOLDIER_SHEET,
+  SOLDIER_TEXTURES,
+} from "./manifest";
 
 /**
  * Stand-in artwork drawn with Graphics and baked into textures that have exactly the same
@@ -9,8 +16,11 @@ import { ASSET_KEYS, KIMDONG_SHEET, SOLDIER_SHEET, SPRITE_FRAME } from "./manife
  */
 
 const SKIN = 0xf2c9a0;
-const FRAME_W = SPRITE_FRAME.width;
-const FRAME_H = SPRITE_FRAME.height;
+/** The stand-in frames are baked at the size the characters are shown at (no scaling). */
+const FRAME_W = LOGICAL_FRAME.width;
+const FRAME_H = LOGICAL_FRAME.height;
+/** The drawings below were made for 32-wide frames: centre them in the wider frame. */
+const DRAW_X = (FRAME_W - 32) / 2;
 
 type Drawer = (g: Phaser.GameObjects.Graphics) => void;
 
@@ -161,26 +171,29 @@ export function createPlaceholderTextures(scene: Phaser.Scene): void {
     bake(scene, ASSET_KEYS.kimdong, columns * FRAME_W, rowCount * FRAME_H, (g) => {
       for (let row = 0; row < rowCount; row++) {
         for (let column = 0; column < columns; column++) {
-          drawKimDongFrame(g, column * FRAME_W, row * FRAME_H, row, column);
+          drawKimDongFrame(g, column * FRAME_W + DRAW_X, row * FRAME_H, row, column);
         }
       }
     });
     addSheetFrames(scene, ASSET_KEYS.kimdong, columns, rowCount);
   }
 
-  if (!textures.exists(ASSET_KEYS.soldier)) {
+  for (const key of SOLDIER_TEXTURES) {
+    if (textures.exists(key)) continue;
     const { columns, rows } = SOLDIER_SHEET;
     const rowCount = Object.keys(rows).length;
-    bake(scene, ASSET_KEYS.soldier, columns * FRAME_W, rowCount * FRAME_H, (g) => {
+    bake(scene, key, columns * FRAME_W, rowCount * FRAME_H, (g) => {
       for (let row = 0; row < rowCount; row++) {
         for (let column = 0; column < columns; column++) {
-          drawSoldierFrame(g, column * FRAME_W, row * FRAME_H, row, column);
+          drawSoldierFrame(g, column * FRAME_W + DRAW_X, row * FRAME_H, row, column);
         }
       }
     });
-    addSheetFrames(scene, ASSET_KEYS.soldier, columns, rowCount);
+    addSheetFrames(scene, key, columns, rowCount);
   }
 
   if (!textures.exists(ASSET_KEYS.letter)) bake(scene, ASSET_KEYS.letter, 28, 20, drawLetter);
-  if (!textures.exists(ASSET_KEYS.bush)) bake(scene, ASSET_KEYS.bush, 128, 128, drawBush);
+  for (const key of BUSH_KEYS) {
+    if (!textures.exists(key)) bake(scene, key, 128, 128, drawBush);
+  }
 }

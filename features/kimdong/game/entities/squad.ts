@@ -1,6 +1,8 @@
 import type Phaser from "phaser";
 
-import { ASSET_KEYS, SOLDIER_SHEET, SPRITE_ORIGIN } from "../assets/manifest";
+import { soldierAnim } from "../assets/animations";
+import { SOLDIER_SHEET, SOLDIER_TEXTURES, SPRITE_ORIGIN } from "../assets/manifest";
+import { fitToWorld } from "../assets/sprite-utils";
 import { CLIMAX } from "../config";
 
 const FLASH_INTERVAL_MS = 85;
@@ -20,11 +22,19 @@ export class Squad {
   constructor(private readonly scene: Phaser.Scene) {
     for (let i = 0; i < CLIMAX.squadSize; i++) {
       // They come from the right and face left, toward the player.
+      // French soldiers and "lính khố xanh" fall in together.
       this.soldiers.push(
-        scene.add
-          .sprite(0, -10_000, ASSET_KEYS.soldier, SOLDIER_SHEET.rows.left * SOLDIER_SHEET.columns)
-          .setOrigin(SPRITE_ORIGIN.x, SPRITE_ORIGIN.y)
-          .setDepth(40),
+        fitToWorld(
+          scene.add
+            .sprite(
+              0,
+              -10_000,
+              SOLDIER_TEXTURES[i % SOLDIER_TEXTURES.length]!,
+              SOLDIER_SHEET.rows.left * SOLDIER_SHEET.columns,
+            )
+            .setOrigin(SPRITE_ORIGIN.x, SPRITE_ORIGIN.y)
+            .setDepth(40),
+        ),
       );
     }
     this.tracers = scene.add.graphics().setDepth(41);
@@ -49,7 +59,10 @@ export class Squad {
       const targetX = view.right - view.width * 0.12 - column * 70;
       const targetY = view.y + view.height * 0.2 + row * 75 + column * 18;
       soldier.setPosition(view.right + 140 + index * 40, view.y - 80);
-      soldier.anims.play("patrol_left", true);
+      soldier.anims.play(
+        soldierAnim(SOLDIER_TEXTURES[index % SOLDIER_TEXTURES.length]!, "left"),
+        true,
+      );
       this.scene.tweens.add({
         targets: soldier,
         x: targetX,

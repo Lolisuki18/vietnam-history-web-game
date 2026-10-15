@@ -1,8 +1,16 @@
 import { isPointInCone, rotateToward, type Point } from "@/lib/engine";
 import type Phaser from "phaser";
 
-import type { SoldierAnimKey } from "../assets/animations";
-import { ASSET_KEYS, SOLDIER_SHEET, SPRITE_FRAME, SPRITE_ORIGIN } from "../assets/manifest";
+import { soldierAnim, type SoldierAnimKey } from "../assets/animations";
+import {
+  ASSET_KEYS,
+  EMOTE_SHEET,
+  LOGICAL_FRAME,
+  SOLDIER_SHEET,
+  SPRITE_ORIGIN,
+  type SoldierTexture,
+} from "../assets/manifest";
+import { fitToWorld } from "../assets/sprite-utils";
 import { GUARD } from "../config";
 import type { GuardRoute } from "../world-data";
 
@@ -49,7 +57,9 @@ export class Guard {
   private readonly container: Phaser.GameObjects.Container;
   private readonly cone: Phaser.GameObjects.Graphics;
   private readonly sprite: Phaser.GameObjects.Sprite;
+  /** Speech-bubble emote above the head ("?" suspicious, "!" spotted); text when no art loaded. */
   private readonly icon: Phaser.GameObjects.Text;
+  private readonly emote?: Phaser.GameObjects.Sprite;
   /** The guard moved during this update (drives the walking animation). */
   private moving = false;
   private lookingLeft = true;
@@ -58,6 +68,8 @@ export class Guard {
   constructor(
     scene: Phaser.Scene,
     private readonly route: GuardRoute,
+    /** Which soldier sheet this guard uses (French soldier or "lính khố xanh"). */
+    private readonly texture: SoldierTexture = ASSET_KEYS.soldier,
   ) {
     const start = route.path[0]!;
     this.x = start.x;
@@ -66,19 +78,33 @@ export class Guard {
     // The container sits on the guard's logical position (the feet); the sprite's origin is at
     // its feet too, so the cone, the sprite and all hit tests share the same centre.
     this.cone = scene.add.graphics();
-    this.sprite = scene.add
-      .sprite(0, 0, ASSET_KEYS.soldier, SOLDIER_SHEET.rows.left * SOLDIER_SHEET.columns)
-      .setOrigin(SPRITE_ORIGIN.x, SPRITE_ORIGIN.y);
+    this.sprite = fitToWorld(
+      scene.add
+        .sprite(0, 0, this.texture, SOLDIER_SHEET.rows.left * SOLDIER_SHEET.columns)
+        .setOrigin(SPRITE_ORIGIN.x, SPRITE_ORIGIN.y),
+    );
+    const bubbleY = -LOGICAL_FRAME.height * SPRITE_ORIGIN.y - 18;
     this.icon = scene.add
-      .text(0, -SPRITE_FRAME.height * SPRITE_ORIGIN.y - 18, "", {
+      .text(0, bubbleY, "", {
         fontFamily: "sans-serif",
         fontSize: "22px",
         fontStyle: "bold",
       })
       .setOrigin(0.5);
-    this.container = scene.add
-      .container(this.x, this.y, [this.cone, this.sprite, this.icon])
-      .setDepth(15);
+    const parts: Phaser.GameObjects.GameObject[] = [this.cone, this.sprite];
+    if (
+      scene.textures.exists(ASSET_KEYS.emotes) &&
+      scene.textures.get(ASSET_KEYS.emotes).frameTotal > 2
+    ) {
+      this.emote = scene.add
+        .sprite(0, bubbleY, ASSET_KEYS.emotes, EMOTE_SHEET.frames.question)
+        .setDisplaySize(26, 26)
+        .setVisible(false);
+      parts.push(this.emote);
+    } else {
+      parts.push(this.icon);
+    }
+    this.container = scene.add.container(this.x, this.y, parts).setDepth(15);
 
     this.reset();
   }
@@ -210,6 +236,12 @@ export class Guard {
     this.drawCone(CONE_STYLES[state]);
     this.icon.setText(state === "watching" ? "!" : state === "investigate" ? "?" : "");
     this.icon.setColor(state === "watching" ? "#ff5252" : "#ffd54f");
+    if (this.emote) {
+      this.emote.setVisible(state !== "patrol");
+      this.emote.setFrame(
+        state === "watching" ? EMOTE_SHEET.frames.alert : EMOTE_SHEET.frames.question,
+      );
+    }
   }
 
   private drawCone({ color, alpha }: ConeStyle): void {
@@ -240,7 +272,7 @@ export class Guard {
     const horizontal = Math.cos(this.facing);
     // Dead zone so a guard walking straight up/down does not flicker between the two sheets.
     if (Math.abs(horizontal) > 0.2) this.lookingLeft = horizontal < 0;
-    const key: SoldierAnimKey = this.lookingLeft ? "patrol_left" : "patrol_right";
+    const key: SoldierAnimKey = soldierAnim(this.texture, this.lookingLeft ? "left" : "right");
 
     if (this.moving) {
       if (key !== this.animKey || !this.sprite.anims.isPlaying) {

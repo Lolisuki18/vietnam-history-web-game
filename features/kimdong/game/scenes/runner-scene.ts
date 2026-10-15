@@ -1,6 +1,8 @@
 import Phaser from "phaser";
 
-import { ASSET_KEYS, SPRITE_ORIGIN } from "../assets/manifest";
+import { soldierAnim } from "../assets/animations";
+import { ASSET_KEYS, SOLDIER_TEXTURES, SPRITE_ORIGIN } from "../assets/manifest";
+import { fitToWorld } from "../assets/sprite-utils";
 import { GameAudio } from "../audio";
 import { RUNNER } from "../config";
 import { plugDebugHandlers } from "../debug";
@@ -99,6 +101,7 @@ export class RunnerScene extends Phaser.Scene {
   private readonly bullets: Bullet[] = [];
   private readonly chasers: Phaser.GameObjects.Sprite[] = [];
   private stopAmbience?: () => void;
+  private stopRunnerMusic?: () => void;
   private readonly cleanups: Array<() => void> = [];
 
   constructor() {
@@ -144,8 +147,11 @@ export class RunnerScene extends Phaser.Scene {
       () => this.input.keyboard?.off("keydown", this.onKeyDown),
       gameEvents.on("touch:action", () => this.jump()),
       () => this.stopAmbience?.(),
+      () => this.stopRunnerMusic?.(),
       () => gameEvents.emit("controls:active", false),
     );
+    // The chase has its own driving music, until the gunshot of the ending.
+    this.stopRunnerMusic = this.audio.playRunnerBGM();
     if (process.env.NODE_ENV !== "production") {
       this.cleanups.push(
         plugDebugHandlers({
@@ -265,11 +271,11 @@ export class RunnerScene extends Phaser.Scene {
   private createChasers(): void {
     for (let i = 0; i < RUNNER.lanes; i++) {
       // They chase from the right, so they face left like the runner.
-      const chaser = this.add
-        .sprite(0, 0, ASSET_KEYS.soldier, 0)
-        .setOrigin(SPRITE_ORIGIN.x, SPRITE_ORIGIN.y)
-        .setDepth(6);
-      chaser.anims.play("patrol_left");
+      const texture = SOLDIER_TEXTURES[i % SOLDIER_TEXTURES.length]!;
+      const chaser = fitToWorld(
+        this.add.sprite(0, 0, texture, 0).setOrigin(SPRITE_ORIGIN.x, SPRITE_ORIGIN.y).setDepth(6),
+      );
+      chaser.anims.play(soldierAnim(texture, "left"));
       this.chasers.push(chaser);
     }
   }
@@ -293,11 +299,21 @@ export class RunnerScene extends Phaser.Scene {
 
   private createPlayer(): void {
     // Same sprite and origin as in the exploration scene: x / y are the feet.
-    this.player = this.add
-      .sprite(0, 0, ASSET_KEYS.kimdong, 0)
-      .setOrigin(SPRITE_ORIGIN.x, SPRITE_ORIGIN.y)
-      .setDepth(10);
-    this.player.anims.play("walk_left");
+    this.player = fitToWorld(
+      this.add
+        .sprite(0, 0, ASSET_KEYS.kimdong, 0)
+        .setOrigin(SPRITE_ORIGIN.x, SPRITE_ORIGIN.y)
+        .setDepth(10),
+    );
+    // The run cycle is drawn facing right; the runner flees to the left.
+    this.player.setFlipX(true);
+    this.player.anims.play("run");
+  }
+
+  /** Run on the ground, play the jump pose while in the air. */
+  private updatePlayerAnimation(airborne: boolean): void {
+    const key = airborne ? "jump" : "run";
+    if (this.player.anims.currentAnim?.key !== key) this.player.anims.play(key, true);
   }
 
   private createHud(): void {
@@ -392,6 +408,7 @@ export class RunnerScene extends Phaser.Scene {
     this.jumpOffset = jumpOffset;
 
     this.player.setPosition(this.player.x, this.laneY - jumpOffset);
+    this.updatePlayerAnimation(jumpOffset > 1);
     // Blink while invulnerable.
     this.player.setAlpha(
       this.invulnerableMs > 0 && Math.floor(this.invulnerableMs / 90) % 2 === 0 ? 0.35 : 1,
@@ -522,6 +539,8 @@ export class RunnerScene extends Phaser.Scene {
     this.progressBack.setVisible(false);
     this.progressFill.setVisible(false);
     this.player.anims.stop();
+    this.stopRunnerMusic?.();
+    this.stopRunnerMusic = undefined;
 
     this.audio.gunshot();
     this.cameras.main.flash(200, 255, 255, 255);

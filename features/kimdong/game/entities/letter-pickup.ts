@@ -1,5 +1,6 @@
 import type Phaser from "phaser";
 
+import { LETTER_ANIM } from "../assets/animations";
 import { ASSET_KEYS, LETTER_DISPLAY_WIDTH } from "../assets/manifest";
 
 const PICKUP_RADIUS = 28;
@@ -11,7 +12,7 @@ const BOB_HEIGHT = 5;
  * changes how close the player has to get.
  */
 export class LetterPickup {
-  private readonly image: Phaser.GameObjects.Image;
+  private readonly image: Phaser.GameObjects.Sprite;
   private readonly glow: Phaser.GameObjects.Arc;
   private readonly baseScale: number;
   private taken = false;
@@ -32,9 +33,13 @@ export class LetterPickup {
       ease: "Sine.easeInOut",
     });
 
-    this.image = scene.add.image(x, y, ASSET_KEYS.letter).setDepth(9);
+    this.image = scene.add.sprite(x, y, ASSET_KEYS.letter).setDepth(9);
     this.baseScale = LETTER_DISPLAY_WIDTH / this.image.width;
     this.image.setScale(this.baseScale);
+    // Each letter starts at another point of the shimmer, so they do not pulse in step.
+    if (scene.anims.exists(LETTER_ANIM)) {
+      this.image.anims.play({ key: LETTER_ANIM, startFrame: Math.floor(Math.random() * 14) });
+    }
     scene.tweens.add({
       targets: this.image,
       y: y - BOB_HEIGHT,
