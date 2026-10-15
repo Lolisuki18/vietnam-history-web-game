@@ -1,4 +1,4 @@
-import Phaser from "phaser";
+import type Phaser from "phaser";
 import { Synth } from "@/lib/game/synth";
 import { AUDIO_KEYS } from "./assets/manifest";
 

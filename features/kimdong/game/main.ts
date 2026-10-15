@@ -46,8 +46,10 @@ export function createGame(parent: HTMLElement): GameHandle {
     hostEvents.on("pause", (paused) => {
       if (paused) {
         pauseController.pause();
+        game.sound.pauseAll();
         return;
       }
+      game.sound.resumeAll();
       const frozenMs = pauseController.resume();
       if (frozenMs > 0) gameEvents.emit("resumed", frozenMs);
     }),

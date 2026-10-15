@@ -1,7 +1,8 @@
 /**
  * The contract between the game code and the artwork in `public/assets`.
- * Change a frame size or a sheet layout here (and in `public/assets/README.md`) and everything
- * else — animations, hitboxes, the fallback art — follows.
+ * The art is produced from the raw images in `assets-src/kimdong` by `tools/kimdong-art/build.py`:
+ * change a frame size or a sheet layout there and here (and in `public/assets/kimdong/README.md`)
+ * and everything else — animations, hitboxes, the fallback art — follows.
  */
 
 const BASE = "/assets/kimdong/";
@@ -10,19 +11,47 @@ const BASE = "/assets/kimdong/";
 export const ASSET_KEYS = {
   kimdong: "kimdong",
   soldier: "french_soldier",
+  khoXanh: "linh_kho_xanh",
   tiles: "forest_tiles",
   map: "level1",
   letter: "letter",
-  bush: "bush",
+  emotes: "emotes",
+  tree: "prop_tree",
+  tower: "prop_tower",
 } as const;
 
+/** Bush pictures, by size: the world picks one for each bush from its radius. */
+export const BUSH_KEYS = ["bush_a", "bush_b", "bush_c"] as const;
+/** Decorative rocks and stumps scattered over the forest floor (no collision). */
+export const ROCK_KEYS = [
+  "prop_rock_a",
+  "prop_rock_b",
+  "prop_rock_c",
+  "prop_rock_d",
+  "prop_rock_e",
+  "prop_rock_f",
+] as const;
+export const STUMP_KEYS = ["prop_stump_a", "prop_stump_b"] as const;
+
+/**
+ * Added to every image URL so a browser that cached an older sheet fetches the rebuilt one. Bump it
+ * whenever `tools/kimdong-art/build.py` changes a file in `public/assets/kimdong`.
+ */
+export const ASSET_VERSION = "20261015b";
+
+const images = (name: string): string => `${BASE}images/${name}.png?v=${ASSET_VERSION}`;
+const sprites = (name: string): string => `${BASE}sprites/${name}.png?v=${ASSET_VERSION}`;
+
 export const ASSET_URLS = {
-  kimdong: `${BASE}sprites/kimdong.png`,
-  soldier: `${BASE}sprites/french_soldier.png`,
-  tiles: `${BASE}images/forest_tiles.png`,
+  kimdong: sprites("kimdong"),
+  soldier: sprites("french_soldier"),
+  khoXanh: sprites("linh_kho_xanh"),
+  tiles: images("forest_tiles"),
   map: `${BASE}maps/level1.json`,
-  letter: `${BASE}images/letter.png`,
-  bush: `${BASE}images/bush.png`,
+  letter: images("letter"),
+  emotes: images("emotes"),
+  tree: images("prop_tree"),
+  tower: images("prop_tower"),
 } as const;
 
 /** Audio asset keys. */
@@ -48,8 +77,21 @@ export const AUDIO_URLS = {
   bgmRunner: `${BASE}audio/bgm_runner.wav`,
 } as const;
 
-/** Size of one frame of the character spritesheets. */
-export const SPRITE_FRAME = { width: 32, height: 48 } as const;
+/** `images(name)` for the props and bushes (they are loaded in a loop by the preloader). */
+export const imageUrl = images;
+
+/**
+ * Size of one frame of the character spritesheets, in file pixels. The files are drawn larger than
+ * they are shown (`SPRITE_SCALE`) so they stay sharp when the camera zooms in.
+ */
+export const SPRITE_FRAME = { width: 80, height: 96 } as const;
+export const SPRITE_SCALE = 0.65;
+
+/** Size of a character frame in the game world, in world pixels (the character fills ~70%). */
+export const LOGICAL_FRAME = {
+  width: Math.round(SPRITE_FRAME.width * SPRITE_SCALE),
+  height: Math.round(SPRITE_FRAME.height * SPRITE_SCALE),
+} as const;
 
 /**
  * Sprite origin. With (0.5, 0.75) the sprite's x/y is the centre of its feet, which is also the
@@ -57,29 +99,34 @@ export const SPRITE_FRAME = { width: 32, height: 48 } as const;
  */
 export const SPRITE_ORIGIN = { x: 0.5, y: 0.75 } as const;
 
-/** Side of the square hitbox at the character's feet. */
+/** Side of the square hitbox at the character's feet, in world pixels. */
 export const HITBOX_SIZE = 24;
 
-/** Top-left of the hitbox inside a frame, so that it is centred on the sprite origin. */
-export const HITBOX_OFFSET = {
-  x: SPRITE_FRAME.width * SPRITE_ORIGIN.x - HITBOX_SIZE / 2,
-  y: SPRITE_FRAME.height * SPRITE_ORIGIN.y - HITBOX_SIZE / 2,
-} as const;
-
-/** `kimdong.png`: 4 columns; one row per animation. */
+/** `kimdong.png`: 6 columns; one row per animation, each using the first `frames[row]` columns. */
 export const KIMDONG_SHEET = {
-  columns: 4,
-  rows: { down: 0, left: 1, right: 2, up: 3, swim: 4 },
+  columns: 6,
+  rows: { down: 0, left: 1, right: 2, up: 3, swim: 4, run: 5, jump: 6, throw: 7 },
+  frames: { walk: 4, swim: 4, run: 6, jump: 3, throw: 3 },
 } as const;
 
-/** `french_soldier.png`: 4 columns; one row per walking direction. */
+/** `french_soldier.png` / `linh_kho_xanh.png`: 5 columns; one row per walking direction. */
 export const SOLDIER_SHEET = {
-  columns: 4,
+  columns: 5,
   rows: { left: 0, right: 1 },
 } as const;
 
-/** Display width of the letter pickup in world px (the image is scaled to it). */
-export const LETTER_DISPLAY_WIDTH = 30;
+/** The two enemy sprite sheets; guards use them in turn so a patrol is a mixed one. */
+export const SOLDIER_TEXTURES = [ASSET_KEYS.soldier, ASSET_KEYS.khoXanh] as const;
+export type SoldierTexture = (typeof SOLDIER_TEXTURES)[number];
+
+/** `letter.png`: 5 columns x 3 rows, 14 frames of a shimmering letter (80 x 71 each). */
+export const LETTER_SHEET = { frameWidth: 80, frameHeight: 71, frames: 14 } as const;
+
+/** `emotes.png`: 64 x 64 frames. */
+export const EMOTE_SHEET = { frameSize: 64, frames: { question: 0, alert: 1 } } as const;
+
+/** Display width of the letter pickup in world px (the frame includes a margin for the glow). */
+export const LETTER_DISPLAY_WIDTH = 58;
 
 /** A bush image is scaled so that it covers this multiple of the bush's hiding radius. */
-export const BUSH_DISPLAY_FACTOR = 2.3;
+export const BUSH_DISPLAY_FACTOR = 2.4;

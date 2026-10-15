@@ -29,6 +29,8 @@ export const PHASE_CONTROLS_TOUCH: Partial<Record<ChapterPhase, string>> = {
 export interface DialogueLine {
   speaker: string;
   role?: string;
+  /** Portrait of the speaker (a file in public/); the initials are shown when there is none. */
+  portrait?: string;
   text: string;
 }
 
@@ -46,6 +48,7 @@ export const DIALOGUES: Record<DialogueId, DialogueScript> = {
       {
         speaker: "Anh Đức Thanh",
         role: "Cán bộ",
+        portrait: "/assets/kimdong/images/portrait_ducthanh.png",
         text: "Dền ơi, em đi trước dò đường và nhặt 5 mật thư liên lạc bị thất lạc nhé. Hãy cẩn thận tránh lính Pháp tuần tra!",
       },
     ],

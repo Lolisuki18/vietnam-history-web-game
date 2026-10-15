@@ -36,6 +36,8 @@
 /* A strip of paper stuck on: cut by hand, a little crooked. */
 @utility label-tape {
   background-color: #d8c79a;
+  background-image: url("/textures/paper-aged.webp");
+  background-size: 160px auto;
   color: #2a2013;
   rotate: -2deg;
   clip-path: polygon(

@@ -4,7 +4,7 @@ import type { ChapterId } from "@/lib/engine";
 
 import { CODEX } from "./kimdong/data/story";
 import { KIMDONG_ID } from "./kimdong/types";
-import { KimDongArt } from "./kimdong/ui/codex-illustration";
+import { KimDongArt, KimDongCodexArt } from "./kimdong/ui/codex-illustration";
 
 /** What the home page needs to draw a chapter that lives in `features/<game>`. */
 export interface ChapterView {
@@ -35,7 +35,7 @@ export const CHAPTER_VIEWS: Record<ChapterId, ChapterView> = {
       years: CODEX.years,
       role: "Người liên lạc nhỏ",
       summary: CODEX.cardSummary,
-      art: <KimDongArt />,
+      art: <KimDongCodexArt crop />,
       lockedHint: "Hoàn thành Chương 1 – Kim Đồng để mở khóa hồ sơ này.",
     },
   },
