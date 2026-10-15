@@ -12,8 +12,14 @@ const RIPPLE_RING_DELAY_MS = 180;
 const ARC_HEIGHT = 70;
 /** The picture's biggest ring is about this many px wide in its 192 px frame. */
 const RING_PICTURE_DIAMETER = 170;
+/**
+ * On-screen size of the ring picture, in world px. Smaller than the distance guards hear (which is
+ * `GUARD.hearingRadius`): stretching a pixel-art ring over 640 px made it huge and blurry.
+ */
+const RING_DISPLAY_DIAMETER = 140;
+const RING_DISPLAY_SIZE = (RING_DISPLAY_DIAMETER * SFX_SHEET.frameSize) / RING_PICTURE_DIAMETER;
 /** Size of the pebble picture on screen (its frame is mostly empty), in world px. */
-const PEBBLE_DISPLAY = 40;
+const PEBBLE_DISPLAY = 64;
 
 type Ripple = Phaser.GameObjects.Arc | Phaser.GameObjects.Sprite;
 
@@ -51,10 +57,9 @@ export class PebbleThrower {
     }
     for (let i = 0; i < RIPPLE_COUNT; i++) {
       if (this.pictures) {
-        const size = (2 * GUARD.hearingRadius * SFX_SHEET.frameSize) / RING_PICTURE_DIAMETER;
         const ripple = scene.add
           .sprite(0, 0, ASSET_KEYS.sfx, SFX_SHEET.ringFrom)
-          .setDisplaySize(size, size)
+          .setDisplaySize(RING_DISPLAY_SIZE, RING_DISPLAY_SIZE)
           .setDepth(4)
           .setVisible(false);
         ripple.on("animationcomplete", () => ripple.setVisible(false));
@@ -110,21 +115,22 @@ export class PebbleThrower {
   }
 
   private spawnRipples(x: number, y: number): void {
-    for (let ring = 0; ring < RIPPLE_RINGS_PER_THROW; ring++) {
+    // The ring picture already holds several concentric rings: one is enough.
+    const rings = this.pictures ? 1 : RIPPLE_RINGS_PER_THROW;
+    for (let ring = 0; ring < rings; ring++) {
       const ripple = this.ripples[this.nextRipple]!;
       this.nextRipple = (this.nextRipple + 1) % this.ripples.length;
       this.scene.tweens.killTweensOf(ripple);
       if ("play" in ripple) {
-        const size = (2 * GUARD.hearingRadius * SFX_SHEET.frameSize) / RING_PICTURE_DIAMETER;
         ripple.setPosition(x, y).setAlpha(0.9).setVisible(false);
         this.scene.time.delayedCall(ring * RIPPLE_RING_DELAY_MS, () => {
           if (!ripple.scene) return;
-          ripple.setVisible(true).setDisplaySize(size * 0.06, size * 0.06);
+          ripple.setVisible(true).setDisplaySize(RING_DISPLAY_SIZE * 0.2, RING_DISPLAY_SIZE * 0.2);
           ripple.play(RIPPLE_ANIM);
           this.scene.tweens.add({
             targets: ripple,
-            displayWidth: size,
-            displayHeight: size,
+            displayWidth: RING_DISPLAY_SIZE,
+            displayHeight: RING_DISPLAY_SIZE,
             duration: RIPPLE_DURATION_MS,
             ease: "Quad.easeOut",
           });

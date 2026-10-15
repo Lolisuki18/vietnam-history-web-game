@@ -92,7 +92,9 @@ const libBoundary = {
 
 /** Next.js (React, hooks, a11y) + typescript-eslint rules; used for the whole repo. */
 export default defineConfig(
-  globalIgnores([".next/**", "out/**", "next-env.d.ts"]),
+  // `.claude/skills` and `.agents/skills` hold local-only third-party agent skills (git-ignored):
+  // not our code to lint.
+  globalIgnores([".next/**", "out/**", "next-env.d.ts", ".claude/**", ".agents/**"]),
   nextVitals,
   nextTs,
   {

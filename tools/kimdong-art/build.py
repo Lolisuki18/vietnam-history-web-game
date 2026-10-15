@@ -16,7 +16,7 @@ import os
 import sys
 from pathlib import Path
 
-from PIL import Image, ImageChops
+from PIL import Image, ImageChops, ImageFilter
 
 import artlib
 
@@ -369,8 +369,14 @@ def build_terrain() -> None:
     for name, (box, side) in TERRAIN_PROPS.items():
         crop = clean.crop(box)
         if name in GREEN_PROPS:
-            crop = terrain.clean_specks(crop)
-        cut = terrain.remove_white(crop)
+            # leaves are strongly green: a low floor also removes the grey drop shadow
+            cut = terrain.remove_pale(terrain.clean_specks(crop), floor=135)
+        elif name == "prop_stump_c":
+            cut = terrain.remove_pale(crop, floor=150)
+        else:
+            cut = terrain.remove_white(crop)
+            if name in ("prop_rock_g", "pebbles"):  # shave the pale rim the shadow leaves
+                cut.putalpha(cut.getchannel("A").filter(ImageFilter.MinFilter(3)))
         bbox = cut.getchannel("A").point(lambda v: 255 if v > 24 else 0).getbbox()
         tight = cut.crop(bbox)
         scale = side / max(tight.size)

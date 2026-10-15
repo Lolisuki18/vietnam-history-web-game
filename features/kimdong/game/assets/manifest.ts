@@ -3,7 +3,7 @@
  * The art is produced from the raw images (kept in git history, see tools/kimdong-art/README.md) by
  * `tools/kimdong-art/build.py`:
  * change a frame size or a sheet layout there and here (and in `public/assets/kimdong/README.md`)
- * and everything else — animations, hitboxes, the fallback art — follows.
+ * and everything else â€” animations, hitboxes, the fallback art â€” follows.
  */
 
 const BASE = "/assets/kimdong/";
@@ -22,6 +22,14 @@ export const ASSET_KEYS = {
   pebbles: "pebbles",
   ducThanh: "duc_thanh",
   sfx: "sfx",
+  // New character spritesheets
+  soldierSleeping: "soldier_sleeping",
+  soldierShooting: "soldier_shooting",
+  soldierRunning: "soldier_running",
+  kimdongClimb: "kimdong_climb",
+  kimdongShoot: "kimdong_shoot",
+  kimdongFall: "kimdong_fall",
+  kimdongHideRock: "kimdong_hide_rock",
 } as const;
 
 /** Seamless ground textures (cut from `forest_tiles.png`) the world is painted with. */
@@ -52,6 +60,30 @@ export const DECOR_KEYS = [
   "deco_tuft_a",
   "deco_tuft_b",
 ] as const;
+
+/** New environment, prop, VFX and UI image keys. */
+export const NEW_PROP_KEYS = [
+  "fog_layer_a",
+  "fog_layer_b",
+  "prop_barbed_wire",
+  "prop_outpost_gate",
+  "prop_root_obstacle",
+  "item_pebble",
+  "prop_rock_cover_a",
+  "prop_rock_cover_b",
+  "prop_stepping_stones",
+  "prop_bamboo_bridge",
+  "muzzle_flash",
+  "bullet_tracer",
+  "ui_space_prompt",
+  "ui_cuckoo_rhythm",
+  "ui_oxygen_hud",
+  "tu_hu_bird",
+  "ui_rhythm_hit_spark",
+  "portrait_kimdong_worried",
+  "portrait_kimdong_determined",
+] as const;
+
 /** Every image loaded in a loop by the preloader (all in `images/`). */
 export const LOOSE_IMAGE_KEYS = [
   ...BUSH_KEYS,
@@ -59,6 +91,7 @@ export const LOOSE_IMAGE_KEYS = [
   ...STUMP_KEYS,
   ...DECOR_KEYS,
   ...Object.values(GROUND_KEYS),
+  ...NEW_PROP_KEYS,
   ASSET_KEYS.fence,
   ASSET_KEYS.fencePost,
   ASSET_KEYS.pebbles,
@@ -68,7 +101,7 @@ export const LOOSE_IMAGE_KEYS = [
  * Added to every image URL so a browser that cached an older sheet fetches the rebuilt one. Bump it
  * whenever `tools/kimdong-art/build.py` changes a file in `public/assets/kimdong`.
  */
-export const ASSET_VERSION = "20261015c";
+export const ASSET_VERSION = "20261015e";
 
 const images = (name: string): string => `${BASE}images/${name}.png?v=${ASSET_VERSION}`;
 const sprites = (name: string): string => `${BASE}sprites/${name}.png?v=${ASSET_VERSION}`;
@@ -83,6 +116,14 @@ export const ASSET_URLS = {
   emotes: images("emotes"),
   tree: images("prop_tree"),
   tower: images("prop_tower"),
+  // Sprites
+  soldierSleeping: sprites("soldier_sleeping"),
+  soldierShooting: sprites("soldier_shooting"),
+  soldierRunning: sprites("soldier_running"),
+  kimdongClimb: sprites("kimdong_climb"),
+  kimdongShoot: sprites("kimdong_shoot"),
+  kimdongFall: sprites("kimdong_fall"),
+  kimdongHideRock: sprites("kimdong_hide_rock"),
 } as const;
 
 /** Audio asset keys. */
@@ -95,6 +136,16 @@ export const AUDIO_KEYS = {
   bgmExplore: "bgm_explore",
   bgmTension: "bgm_tension",
   bgmRunner: "bgm_runner",
+  // New audio assets
+  bgmStreamBirds: "bgm_stream_birds",
+  fogFootsteps: "sfx_fog_footsteps",
+  alert: "sfx_alert",
+  question: "sfx_question",
+  pickupLetter: "sfx_pickup_letter",
+  gasp: "sfx_gasp",
+  heartbeatCountdown: "sfx_heartbeat_countdown",
+  cuckooSignal: "sfx_cuckoo_signal",
+  cuckooWarning: "sfx_cuckoo_warning",
 } as const;
 
 export const AUDIO_URLS = {
@@ -106,6 +157,15 @@ export const AUDIO_URLS = {
   bgmExplore: `${BASE}audio/bgm_explore.wav`,
   bgmTension: `${BASE}audio/bgm_tension.wav`,
   bgmRunner: `${BASE}audio/bgm_runner.wav`,
+  bgmStreamBirds: `${BASE}audio/bgm_stream_birds.wav`,
+  fogFootsteps: `${BASE}audio/sfx_fog_footsteps.wav`,
+  alert: `${BASE}audio/sfx_alert.wav`,
+  question: `${BASE}audio/sfx_question.wav`,
+  pickupLetter: `${BASE}audio/sfx_pickup_letter.wav`,
+  gasp: `${BASE}audio/sfx_gasp.wav`,
+  heartbeatCountdown: `${BASE}audio/sfx_heartbeat_countdown.wav`,
+  cuckooSignal: `${BASE}audio/sfx_cuckoo_signal.wav`,
+  cuckooWarning: `${BASE}audio/sfx_cuckoo_warning.wav`,
 } as const;
 
 /** `images(name)` for the props and bushes (they are loaded in a loop by the preloader). */

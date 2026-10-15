@@ -57,19 +57,22 @@ export class PreloaderScene extends Phaser.Scene {
       frameWidth: EMOTE_SHEET.frameSize,
       frameHeight: EMOTE_SHEET.frameSize,
     });
+    this.load.spritesheet(ASSET_KEYS.soldierSleeping, ASSET_URLS.soldierSleeping, frame);
+    this.load.spritesheet(ASSET_KEYS.soldierShooting, ASSET_URLS.soldierShooting, frame);
+    this.load.spritesheet(ASSET_KEYS.soldierRunning, ASSET_URLS.soldierRunning, frame);
+    this.load.spritesheet(ASSET_KEYS.kimdongClimb, ASSET_URLS.kimdongClimb, frame);
+    this.load.spritesheet(ASSET_KEYS.kimdongShoot, ASSET_URLS.kimdongShoot, frame);
+    this.load.spritesheet(ASSET_KEYS.kimdongFall, ASSET_URLS.kimdongFall, frame);
+    this.load.spritesheet(ASSET_KEYS.kimdongHideRock, ASSET_URLS.kimdongHideRock, frame);
     this.load.image(ASSET_KEYS.tree, ASSET_URLS.tree);
     this.load.image(ASSET_KEYS.tower, ASSET_URLS.tower);
     for (const key of LOOSE_IMAGE_KEYS) this.load.image(key, imageUrl(key));
 
-    // Audio assets
-    this.load.audio(AUDIO_KEYS.cuckoo, AUDIO_URLS.cuckoo);
-    this.load.audio(AUDIO_KEYS.gunshot, AUDIO_URLS.gunshot);
-    this.load.audio(AUDIO_KEYS.pebble, AUDIO_URLS.pebble);
-    this.load.audio(AUDIO_KEYS.footsteps, AUDIO_URLS.footsteps);
-    this.load.audio(AUDIO_KEYS.splash, AUDIO_URLS.splash);
-    this.load.audio(AUDIO_KEYS.bgmExplore, AUDIO_URLS.bgmExplore);
-    this.load.audio(AUDIO_KEYS.bgmTension, AUDIO_URLS.bgmTension);
-    this.load.audio(AUDIO_KEYS.bgmRunner, AUDIO_URLS.bgmRunner);
+    // Audio assets: load every sound defined in AUDIO_URLS
+    for (const [name, url] of Object.entries(AUDIO_URLS)) {
+      const audioKey = AUDIO_KEYS[name as keyof typeof AUDIO_KEYS];
+      if (audioKey) this.load.audio(audioKey, url);
+    }
   }
 
   create(): void {

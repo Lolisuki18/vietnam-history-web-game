@@ -163,6 +163,28 @@ def has_line_pixels(img: Image.Image) -> bool:
     return _line_colour_mask(img).getbbox() is not None
 
 
+def remove_pale(img: Image.Image, floor: int = 168, sat: int = 30) -> Image.Image:
+    """For plants (green) on the white sheet: every white or pale grey pixel goes, also the little
+    white pockets between leaves that the border flood fill cannot reach, and the grey drop shadow.
+    Green leaves are far more saturated than the threshold, so they are not touched."""
+    rgb = img.convert("RGB")
+    r, g, b = rgb.split()
+    spread = ImageChops.lighter(ImageChops.difference(r, g), ImageChops.difference(g, b))
+    pale = ImageChops.multiply(
+        _lut_mask(spread, lambda v: v <= sat),
+        _lut_mask(ImageChops.darker(ImageChops.darker(r, g), b), lambda v: v >= floor),
+    )
+    # a pixel next to a removed one that is only somewhat pale is a blended edge: remove it too
+    soft = ImageChops.multiply(
+        _lut_mask(spread, lambda v: v <= 46),
+        _lut_mask(ImageChops.darker(ImageChops.darker(r, g), b), lambda v: v >= floor - 50),
+    )
+    background = grow_into(pale, soft, rounds=2)
+    out = rgb.convert("RGBA")
+    out.putalpha(ImageChops.invert(background))
+    return out
+
+
 def remove_white(img: Image.Image, floor: int = 222, sat: int = 16) -> Image.Image:
     """White background -> transparent (flood fill from the border, then a thin fringe)."""
     rgb = img.convert("RGB")

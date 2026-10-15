@@ -28,3 +28,11 @@ docs/
 AGENTS.md
 # raw originals restored from git history to rebuild the art (tools/kimdong-art/README.md)
 raw-art/
+
+# local-only agent skills (Forge sprite / map skills + game-assets): never pushed
+.claude/skills/
+.agents/skills/
+
+# Python bytecode
+__pycache__/
+scratch/
