@@ -64,7 +64,7 @@ export function DialogueBox({ onClose }: { onClose: (id: DialogueId) => void }) 
             role="dialog"
             aria-modal="true"
             aria-label="Hội thoại"
-            className="relative max-h-[88svh] w-full max-w-2xl overflow-y-auto rounded-sm border-[3px] border-red-950 bg-[#ecd9a8] bg-[url('/textures/paper-aged.webp')] bg-cover bg-center p-1.5"
+            className="relative max-h-[88svh] w-full max-w-2xl overflow-y-auto rounded-sm border-[3px] border-red-950 bg-[#ecd9a8] bg-[url('/assets/shared/textures/paper-aged.webp')] bg-cover bg-center p-1.5"
           >
             <div className="relative rounded-lg border border-dashed border-red-900/60 p-5 text-stone-900 sm:p-7">
               <div className="flex items-center justify-between gap-4">

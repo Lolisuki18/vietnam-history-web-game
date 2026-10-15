@@ -63,7 +63,7 @@ export function ResultScreen({ onReplay }: { onReplay: () => void }) {
           {/* The chapter is "stamped" as done, next to the news of the unlocked file. */}
           <div className="flex items-center gap-4">
             <Image
-              src="/art/stamp-viet-minh.png"
+              src="/assets/shared/textures/stamp-viet-minh.png"
               alt=""
               width={640}
               height={640}

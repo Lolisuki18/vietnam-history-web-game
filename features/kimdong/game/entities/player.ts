@@ -13,6 +13,7 @@ export class Player {
   readonly sprite: Phaser.Physics.Arcade.Sprite;
   private currentAnim: PlayerAnimKey | null = null;
   private throwing = false;
+  private facingLeft = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     this.sprite = scene.physics.add
@@ -45,13 +46,20 @@ export class Player {
    * Pick the animation from the movement direction (`dx`, `dy` are the input axes, 0 when
    * standing still). Swimming wins over everything else. Cheap enough to call every frame.
    */
-  animate(dx: number, dy: number, swimming: boolean): void {
+  animate(dx: number, dy: number, swimming: boolean, hiding = false): void {
     if (this.throwing) return;
+    const moving = dx !== 0 || dy !== 0;
+    if (dx !== 0) this.facingLeft = dx < 0;
     let key: PlayerAnimKey;
-    if (swimming) key = "swim";
-    else if (dx === 0 && dy === 0) key = "idle";
+    if (swimming) key = moving ? "swim" : "swim_idle";
+    else if (hiding) key = moving ? "crawl" : "hide";
+    else if (!moving) key = "idle";
     else if (Math.abs(dx) > Math.abs(dy)) key = dx < 0 ? "walk_left" : "walk_right";
     else key = dy < 0 ? "walk_up" : "walk_down";
+
+    // The water and bush poses are drawn facing right: mirror them for the other way.
+    const sideways = key === "swim" || key === "swim_idle" || key === "hide" || key === "crawl";
+    this.sprite.setFlipX(sideways && this.facingLeft);
 
     if (key === this.currentAnim) return;
     this.currentAnim = key;
@@ -60,7 +68,7 @@ export class Player {
 
   /** Play the pebble-throwing pose once; walking resumes when it has finished. */
   playThrow(towardX: number): void {
-    if (this.throwing || this.currentAnim === "swim") return;
+    if (this.throwing || this.currentAnim === "swim" || this.currentAnim === "swim_idle") return;
     this.throwing = true;
     this.currentAnim = "throw";
     // The pose is drawn facing right: mirror it when throwing to the left.

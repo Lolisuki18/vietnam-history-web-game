@@ -6,6 +6,7 @@ import { SOLDIER_TEXTURES } from "../assets/manifest";
 import { GameAudio } from "../audio";
 import { ALERT, CLIMAX, PEBBLE, PLAYER } from "../config";
 import { plugDebugHandlers } from "../debug";
+import { DucThanh } from "../entities/duc-thanh";
 import { Guard } from "../entities/guard";
 import { LetterPickup } from "../entities/letter-pickup";
 import { Player } from "../entities/player";
@@ -16,7 +17,12 @@ import { touchInput } from "../input-state";
 import { AlertMeter } from "../systems/alert-meter";
 import { OxygenMeter } from "../systems/oxygen-meter";
 import { PebbleThrower } from "../systems/pebble";
-import { createBushes, createProps, createWorld } from "../systems/world-renderer";
+import {
+  createBushes,
+  createOutpostFence,
+  createProps,
+  createWorld,
+} from "../systems/world-renderer";
 import { isInBush, isInWater } from "../systems/zones";
 import { KIMDONG_ID, type DialogueId } from "../../types";
 import {
@@ -67,9 +73,13 @@ export class StealthScene extends Phaser.Scene {
   private stepTimer = 0;
   private wasSwimming = false;
   private squad!: Squad;
+  private ducThanh!: DucThanh;
   /** Pulsing ring + label that tell the player where the old tree is, until it has been used. */
   private treeHint: Phaser.GameObjects.GameObject[] = [];
   private rhythmDone = false;
+  /** Number and a sample of the solid props (reported by the dev-only `debugStats`). */
+  private blockerCount = 0;
+  private blockerSample: number[][] = [];
   private cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd?: MovementKeys;
   private state: SceneState = "waiting";
@@ -108,14 +118,19 @@ export class StealthScene extends Phaser.Scene {
   create(): void {
     createWorld(this);
     createBushes(this);
-    createProps(this);
+    const blockers = createProps(this);
+    this.blockerCount = blockers.length;
+    this.blockerSample = blockers.slice(0, 40).map((b) => [Math.round(b.x), Math.round(b.y)]);
     this.createSolids();
     this.createTreeHint();
     this.audio = new GameAudio(this);
     this.squad = new Squad(this);
+    this.ducThanh = new DucThanh(this, PLAYER_START.x + 70, PLAYER_START.y + 20);
 
     this.player = new Player(this, PLAYER_START.x, PLAYER_START.y);
     this.physics.add.collider(this.player.sprite, this.solids);
+    // Trees, rocks, stumps and the watchtower are solid too.
+    this.physics.add.collider(this.player.sprite, blockers);
     this.oxygen = new OxygenMeter(this);
     this.thrower = new PebbleThrower(this, (x, y) => this.onNoise(x, y));
     // Patrols mix French soldiers and "lính khố xanh" (colonial native guards).
@@ -147,11 +162,12 @@ export class StealthScene extends Phaser.Scene {
     const py = this.player.y;
 
     const inWater = isInWater(px, py);
-    const hidden = inWater || isInBush(px, py);
+    const inBush = !inWater && isInBush(px, py);
+    const hidden = inWater || inBush;
     this.player.setAlpha(inWater ? PLAYER.waterAlpha : hidden ? PLAYER.bushAlpha : 1);
 
     if (playing) {
-      this.movePlayer(inWater ? PLAYER.waterSpeedFactor : 1);
+      this.movePlayer(inWater ? PLAYER.waterSpeedFactor : inBush ? PLAYER.bushSpeedFactor : 1);
       if (!inWater) {
         this.lastDry.x = px;
         this.lastDry.y = py;
@@ -162,7 +178,7 @@ export class StealthScene extends Phaser.Scene {
       this.moveInput.x = 0;
       this.moveInput.y = 0;
     }
-    this.player.animate(this.moveInput.x, this.moveInput.y, inWater);
+    this.player.animate(this.moveInput.x, this.moveInput.y, inWater, inBush);
     if (playing) this.updateSounds(dt, inWater);
 
     let seen = false;
@@ -273,7 +289,10 @@ export class StealthScene extends Phaser.Scene {
     }
     this.state = "climax";
     sendToHost({ type: "chapter:phase", phase: "climax" });
-    this.squad.enter(this.cameras.main.worldView);
+    const view = this.cameras.main.worldView;
+    this.squad.enter(view);
+    // The cadre is coming up the path from behind, right into the ambush.
+    this.ducThanh.walkTo(this.player.x - 70, this.player.y, { x: view.x - 60, y: this.player.y });
     gameEvents.emit("climax:start", undefined);
   }
 
@@ -487,6 +506,8 @@ export class StealthScene extends Phaser.Scene {
       return solid;
     };
     this.solids = OUTPOST_WALLS.map((wall) => makeSolid(wall, 0x3b2a1a, 0x1c130a));
+    // The bamboo fence picture replaces the plain wall rectangles; they stay as the collision.
+    if (createOutpostFence(this)) for (const solid of this.solids) solid.setVisible(false);
     this.gate = makeSolid(OUTPOST_GATE, 0x8a5a2b, 0x3d2610);
     this.solids.push(this.gate);
   }
@@ -595,6 +616,8 @@ export class StealthScene extends Phaser.Scene {
       x: Math.round(this.player.x),
       y: Math.round(this.player.y),
       collected: this.collected,
+      blockers: this.blockerCount,
+      blockerSample: this.blockerSample,
       anim: this.player.animation,
       frame: this.player.sprite.frame.name,
     });
@@ -615,6 +638,7 @@ export class StealthScene extends Phaser.Scene {
     for (const guard of this.guards) guard.destroy();
     for (const letter of this.letters) letter.destroy();
     this.squad.destroy();
+    this.ducThanh.destroy();
     this.destroyTreeHint();
   }
 }
