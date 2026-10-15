@@ -1,69 +1,51 @@
-# Hào khí Việt Nam – web game lịch sử
+# Hào khí Việt Nam
 
-Mỗi nhân vật lịch sử Việt Nam là một game nhỏ (Phaser) nằm trong **một** app Next.js. Game Kim Đồng ở `/kimdong`, hồ sơ lịch sử ở `/kimdong/codex`.
+**Chơi game để hiểu những người anh hùng đã làm nên lịch sử.**
 
-Công nghệ: Next.js 16 (App Router) · React 19 · Tailwind 4 · Zustand 5 · Phaser 4 · pnpm 11.
+Hào khí Việt Nam là dự án web game về các anh hùng cách mạng Việt Nam. Mỗi anh hùng là một **chương**: bạn nhập vai chính nhân vật, đi qua một khoảnh khắc làm nên tên tuổi của họ, rồi đọc **hồ sơ lịch sử** để biết người thật, việc thật đằng sau câu chuyện. Chơi ngay trên trình duyệt, không cần cài đặt, dùng được cả trên máy tính lẫn điện thoại.
 
-## Chạy
+## Các chương
+
+| Chương | Nhân vật                                               | Trạng thái |
+| ------ | ------------------------------------------------------ | ---------- |
+| 1      | **Kim Đồng** – Người liên lạc nhỏ (Cao Bằng, 1943)     | Chơi được  |
+| 2      | **Trần Quốc Toản** – Bóp nát quả cam (Bình Than, 1282) | Sắp ra mắt |
+| 3      | **Võ Thị Sáu** – Mùa hoa lê-ki-ma (Côn Đảo, 1952)      | Sắp ra mắt |
+| …      | Những người anh hùng tiếp theo                         | Dự kiến    |
+
+## Chương 1 – Kim Đồng: Người liên lạc nhỏ
+
+Cao Bằng, những năm kháng chiến chống Pháp. Bạn là Nông Văn Dền, tên thường gọi **Kim Đồng**, đội trưởng đầu tiên của Đội Nhi đồng Cứu quốc, cậu giao liên nhỏ tuổi của cách mạng.
+
+- **Lặng lẽ qua rừng:** nấp trong bụi rậm, sau tảng đá, lặn qua suối để lính tuần không nhìn thấy; sương mù buông dần khi đi sâu vào rừng.
+- **Nhặt năm mật thư:** mỗi mảnh thư mở ra một mẩu kiến thức về người giao liên thời ấy.
+- **Đánh lạc hướng:** ném sỏi dụ lính đi chỗ khác, nhặt thêm sỏi dọc đường.
+- **Tiếng tu hú báo tin:** trèo lên cây, bấm đúng nhịp để gửi tín hiệu cho cán bộ.
+- **Khoảnh khắc quyết định:** khi bị phục kích, Kim Đồng nổ súng đánh động để đồng đội rút lui, rồi chạy thoát khỏi toán lính đuổi.
+
+Điều khiển: `WASD` hoặc phím mũi tên để di chuyển, chuột trái hoặc `G` để ném sỏi. Trên điện thoại có cần gạt và nút hành động. Cả màn chơi mất khoảng 5 phút.
+
+### Hồ sơ lịch sử
+
+Sau khi chơi, bạn mở được hồ sơ đầy đủ về Kim Đồng: tiểu sử và dòng thời gian, năm mảnh mật thư, các hiện vật (súng kíp, áo chàm, còi tu hú) và khu di tích ở Nà Mạ, Hà Quảng, Cao Bằng cùng bản đồ vùng đất ấy.
+
+## Cảm hứng thiết kế
+
+Đồ họa pixel với màu sắc, giấy ố và con dấu của thời kháng chiến: phẳng, mộc mạc, không hào nhoáng. Mục tiêu là để lịch sử gần gũi chứ không phải để "chơi cho vui rồi quên".
+
+## Lưu ý về nội dung
+
+Nội dung lịch sử được tổng hợp từ tư liệu phổ thông, phục vụ mục đích giáo dục; hãy đối chiếu sách giáo khoa và nguồn chính thống khi cần trích dẫn. Các tình tiết trong trò chơi (mật thư, trạm gác, cuộc phục kích…) là hư cấu để minh họa tinh thần của nhân vật.
+
+## Chạy thử trên máy
+
+Cần Node.js 22.12 trở lên và pnpm.
 
 ```bash
 pnpm install
-pnpm dev          # http://localhost:3000
+pnpm dev          # mở http://localhost:3000
 ```
 
-| Lệnh                | Việc                                                |
-| ------------------- | --------------------------------------------------- |
-| `pnpm typecheck`    | Kiểm tra kiểu TypeScript                            |
-| `pnpm lint`         | ESLint (gồm quy tắc ranh giới thư mục)              |
-| `pnpm test`         | Vitest (logic thuần, danh sách chương, lưu tiến độ) |
-| `pnpm format:check` | Prettier                                            |
-| `pnpm check:assets` | Ngân sách dung lượng ảnh / âm thanh của game        |
-| `pnpm build`        | Build production                                    |
+Muốn góp code, thêm anh hùng mới hay làm asset: xem [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Cả sáu lệnh chạy tự động trên mỗi PR (`.github/workflows/ci.yml`).
-
-## Cấu trúc
-
-```
-app/                    route Next.js: trang chủ, /<game>, /<game>/codex
-components/ui/          Button, Card, ChapterCard, CodexCard (dùng chung)
-components/game/        GameCanvas: nhúng một game Phaser, có màn lỗi + thử lại
-components/home/        trang chủ (đọc danh sách chương)
-lib/engine/             logic thuần, không phụ thuộc Phaser/React (có test)
-lib/game/               hạ tầng Phaser dùng chung: tạo/hủy game, cần gạt cảm ứng, thanh tải, synth âm thanh, sổ cheat dev
-features/<game>/        MỌI THỨ của một game: game/ (Phaser), ui/ (React overlay), data/, store/, types.ts
-features/registry.tsx   mô tả từng chương cho trang chủ (Record<ChapterId, ...>)
-data/chapters.ts        danh sách chương hiển thị ở trang chủ
-stores/                 tiến độ người chơi (localStorage, có version + migrate)
-public/assets/<game>/   ảnh, bản đồ, âm thanh của game
-```
-
-## Thêm một game mới (ví dụ `tran-hung-dao`)
-
-1. Thêm id vào `CHAPTER_IDS` ở `lib/engine/chapter.ts`. TypeScript sẽ báo lỗi ở mọi nơi còn thiếu.
-2. Tạo `features/tran-hung-dao/` theo mẫu `features/kimdong/`:
-   - `types.ts`: hằng id, các giai đoạn, kiểu thông điệp game ⇄ UI, kiểu kết quả.
-   - `game/`: Phaser. Gọi `createPhaserGame` / `destroyPhaserGame` (`lib/game/phaser.ts`), `TouchControls`, `LoadingBar`, `Synth`… từ `lib/game/`. **Tự tạo emitter, `touchInput`, sổ debug của riêng game** (đừng dùng chung biến toàn cục).
-   - `ui/`: React overlay, nhúng game bằng `<GameCanvas load={...} />`.
-3. Thêm route `app/tran-hung-dao/page.tsx` (và `codex/page.tsx`); đặt `metadata` riêng.
-4. Thêm vào `data/chapters.ts` (`href: "/tran-hung-dao"`, `codexHref: "/tran-hung-dao/codex"`) và `features/registry.tsx`.
-5. Bỏ ảnh/âm thanh vào `public/assets/tran-hung-dao/`.
-
-## Quy tắc (ESLint tự kiểm tra)
-
-- `features/<game>` **không** import `features/<game khác>`. Cần dùng chung thì đưa sang `lib/` hoặc `components/`.
-- `lib/` không import `features`, `app`, `components`, `stores`, `data`.
-- Phaser chỉ được import trong code tải bằng `import()` bên trong effect (nó dùng `window`). Đừng import `phaser` ở file chạy lúc render server.
-- Mã chỉ để test (cheat `window.debug*`, `?timeoutloop`) phải nằm sau `process.env.NODE_ENV !== "production"` để không vào bản production.
-
-## Dung lượng asset
-
-`pnpm check:assets` (chạy cả trong CI) giới hạn: mỗi file ≤ 2 MB, mỗi game ≤ 12 MB, cấm `.wav`, `.bmp`, `.tiff`, `.psd`… Dùng `png`/`webp`/`jpg` cho ảnh, `ogg`/`mp3`/`m4a` cho âm thanh. Mỗi game chỉ tải asset của nó khi vào route của nó. File trong `/assets/*` được cache 1 ngày (xem `next.config.ts`): khi thay ảnh cùng tên, người chơi có thể thấy ảnh cũ tối đa 1 ngày; đổi tên file nếu cần cập nhật ngay.
-
-## Dữ liệu người chơi
-
-Tiến độ lưu trong `localStorage` (`vhg-progress`) của từng trình duyệt. Khi đổi cấu trúc `ProgressData` (`stores/progress-migrate.ts`): tăng `PROGRESS_VERSION` và thêm bước chuyển đổi trong `migrateProgress`, để bản lưu cũ của người chơi không bị mất.
-
-## Deploy (Vercel)
-
-Một project Vercel trỏ vào thư mục gốc, không cần biến môi trường. Push `main` → production; mỗi PR → bản preview.
+Xây dựng bằng Next.js, React, Phaser, Tailwind và TypeScript.
