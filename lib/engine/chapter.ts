@@ -5,7 +5,7 @@ import { clamp } from "./math";
  * `Record<ChapterId, ...>` tables (features/registry.tsx) then fail to compile until the new
  * chapter is described there too.
  */
-export const CHAPTER_IDS = ["kim-dong"] as const;
+export const CHAPTER_IDS = ["kim-dong", "vo-thi-sau"] as const;
 export type ChapterId = (typeof CHAPTER_IDS)[number];
 
 export interface ChapterProgress {

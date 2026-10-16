@@ -50,11 +50,13 @@ export const CHAPTERS: readonly ChapterInfo[] = [
     chapterLabel: "Chương 3",
     character: "Võ Thị Sáu",
     title: "Mùa hoa lê-ki-ma",
-    period: "Côn Đảo · 1952",
+    period: "Đất Đỏ · 1948 – 1952",
     description:
-      "Người con gái Đất Đỏ kiên trung, bất khuất trước mũi súng kẻ thù, hóa thành đóa hoa bất tử giữa biển trời Côn Đảo.",
+      "Lẩn qua rừng cao su, hòa vào chợ Đất Đỏ, rồi đối mặt phòng thẩm vấn: người con gái Đất Đỏ kiên trung, bất khuất trước kẻ thù.",
+    href: "/vothisau",
+    codexHref: "/vothisau/codex",
     difficulty: "Kịch tính (4/5)",
-    estimatedTime: "Sắp ra mắt",
+    estimatedTime: "~10 phút",
     tag: "Kháng chiến chống Pháp",
   },
 ];
