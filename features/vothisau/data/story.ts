@@ -198,7 +198,8 @@ export interface LoreContent {
 export const LORE: readonly LoreContent[] = [
   {
     title: "Truyền đơn Việt Minh",
-    quote: "Đồng bào Đất Đỏ! Đất nước là của chúng ta. Đoàn kết lại, không để giặc cướp nước giày xéo!",
+    quote:
+      "Đồng bào Đất Đỏ! Đất nước là của chúng ta. Đoàn kết lại, không để giặc cướp nước giày xéo!",
     fact: "Chị Võ Thị Sáu sinh năm 1933 ở Đất Đỏ (Bà Rịa) và tham gia hoạt động cách mạng từ khi còn rất nhỏ, làm liên lạc, tiếp tế cho bộ đội.",
   },
   {
@@ -374,4 +375,11 @@ export const CODEX = {
 export const MONUMENT = {
   title: "Nghĩa trang Hàng Dương (Côn Đảo)",
   body: "Mộ chị Võ Thị Sáu nằm ở nghĩa trang Hàng Dương, Côn Đảo, nơi hằng năm có rất nhiều người đến thắp hương, đặt hoa tưởng niệm. Ở quê nhà Đất Đỏ cũng có đền thờ và khu tưởng niệm chị.",
+} as const;
+
+/** The title card shown when an act begins. */
+export const ACT_TITLES = {
+  1: { label: "Hồi 1", title: "Bóng đêm Rừng Cao Su", subtitle: "Nhiệm vụ liên lạc" },
+  2: { label: "Hồi 2", title: "Chợ Đất Đỏ", subtitle: "Ẩn thân và phá hoại" },
+  3: { label: "Hồi 3", title: "Khí tiết", subtitle: "Phòng thẩm vấn" },
 } as const;

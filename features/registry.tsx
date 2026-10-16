@@ -5,6 +5,9 @@ import type { ChapterId } from "@/lib/engine";
 import { CODEX } from "./kimdong/data/story";
 import { KIMDONG_ID } from "./kimdong/types";
 import { KimDongArt, KimDongCodexArt } from "./kimdong/ui/codex-illustration";
+import { CODEX as VOTHISAU_CODEX } from "./vothisau/data/story";
+import { VOTHISAU_ID } from "./vothisau/types";
+import { VoThiSauArt, VoThiSauCodexArt } from "./vothisau/ui/codex-illustration";
 
 /** What the home page needs to draw a chapter that lives in `features/<game>`. */
 export interface ChapterView {
@@ -37,6 +40,17 @@ export const CHAPTER_VIEWS: Record<ChapterId, ChapterView> = {
       summary: CODEX.cardSummary,
       art: <KimDongCodexArt crop />,
       lockedHint: "Hoàn thành Chương 1 – Kim Đồng để mở khóa hồ sơ này.",
+    },
+  },
+  [VOTHISAU_ID]: {
+    cover: <VoThiSauArt />,
+    codex: {
+      name: "Nữ anh hùng Võ Thị Sáu",
+      years: VOTHISAU_CODEX.years,
+      role: "Nữ chiến sĩ Đất Đỏ",
+      summary: VOTHISAU_CODEX.cardSummary,
+      art: <VoThiSauCodexArt crop />,
+      lockedHint: "Hoàn thành Chương 3 – Võ Thị Sáu để mở khóa hồ sơ này.",
     },
   },
 };

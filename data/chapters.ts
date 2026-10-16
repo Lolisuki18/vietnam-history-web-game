@@ -47,6 +47,7 @@ export const CHAPTERS: readonly ChapterInfo[] = [
     tag: "Chống quân Nguyên Mông",
   },
   {
+    id: "vo-thi-sau",
     chapterLabel: "Chương 3",
     character: "Võ Thị Sáu",
     title: "Mùa hoa lê-ki-ma",
