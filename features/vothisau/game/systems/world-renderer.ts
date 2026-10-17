@@ -7,9 +7,16 @@ import type { LevelDef, Rect } from "../world-data";
 const SHADE_DEPTH = 5000;
 
 /** The ground, the props (sorted by their feet), the bushes and the shade over everything. */
-export function createWorld(scene: Phaser.Scene, level: LevelDef): Phaser.GameObjects.Image[] {
+export interface WorldPictures {
   /** Solid props (trees, stalls, the well...) that can stand in front of the player and hide her. */
+  occluders: Phaser.GameObjects.Image[];
+  /** Props that have an `id`, so a scene can move or fade them. */
+  named: Map<string, Phaser.GameObjects.Image>;
+}
+
+export function createWorld(scene: Phaser.Scene, level: LevelDef): WorldPictures {
   const occluders: Phaser.GameObjects.Image[] = [];
+  const named = new Map<string, Phaser.GameObjects.Image>();
   const groundKey = level.ground === "forest" ? IMAGE_KEYS.groundForest : IMAGE_KEYS.groundMarket;
   scene.add.tileSprite(0, 0, level.world.w, level.world.h, groundKey).setOrigin(0, 0).setDepth(-10);
 
@@ -22,6 +29,7 @@ export function createWorld(scene: Phaser.Scene, level: LevelDef): Phaser.GameOb
       .setFlipX(prop.flip === true)
       .setDepth(prop.y);
     if (prop.solid) occluders.push(image);
+    if (prop.id) named.set(prop.id, image);
   }
 
   level.bushes.forEach((bush, index) => {
@@ -39,7 +47,7 @@ export function createWorld(scene: Phaser.Scene, level: LevelDef): Phaser.GameOb
     .rectangle(0, 0, level.world.w, level.world.h, level.shade.color, level.shade.alpha)
     .setOrigin(0, 0)
     .setDepth(SHADE_DEPTH);
-  return occluders;
+  return { occluders, named };
 }
 
 /**

@@ -152,7 +152,15 @@ export function InterrogationScreen({ onDone }: { onDone: (path: 1 | 2) => void 
 
   return (
     <div className="absolute inset-0 overflow-y-auto bg-[#0b0806]">
-      {/* The room: a single bulb over an iron table, flickering; it gets redder when he loses his temper. */}
+      {/* The painted room (web/interrogation_room.webp); it fades out with the rest at the end. */}
+      <div
+        aria-hidden
+        className={cn(
+          "pointer-events-none absolute inset-0 bg-[url('/assets/vothisau/web/interrogation_room.webp')] bg-cover bg-center transition-opacity duration-[1800ms]",
+          dark ? "opacity-0" : "opacity-60",
+        )}
+      />
+      {/* The light of the bulb: it gets redder when the officer loses his temper. */}
       <div
         aria-hidden
         className={cn(
@@ -162,18 +170,6 @@ export function InterrogationScreen({ onDone }: { onDone: (path: 1 | 2) => void 
             : "bg-[radial-gradient(ellipse_at_50%_20%,rgba(214,170,70,0.35),transparent_60%)]",
         )}
       />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute top-0 left-1/2 h-16 w-px -translate-x-1/2 bg-stone-600"
-      />
-      <div
-        aria-hidden
-        className={cn(
-          "pointer-events-none absolute top-16 left-1/2 size-5 -translate-x-1/2 animate-pulse rounded-full",
-          angry ? "bg-red-400" : "bg-amber-200",
-        )}
-      />
-
       <div
         className={cn(
           "relative flex min-h-full flex-col items-center justify-end gap-5 px-4 pt-28 pb-6 transition-opacity duration-[1800ms] sm:justify-center sm:pb-10",

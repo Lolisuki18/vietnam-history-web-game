@@ -63,7 +63,7 @@ export function ResultScreen({ onReplay }: { onReplay: () => void }) {
 
           <div className="flex items-center gap-4">
             <Image
-              src="/assets/shared/textures/stamp-viet-minh.png"
+              src="/assets/shared/textures/stamp-cuu-quoc.png"
               alt=""
               width={640}
               height={640}

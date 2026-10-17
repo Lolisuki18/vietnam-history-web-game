@@ -14,6 +14,7 @@ import {
   CAI_TONG_ROUTE,
   CRATE_DROP,
   EXIT,
+  GATE_BARRIER_ID,
   GATE_TRIGGER,
   MARKET,
   MARKET_CROWDS,
@@ -319,8 +320,15 @@ export class MarketScene extends LevelScene {
     this.setMode("play");
   }
 
+  /** The barrier is raised out of the way: the picture fades to a ghost. */
+  private liftBarrier(): void {
+    const barrier = this.namedProps.get(GATE_BARRIER_ID);
+    if (barrier) this.tweens.add({ targets: barrier, alpha: 0.3, duration: 500 });
+  }
+
   private resolveCheckpoint(correct: boolean): void {
     this.gateResolved = true;
+    this.liftBarrier();
     this.setCheckpoint(1);
     sendToHost({ type: "chapter:phase", phase: "target" });
     if (correct) {

@@ -11,7 +11,7 @@ const BASE = "/assets/vothisau/";
  * Added to every image URL so a browser that cached an older sheet fetches the rebuilt one. Bump it
  * whenever a file in `public/assets/vothisau` is rebuilt.
  */
-export const ASSET_VERSION = "20261017a";
+export const ASSET_VERSION = "20261017f";
 
 const sprites = (name: string): string => `${BASE}sprites/${name}.png?v=${ASSET_VERSION}`;
 const images = (name: string): string => `${BASE}images/${name}.png?v=${ASSET_VERSION}`;
@@ -30,6 +30,8 @@ export const HITBOX_SIZE = 22;
 /** `sau.png`: 6 columns; one row per animation, each using the first `frames[...]` columns. */
 export const SAU_SHEET = {
   columns: 6,
+  /** Column of the standing pose in the four walking rows (the walk cycle uses columns 0-3). */
+  idleColumn: 4,
   rows: { down: 0, left: 1, right: 2, up: 3, sneak: 4, throw: 5, interact: 6, hide: 7 },
   frames: { walk: 4, sneak: 4, throw: 3, interact: 3, hide: 2 },
 } as const;
@@ -48,8 +50,28 @@ export const NPC_SHEET = {
 export const SOLDIER_KEYS = ["french_soldier", "viet_gian"] as const;
 export const CAI_TONG_KEY = "cai_tong";
 export type SoldierTexture = (typeof SOLDIER_KEYS)[number] | typeof CAI_TONG_KEY;
-export const VILLAGER_KEYS = ["villager_a", "villager_b", "villager_c"] as const;
+export const VILLAGER_KEYS = [
+  "villager_a",
+  "villager_b",
+  "villager_c",
+  "villager_d",
+  "villager_e",
+] as const;
 export const SAU_KEY = "sau";
+
+/**
+ * The fallen and the staggering: `soldier_down.png` (4 columns x 2 rows: row 0 French soldier,
+ * row 1 khố xanh) and `cai_tong_down.png` (4 columns x 1 row). Frames: 0 staggers, 1 falls, 2 and 3
+ * lie on the ground. Drawn facing right. Both are optional: without them the soldier is simply
+ * turned on his side.
+ */
+export const DOWN_SHEETS = {
+  french_soldier: { key: "soldier_down", row: 0 },
+  viet_gian: { key: "soldier_down", row: 1 },
+  cai_tong: { key: "cai_tong_down", row: 0 },
+} as const;
+export const DOWN_COLUMNS = 4;
+export const DOWN_FRAMES = { stagger: 0, falling: 1, lying: 3 } as const;
 export const BAY_KEY = "dong_chi_bay";
 
 /** Every character sheet, key -> file URL. */
@@ -62,6 +84,10 @@ export const SPRITE_URLS: Readonly<Record<string, string>> = {
   villager_a: sprites("villager_a"),
   villager_b: sprites("villager_b"),
   villager_c: sprites("villager_c"),
+  villager_d: sprites("villager_d"),
+  villager_e: sprites("villager_e"),
+  soldier_down: sprites("soldier_down"),
+  cai_tong_down: sprites("cai_tong_down"),
 };
 
 /** `emotes.png`: 64 x 64 frames. */

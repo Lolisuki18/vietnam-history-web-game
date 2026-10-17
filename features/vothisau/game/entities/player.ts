@@ -115,6 +115,6 @@ export class Player {
 
   private setIdleFrame(): void {
     const row = SAU_SHEET.rows[this.facing === "down" ? "down" : this.facing];
-    this.sprite.setFrame(row * SAU_SHEET.columns);
+    this.sprite.setFrame(row * SAU_SHEET.columns + SAU_SHEET.idleColumn);
   }
 }

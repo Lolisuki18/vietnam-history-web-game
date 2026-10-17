@@ -2,8 +2,16 @@ import type Phaser from "phaser";
 
 import { isPointInCone, rotateToward, type Point } from "@/lib/engine";
 
-import { soldierAnim } from "../assets/animations";
-import { EMOTE_SHEET, LOGICAL_FRAME, SOLDIER_SHEET, SPRITE_ORIGIN } from "../assets/manifest";
+import { fallAnim, soldierAnim } from "../assets/animations";
+import {
+  DOWN_COLUMNS,
+  DOWN_FRAMES,
+  DOWN_SHEETS,
+  EMOTE_SHEET,
+  LOGICAL_FRAME,
+  SOLDIER_SHEET,
+  SPRITE_ORIGIN,
+} from "../assets/manifest";
 import { fitToWorld } from "../assets/sprite-utils";
 import { GUARD } from "../config";
 import { hasClearLine, rayDistance, slideMove } from "../systems/motion";
@@ -134,6 +142,7 @@ export class Guard {
       this.facing = Math.atan2(first.y - this.y, first.x - this.x);
     }
     this.sprite.setAngle(0).setAlpha(1);
+    this.restoreWalkSheet();
     this.enterState("patrol");
     this.syncVisuals();
   }
@@ -181,13 +190,44 @@ export class Guard {
     this.timer = ms;
     this.stunThenChase = thenChase;
     this.enterState("stunned");
+    // Staggering: the first frame of the fall, when the artwork exists.
+    const down = this.downArt();
+    if (down) this.showDownFrame(down.key, down.row * DOWN_COLUMNS + DOWN_FRAMES.stagger);
   }
 
   /** Dead or out cold: lies on the ground and plays no part any more. */
   fall(): void {
     this.enterState("down");
+    const down = this.downArt();
+    if (down && this.scene.anims.exists(fallAnim(this.route.texture))) {
+      // Stagger, fall, lie down: the drawn animation, held on its last frame.
+      this.showDownFrame(down.key, down.row * DOWN_COLUMNS + DOWN_FRAMES.stagger);
+      this.sprite.anims.play(fallAnim(this.route.texture));
+      return;
+    }
+    // No artwork yet: lie on the side.
     this.sprite.setAngle(90).setAlpha(0.85);
     this.sprite.anims.stop();
+  }
+
+  /** The sheet and row of this soldier's fall, if its picture has been loaded. */
+  private downArt(): { key: string; row: number } | null {
+    const art = DOWN_SHEETS[this.route.texture];
+    return this.scene.textures.exists(art.key) ? art : null;
+  }
+
+  /** Show a frame of a fall sheet (drawn facing right: mirrored when the soldier looks left). */
+  private showDownFrame(key: string, frame: number): void {
+    this.sprite.anims.stop();
+    this.sprite.setTexture(key, frame);
+    this.sprite.setFlipX(this.lookingLeft);
+  }
+
+  /** Back to the walking sheet after a stagger (or a restart). */
+  private restoreWalkSheet(): void {
+    if (this.sprite.texture.key === this.route.texture) return;
+    this.sprite.setTexture(this.route.texture, SOLDIER_SHEET.rows.left * SOLDIER_SHEET.columns);
+    this.sprite.setFlipX(false);
   }
 
   /** Look toward a point (used for the guard's shout or a stare). */
@@ -346,6 +386,7 @@ export class Guard {
   private enterState(state: GuardState): void {
     const previous = this.state;
     this.state = state;
+    if (previous === "stunned" && state !== "down") this.restoreWalkSheet();
     if (state !== previous) {
       if (state === "watching") this.onEvent?.("alert", this);
       else if (state === "investigate") this.onEvent?.("question", this);
@@ -406,6 +447,7 @@ export class Guard {
   /** Walk left or right depending on where the guard looks; stand on the first frame when still. */
   private updateAnimation(): void {
     if (this.state === "down") return;
+    if (this.state === "stunned" && this.sprite.texture.key !== this.route.texture) return;
     const horizontal = Math.cos(this.facing);
     // Dead zone so a guard walking straight up / down does not flicker between the two rows.
     if (Math.abs(horizontal) > 0.2) this.lookingLeft = horizontal < 0;

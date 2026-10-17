@@ -136,6 +136,22 @@ const LOOKS: Record<string, Look> = {
     hair: 0x2a1f18,
     accent: 0xe9e2cf,
   },
+  [VILLAGER_KEYS[3]]: {
+    top: 0x2e3d7a,
+    topDark: 0x1d274f,
+    bottom: 0x222222,
+    hair: 0x1a1410,
+    hat: "conical",
+    hatColor: 0xdcc57d,
+  },
+  [VILLAGER_KEYS[4]]: {
+    top: 0x8a452a,
+    topDark: 0x5e2f1d,
+    bottom: 0x242424,
+    hair: 0x2a1f18,
+    hat: "towel",
+    hatColor: 0xe9e2cf,
+  },
 };
 
 /** One person in a 32 x 48 box whose top-left corner is (x0, y0). */

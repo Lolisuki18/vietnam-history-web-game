@@ -1,15 +1,17 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 
 import { cn } from "@/components/ui";
-import { CODEX, LORE, MONUMENT } from "@/features/vothisau/data/story";
+import { AREA_MAP, ARTIFACTS, CODEX, LORE, MONUMENT } from "@/features/vothisau/data/story";
 
-type TabId = "biography" | "papers" | "monument";
+type TabId = "biography" | "papers" | "artifacts" | "monument";
 
 const TABS: readonly { id: TabId; label: string }[] = [
   { id: "biography", label: "Tiểu sử" },
   { id: "papers", label: `Tư liệu (${LORE.length}/${LORE.length})` },
+  { id: "artifacts", label: "Hiện vật" },
   { id: "monument", label: "Di tích" },
 ];
 
@@ -140,12 +142,59 @@ export function CodexText({ className }: { className?: string }) {
         </div>
       )}
 
+      {activeTab === "artifacts" && (
+        <div className="flex animate-rise-in flex-col gap-6">
+          <header className="rounded-xl border border-amber-800/40 bg-stone-950/70 p-4">
+            <h2 className="font-serif text-xl font-bold text-amber-400">Hiện vật</h2>
+            <p className="mt-1 text-sm text-stone-400">
+              Tranh minh họa gắn với câu chuyện của chị Sáu, không phải ảnh hiện vật thật.
+            </p>
+          </header>
+          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {ARTIFACTS.map((item) => (
+              <li
+                key={item.id}
+                className="flex flex-col overflow-hidden rounded-lg border border-amber-700/50 bg-stone-950/80"
+              >
+                <Image
+                  src={item.image}
+                  alt={item.title}
+                  width={800}
+                  height={800}
+                  sizes="(min-width: 640px) 320px, 90vw"
+                  unoptimized
+                  className="aspect-square w-full object-cover"
+                />
+                <div className="flex flex-col gap-1.5 p-3.5">
+                  <h3 className="font-serif text-base font-bold text-amber-400">{item.title}</h3>
+                  <p className="text-sm leading-relaxed text-stone-300">{item.note}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {activeTab === "monument" && (
         <div className="flex animate-rise-in flex-col gap-6">
           <header className="rounded-xl border border-amber-800/40 bg-stone-950/70 p-4">
             <h2 className="font-serif text-xl font-bold text-amber-400">{MONUMENT.title}</h2>
             <p className="mt-1 text-sm text-stone-400">Nơi chị Võ Thị Sáu yên nghỉ.</p>
           </header>
+          <figure className="overflow-hidden rounded-lg border border-amber-700/50">
+            <Image
+              src={AREA_MAP.image}
+              alt={AREA_MAP.caption}
+              width={1600}
+              height={900}
+              sizes="(min-width: 1024px) 560px, 90vw"
+              unoptimized
+              className="h-auto w-full"
+            />
+            <figcaption className="bg-stone-950/80 px-3 py-2 text-xs text-stone-400">
+              {AREA_MAP.caption}
+            </figcaption>
+          </figure>
           <p className="text-base leading-relaxed text-stone-200">{MONUMENT.body}</p>
           <p className="rounded-md border-l-4 border-red-800 bg-stone-900 p-4 text-stone-200">
             Năm 1993, chị được Nhà nước truy tặng danh hiệu{" "}

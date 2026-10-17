@@ -41,6 +41,8 @@ export interface PropSpawn {
   /** Blocks movement and sight: a box of this size standing on the feet. */
   solid?: { w: number; h: number };
   flip?: boolean;
+  /** Lets a scene find the picture again (see `GATE_BARRIER_ID`). */
+  id?: string;
 }
 
 export interface CrowdSpawn {
@@ -289,6 +291,8 @@ export const MARKET_WALL = { x: 520, w: 60, gapTop: 1100, gapBottom: 1230 } as c
 export const GATE_TRIGGER: Rect = { x: 400, y: 1090, w: 120, h: 150 };
 /** Where the player stands once waved through. */
 export const GATE_PASSED_X = 600;
+/** The barrier in the gate; the market scene lifts it when the player is waved through. */
+export const GATE_BARRIER_ID = "gate-barrier";
 
 const STALL_SOLID = { w: 170, h: 52 } as const;
 const stall = (key: PropKey, x: number, y: number, flip = false): PropSpawn => ({
@@ -319,17 +323,22 @@ export const CAI_TONG_ROUTE: GuardRoute = {
 
 function marketProps(): PropSpawn[] {
   const props: PropSpawn[] = [];
-  // The wall, in blocks, with the gap left open and a barrier in it.
-  for (let y = 100; y < MARKET_WALL.gapTop; y += 120) {
-    props.push({ key: "prop_wall_brick", x: MARKET_WALL.x + MARKET_WALL.w / 2, y: y + 120 });
+  // The wall, in blocks, with the gap left open and a barrier in it. The blocks are 120 px tall and
+  // stand on their feet: the north ones end exactly where the gap starts, the south ones start
+  // exactly where it ends, so the picture matches the collision boxes in `MARKET.solids`.
+  const wallX = MARKET_WALL.x + MARKET_WALL.w / 2;
+  for (let feet = MARKET_WALL.gapTop; feet > 90; feet -= 120) {
+    props.push({ key: "prop_wall_brick", x: wallX, y: feet });
   }
-  for (let y = MARKET_WALL.gapBottom; y < 1440; y += 120) {
-    props.push({ key: "prop_wall_brick", x: MARKET_WALL.x + MARKET_WALL.w / 2, y: y + 120 });
+  for (let feet = MARKET_WALL.gapBottom + 120; feet < 1450 + 120; feet += 120) {
+    props.push({ key: "prop_wall_brick", x: wallX, y: feet });
   }
+  // The boom barrier stands in the middle of the opening (the picture is 110 px tall, on its feet).
   props.push({
     key: "prop_gate_barrier",
-    x: MARKET_WALL.x + MARKET_WALL.w / 2,
-    y: MARKET_WALL.gapTop,
+    id: GATE_BARRIER_ID,
+    x: wallX,
+    y: (MARKET_WALL.gapTop + MARKET_WALL.gapBottom) / 2 + 55,
   });
 
   // West side: where the player comes in.
@@ -372,8 +381,8 @@ export const MARKET_CROWDS: CrowdSpawn[] = [
     members: [
       { dx: -30, dy: 0, texture: "villager_a" },
       { dx: 10, dy: 10, texture: "villager_b" },
-      { dx: 40, dy: -20, texture: "villager_c" },
-      { dx: -10, dy: 40, texture: "villager_a" },
+      { dx: 40, dy: -20, texture: "villager_d" },
+      { dx: -10, dy: 40, texture: "villager_e" },
     ],
   },
   {
@@ -382,7 +391,7 @@ export const MARKET_CROWDS: CrowdSpawn[] = [
     radius: 85,
     members: [
       { dx: -25, dy: 0, texture: "villager_b" },
-      { dx: 20, dy: 15, texture: "villager_c" },
+      { dx: 20, dy: 15, texture: "villager_d" },
       { dx: 35, dy: -25, texture: "villager_a" },
     ],
   },
@@ -392,9 +401,9 @@ export const MARKET_CROWDS: CrowdSpawn[] = [
     radius: 95,
     members: [
       { dx: -35, dy: 0, texture: "villager_c" },
-      { dx: 0, dy: 20, texture: "villager_a" },
+      { dx: 0, dy: 20, texture: "villager_e" },
       { dx: 38, dy: -10, texture: "villager_b" },
-      { dx: -5, dy: -32, texture: "villager_c" },
+      { dx: -5, dy: -32, texture: "villager_d" },
     ],
   },
   {
@@ -402,9 +411,9 @@ export const MARKET_CROWDS: CrowdSpawn[] = [
     y: 520,
     radius: 85,
     members: [
-      { dx: -20, dy: 0, texture: "villager_a" },
+      { dx: -20, dy: 0, texture: "villager_d" },
       { dx: 28, dy: 15, texture: "villager_b" },
-      { dx: 5, dy: -30, texture: "villager_c" },
+      { dx: 5, dy: -30, texture: "villager_e" },
     ],
   },
   {
@@ -413,7 +422,7 @@ export const MARKET_CROWDS: CrowdSpawn[] = [
     radius: 85,
     members: [
       { dx: -28, dy: 0, texture: "villager_b" },
-      { dx: 30, dy: 10, texture: "villager_c" },
+      { dx: 30, dy: 10, texture: "villager_e" },
       { dx: 0, dy: -28, texture: "villager_a" },
     ],
   },
@@ -423,7 +432,7 @@ export const MARKET_CROWDS: CrowdSpawn[] = [
     radius: 85,
     members: [
       { dx: -25, dy: 5, texture: "villager_c" },
-      { dx: 25, dy: -5, texture: "villager_b" },
+      { dx: 25, dy: -5, texture: "villager_d" },
       { dx: 0, dy: 30, texture: "villager_a" },
     ],
   },

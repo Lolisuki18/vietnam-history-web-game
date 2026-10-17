@@ -61,6 +61,8 @@ export abstract class LevelScene extends Phaser.Scene {
   protected checkpointIndex = 0;
 
   private occluders: Phaser.GameObjects.Image[] = [];
+  /** Props with an id (`PropSpawn.id`), for scenes that move or fade them. */
+  protected namedProps = new Map<string, Phaser.GameObjects.Image>();
   private papers: PaperPickup[] = [];
   private pebblePickups: PebblePickup[] = [];
   private pebbles: number = PEBBLES.start;
@@ -160,7 +162,9 @@ export abstract class LevelScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.occluders = createWorld(this, this.level);
+    const world = createWorld(this, this.level);
+    this.occluders = world.occluders;
+    this.namedProps = world.named;
     this.blockers = levelBlockers(this.level);
     const solids = createSolids(this, this.blockers);
 

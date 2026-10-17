@@ -2,6 +2,8 @@ import type Phaser from "phaser";
 
 import {
   BAY_KEY,
+  DOWN_COLUMNS,
+  DOWN_SHEETS,
   CAI_TONG_KEY,
   EXPLOSION_SHEET,
   NPC_SHEET,
@@ -25,6 +27,7 @@ export const sauAnim = (key: SauAnimKey): string => `${SAU_KEY}_${key}`;
 export const soldierAnim = (texture: string, side: "left" | "right"): string =>
   `${texture}_${side}`;
 export const npcAnim = (texture: string, state: "idle" | "scared"): string => `${texture}_${state}`;
+export const fallAnim = (texture: string): string => `${texture}_fall`;
 export const PAPER_ANIM = "paper_shimmer";
 export const EXPLOSION_ANIM = "explosion";
 
@@ -81,6 +84,10 @@ export function createAnimations(
       SOLDIER_SHEET.columns,
       SOLDIER_WALK_FPS,
     );
+  }
+  // Falling: stagger, fall, lie down (plays once and holds the last frame).
+  for (const [texture, { key, row: downRow }] of Object.entries(DOWN_SHEETS)) {
+    row(fallAnim(texture), key, DOWN_COLUMNS, downRow, DOWN_COLUMNS, 8, 0);
   }
   for (const texture of [...VILLAGER_KEYS, BAY_KEY]) {
     row(

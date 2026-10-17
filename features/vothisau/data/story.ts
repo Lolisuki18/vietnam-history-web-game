@@ -371,6 +371,23 @@ export const CODEX = {
   note: "Nội dung được tổng hợp từ tư liệu phổ thông, phục vụ mục đích giáo dục; một số mốc thời gian (năm bị bắt, số liệu các trận đánh) được các nguồn ghi hơi khác nhau, hãy đối chiếu với sách giáo khoa và nguồn chính thống khi cần trích dẫn. Các tình tiết trong trò chơi (rừng cao su ban đêm, đồng chí Bảy, Cai Tòng, cuộc thẩm vấn…) là hư cấu để minh họa tinh thần của chị. Hình vẽ là tranh minh họa, không phải ảnh thật.",
 } as const;
 
+/** The keepsake shown in the Codex ("Hiện vật"): an illustration tied to the title of the chapter. */
+export const ARTIFACTS = [
+  {
+    id: "le-ki-ma",
+    title: "Quả lê-ki-ma",
+    image: "/assets/vothisau/web/artifact_le_ki_ma.webp",
+    note: "Lê-ki-ma là loại cây ăn quả quen thuộc ở miền Nam, gắn với những giai thoại truyền miệng về chị Võ Thị Sáu; tên chương này, “Mùa hoa lê-ki-ma”, lấy từ hình ảnh đó. Đây là tranh minh họa: nhãn bảo tàng và số liệu trong tranh là hư cấu, không phải hiện vật thật.",
+  },
+] as const;
+
+/** Map of the area, shown in the "Di tích" tab. */
+export const AREA_MAP = {
+  image: "/assets/vothisau/web/map_dat_do.webp",
+  caption:
+    "Bản đồ minh họa vùng Đất Đỏ – Bà Rịa (1948 – 1950). Tranh minh họa: địa danh và đường nét không chính xác tuyệt đối.",
+} as const;
+
 /** Where Võ Thị Sáu rests, shown in the "Di tích" tab. */
 export const MONUMENT = {
   title: "Nghĩa trang Hàng Dương (Côn Đảo)",
