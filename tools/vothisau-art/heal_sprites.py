@@ -24,12 +24,74 @@ SPRITES = ROOT / "public" / "assets" / "vothisau" / "sprites"
 FRAME_W, FRAME_H = 80, 96
 
 # Sheets to heal: name -> (columns used per row...) is not needed, every cell is scanned.
-SHEETS = ["sau", "villager_d", "villager_e", "dong_chi_bay"]
+SHEETS = [
+    "sau",
+    "villager_a",
+    "villager_b",
+    "villager_c",
+    "villager_d",
+    "villager_e",
+    "dong_chi_bay",
+    "soldier_down",
+    "cai_tong_down",
+]
 # (sheet, row, column): frames that hold a detached fragment to remove.
 FRAGMENTS = {("sau", 5, 2), ("sau", 6, 1)}
 FRAGMENT_MAX_PIXELS = 160
 # A piece this far (px) from the body counts as detached.
 DETACHED_GAP = 3
+
+
+def heal_internal_holes(cell: np.ndarray) -> int:
+    """Fill 1-px and 2-px transparent holes/slits completely enclosed within the figure."""
+    alpha = cell[..., 3] > 0
+    filled = 0
+    
+    # 1-px vertical slits
+    v1 = (~alpha[1:-1, :]) & alpha[:-2, :] & alpha[2:, :]
+    ys, xs = np.where(v1)
+    ys += 1
+    for y, x in zip(ys, xs):
+        cell[y, x] = ((cell[y-1, x].astype(int) + cell[y+1, x].astype(int)) // 2).astype(np.uint8)
+        alpha[y, x] = True
+        filled += 1
+        
+    # 1-px horizontal slits
+    h1 = (~alpha[:, 1:-1]) & alpha[:, :-2] & alpha[:, 2:]
+    ys, xs = np.where(h1)
+    xs += 1
+    for y, x in zip(ys, xs):
+        cell[y, x] = ((cell[y, x-1].astype(int) + cell[y, x+1].astype(int)) // 2).astype(np.uint8)
+        alpha[y, x] = True
+        filled += 1
+
+    # 2-px vertical slits
+    v2 = (~alpha[1:-2, :]) & (~alpha[2:-1, :]) & alpha[:-3, :] & alpha[3:, :]
+    ys, xs = np.where(v2)
+    ys += 1
+    for y, x in zip(ys, xs):
+        top_c = cell[y-1, x].astype(int)
+        bot_c = cell[y+2, x].astype(int)
+        cell[y, x] = ((top_c * 2 + bot_c) // 3).astype(np.uint8)
+        cell[y+1, x] = ((top_c + bot_c * 2) // 3).astype(np.uint8)
+        alpha[y, x] = True
+        alpha[y+1, x] = True
+        filled += 2
+
+    # 2-px horizontal slits
+    h2 = (~alpha[:, 1:-2]) & (~alpha[:, 2:-1]) & alpha[:, :-3] & alpha[:, 3:]
+    ys, xs = np.where(h2)
+    xs += 1
+    for y, x in zip(ys, xs):
+        l_c = cell[y, x-1].astype(int)
+        r_c = cell[y, x+2].astype(int)
+        cell[y, x] = ((l_c * 2 + r_c) // 3).astype(np.uint8)
+        cell[y, x+1] = ((l_c + r_c * 2) // 3).astype(np.uint8)
+        alpha[y, x] = True
+        alpha[y, x+1] = True
+        filled += 2
+
+    return filled
 
 
 def heal_seams(cell: np.ndarray) -> int:
@@ -77,18 +139,21 @@ def main() -> int:
 
     for name in SHEETS:
         path = SPRITES / f"{name}.png"
+        if not path.exists():
+            continue
         sheet = np.array(Image.open(path).convert("RGBA"))
         rows, columns = sheet.shape[0] // FRAME_H, sheet.shape[1] // FRAME_W
-        seams = removed = 0
+        seams = holes = removed = 0
         for row in range(rows):
             for column in range(columns):
                 cell = sheet[row * FRAME_H : (row + 1) * FRAME_H, column * FRAME_W : (column + 1) * FRAME_W]
                 if not (cell[..., 3] > 0).any():
                     continue
                 seams += heal_seams(cell)
+                holes += heal_internal_holes(cell)
                 if (name, row, column) in FRAGMENTS:
                     removed += drop_fragments(cell)
-        print(f"{name}: {seams} seam rows filled, {removed} fragment pixels removed")
+        print(f"{name}: {seams} seam rows filled, {holes} internal holes healed, {removed} fragment pixels removed")
         if not args.dry_run:
             Image.fromarray(sheet).save(path, optimize=True)
     return 0

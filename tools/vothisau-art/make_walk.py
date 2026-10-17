@@ -18,6 +18,7 @@ Run from the project root:  python tools/vothisau-art/make_walk.py [--preview ou
 from __future__ import annotations
 
 import argparse
+import math
 import sys
 from pathlib import Path
 
@@ -71,22 +72,77 @@ def split_body_legs(frame: np.ndarray, hip: int) -> tuple[np.ndarray, np.ndarray
     return layer(body), layer(back), layer(front), top, foot
 
 
-def move_leg(leg: np.ndarray, top: int, foot: int, shear: int, lift: int = 0, back: int = 0) -> np.ndarray:
+def heal_cell(cell: np.ndarray) -> tuple[np.ndarray, int]:
+    """Fill 1-px and 2-px transparent holes/slits completely enclosed within the figure."""
+    out = cell.copy()
+    alpha = out[..., 3] > 0
+    filled = 0
+    
+    # 1-px vertical slits
+    v1 = (~alpha[1:-1, :]) & alpha[:-2, :] & alpha[2:, :]
+    ys, xs = np.where(v1)
+    ys += 1
+    for y, x in zip(ys, xs):
+        out[y, x] = ((out[y-1, x].astype(int) + out[y+1, x].astype(int)) // 2).astype(np.uint8)
+        alpha[y, x] = True
+        filled += 1
+        
+    # 1-px horizontal slits
+    h1 = (~alpha[:, 1:-1]) & alpha[:, :-2] & alpha[:, 2:]
+    ys, xs = np.where(h1)
+    xs += 1
+    for y, x in zip(ys, xs):
+        out[y, x] = ((out[y, x-1].astype(int) + out[y, x+1].astype(int)) // 2).astype(np.uint8)
+        alpha[y, x] = True
+        filled += 1
+
+    # 2-px vertical slits
+    v2 = (~alpha[1:-2, :]) & (~alpha[2:-1, :]) & alpha[:-3, :] & alpha[3:, :]
+    ys, xs = np.where(v2)
+    ys += 1
+    for y, x in zip(ys, xs):
+        top_c = out[y-1, x].astype(int)
+        bot_c = out[y+2, x].astype(int)
+        out[y, x] = ((top_c * 2 + bot_c) // 3).astype(np.uint8)
+        out[y+1, x] = ((top_c + bot_c * 2) // 3).astype(np.uint8)
+        alpha[y, x] = True
+        alpha[y+1, x] = True
+        filled += 2
+
+    # 2-px horizontal slits
+    h2 = (~alpha[:, 1:-2]) & (~alpha[:, 2:-1]) & alpha[:, :-3] & alpha[:, 3:]
+    ys, xs = np.where(h2)
+    xs += 1
+    for y, x in zip(ys, xs):
+        l_c = out[y, x-1].astype(int)
+        r_c = out[y, x+2].astype(int)
+        out[y, x] = ((l_c * 2 + r_c) // 3).astype(np.uint8)
+        out[y, x+1] = ((l_c + r_c * 2) // 3).astype(np.uint8)
+        alpha[y, x] = True
+        alpha[y+1, x] = True
+        filled += 2
+
+    return out, filled
+
+
+def move_leg(leg: np.ndarray, top: int, foot: int, shear: float, lift: int = 0, back: int = 0) -> np.ndarray:
     """Swing a leg layer from the hip (0 px at the top, `shear` px at the foot).
 
-    `lift` bends the knee: everything below the knee is raised by `lift` rows and moved `back` px,
-    so the foot comes off the ground without the leg getting shorter.
+    `lift` smoothly bends the knee and raises the lower leg and foot without shortening the leg
+    or creating discontinuous notches ('khấc'). Preserves constant leg thickness.
     """
     out = np.zeros_like(leg)
     length = foot - top + 1
-    knee = top + length // 2
+    knee = top + int(round(length * 0.52))
     for y in range(top, foot + 1):
-        t = (y - top) / max(1, length - 1)
-        dx = int(round(shear * t))
-        dy = 0
-        if y >= knee and lift:
-            dy = -lift
-            dx += back
+        if y <= knee:
+            t = (y - top) / max(1, knee - top)
+            dx = (shear * 0.5) * t
+            dy = 0
+        else:
+            t = (y - knee) / max(1, foot - knee)
+            dx = (shear * 0.5) + (shear * 0.5 + back) * t
+            dy = -int(round(lift * t))
         target = y + dy
         if not 0 <= target < FRAME_H:
             continue
@@ -94,9 +150,11 @@ def move_leg(leg: np.ndarray, top: int, foot: int, shear: int, lift: int = 0, ba
         solid = row[:, 3] > 0
         if not solid.any():
             continue
-        columns = np.where(solid)[0] + dx
-        keep = (columns >= 0) & (columns < FRAME_W)
-        out[target, columns[keep]] = row[np.where(solid)[0][keep]]
+        idx = np.where(solid)[0]
+        shift = int(round(dx))
+        c_targets = idx + shift
+        valid = (c_targets >= 0) & (c_targets < FRAME_W)
+        out[target, c_targets[valid]] = row[idx[valid]]
     return out
 
 
@@ -121,6 +179,7 @@ def compose(layers: list[np.ndarray], bob: int, sway: int = 0) -> np.ndarray:
         if not solid[y].any() and solid[y - 1].any() and solid[y + 1].any():
             out[y] = out[y - 1]
             solid[y] = solid[y - 1]
+    out, _ = heal_cell(out)
     return out
 
 
@@ -192,6 +251,11 @@ def build(stride: int) -> Image.Image:
     for name, row in ROWS.items():
         idle = cell(sheet, row, IDLE_COLUMN)
         base = idle if (idle[..., 3] > 0).any() else cell(sheet, row, 0)
+        if row == 0:
+            # Remove the red-black spike jutting out at shoulder (x <= 32, y <= 38)
+            spike = (base[..., 3] > 0) & (np.arange(FRAME_W)[None, :] <= 32) & (np.arange(FRAME_H)[:, None] <= 38)
+            base[spike] = 0
+        base, _ = heal_cell(base)
         frames = walk_frames(base, side=name in ("left", "right"), stride=stride, back_dir=1 if name == "left" else -1)
         for column, frame in enumerate(frames):
             sheet[row * FRAME_H : (row + 1) * FRAME_H, column * FRAME_W : (column + 1) * FRAME_W] = frame
