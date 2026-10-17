@@ -16,7 +16,7 @@ import { AlertMeter, reportProgress } from "../systems/alert-meter";
 import { noiseRipple, PebbleThrower } from "../systems/effects";
 import { circleAt } from "../systems/motion";
 import { SpeechBubbles } from "../systems/speech-bubbles";
-import { createSolids, createWorld } from "../systems/world-renderer";
+import { createSolids, createWorld, fadeOccluders } from "../systems/world-renderer";
 import { levelBlockers, type LevelDef, type PaperSpawn, type Rect } from "../world-data";
 import type { ChoiceId, ChoiceOption, DialogueId } from "../../types";
 
@@ -60,6 +60,7 @@ export abstract class LevelScene extends Phaser.Scene {
   protected readonly moveInput = { x: 0, y: 0 };
   protected checkpointIndex = 0;
 
+  private occluders: Phaser.GameObjects.Image[] = [];
   private papers: PaperPickup[] = [];
   private pebblePickups: PebblePickup[] = [];
   private pebbles: number = PEBBLES.start;
@@ -159,7 +160,7 @@ export abstract class LevelScene extends Phaser.Scene {
   }
 
   create(): void {
-    createWorld(this, this.level);
+    this.occluders = createWorld(this, this.level);
     this.blockers = levelBlockers(this.level);
     const solids = createSolids(this, this.blockers);
 
@@ -229,6 +230,7 @@ export abstract class LevelScene extends Phaser.Scene {
     const hidden = bush !== undefined;
     const concealed = hidden || blended;
     this.player.setAlpha(concealed ? PLAYER.hiddenAlpha : 1);
+    fadeOccluders(this.occluders, px, py);
 
     if (canMove)
       this.movePlayer(hidden ? PLAYER.bushSpeedFactor : blended ? PLAYER.crowdSpeedFactor : 1);

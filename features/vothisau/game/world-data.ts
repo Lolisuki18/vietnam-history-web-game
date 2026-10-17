@@ -149,7 +149,9 @@ function forestProps(): PropSpawn[] {
     solid: TREE_SOLID,
   });
   // Zone 1: open ground to learn to walk on, with a few trees and rustling leaves.
-  props.push(tree(450, 2500), tree(760, 2420), tree(560, 2230));
+  // (The real trees are 260 px tall and their crowns hide what is just north of them: keep them
+  // off the tutorial bush and the gap.)
+  props.push(tree(450, 2500), tree(760, 2420), tree(740, 2250));
   for (const [x, y] of [
     [560, 2610],
     [660, 2540],
@@ -166,7 +168,7 @@ function forestProps(): PropSpawn[] {
   for (let x = 700; x <= 860; x += 60) props.push(tree(x, 2000));
 
   // Zone 3: patrols going left and right, with trees and bushes to hide behind.
-  props.push(tree(500, 1450), tree(700, 1170), tree(560, 1010), tree(660, 720), tree(470, 1730));
+  props.push(tree(500, 1450), tree(700, 1170), tree(560, 1010), tree(660, 720), tree(790, 1790));
   props.push({ key: "prop_log", x: 600, y: 1360 }, { key: "prop_log", x: 720, y: 880 });
 
   // The end: comrade Bảy's hidden post.
@@ -191,10 +193,10 @@ export const FOREST: LevelDef = {
   id: "forest",
   act: 1,
   world: FOREST_WORLD,
-  view: { w: 800, h: 500 },
+  view: { w: 700, h: 440 },
   start: { x: 600, y: 2680 },
   ground: "forest",
-  shade: { color: 0x050a1f, alpha: 0.5 },
+  shade: { color: 0x050a1f, alpha: 0.36 },
   solids: [
     { x: 0, y: 0, w: FOREST_CORRIDOR.left, h: FOREST_WORLD.h },
     {
@@ -431,7 +433,7 @@ export const MARKET: LevelDef = {
   id: "market",
   act: 2,
   world: MARKET_WORLD,
-  view: { w: 1000, h: 620 },
+  view: { w: 900, h: 560 },
   start: { x: 130, y: 1380 },
   ground: "market",
   shade: { color: 0xfff1c0, alpha: 0.05 },

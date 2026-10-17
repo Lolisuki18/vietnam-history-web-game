@@ -11,7 +11,7 @@ const BASE = "/assets/vothisau/";
  * Added to every image URL so a browser that cached an older sheet fetches the rebuilt one. Bump it
  * whenever a file in `public/assets/vothisau` is rebuilt.
  */
-export const ASSET_VERSION = "20261016a";
+export const ASSET_VERSION = "20261017a";
 
 const sprites = (name: string): string => `${BASE}sprites/${name}.png?v=${ASSET_VERSION}`;
 const images = (name: string): string => `${BASE}images/${name}.png?v=${ASSET_VERSION}`;
